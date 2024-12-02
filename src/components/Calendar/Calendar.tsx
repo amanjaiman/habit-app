@@ -86,10 +86,10 @@ export default function Calendar() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between backdrop-blur-sm bg-white/30 
-                    dark:bg-gray-900/30 rounded-xl p-4 border border-white/20 
+      <div className="flex flex-col sm:flex-row items-center justify-between backdrop-blur-sm bg-white/30 
+                    dark:bg-gray-900/30 rounded-xl p-4 sm:p-6 border border-white/20 
                     dark:border-gray-800/30 shadow-lg relative z-[200]">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-y-0 space-x-4">
           <Listbox value={viewType} onChange={setView}>
             <div className="relative z-[200]">
               <Listbox.Button className="relative w-40 px-4 py-2 rounded-lg border-0 
@@ -147,7 +147,7 @@ export default function Calendar() {
           </button>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 mt-3 sm:mt-0">
           <button
             onClick={() => navigate('prev')}
             className="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 

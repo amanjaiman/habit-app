@@ -19,6 +19,7 @@ export default function Navbar() {
   const { state: userState } = useUser();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: HomeIcon },
@@ -153,62 +154,64 @@ export default function Navbar() {
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="flex items-center sm:hidden">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 
-                       hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 
-                       focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-              aria-controls="mobile-menu"
-              aria-expanded="false"
-            >
-              <span className="sr-only">Open main menu</span>
-              {/* Icon for menu button */}
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            {/* Mobile menu button */}
+            <div className="flex items-center sm:hidden">
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 
+                        hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 
+                        focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                aria-controls="mobile-menu"
+                aria-expanded={isMobileMenuOpen}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
+                <span className="sr-only">Open main menu</span>
+                {/* Icon for menu button */}
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Mobile menu */}
-      <div className="sm:hidden" id="mobile-menu">
-        <div className="pt-2 pb-3 space-y-1">
-          {[
-            ...navigation.filter(item => !['Settings', 'Logout'].includes(item.name)),
-            ...profileDropdownItems
-          ].map((item) => (
-            <Link
-              key={item.name}
-              to={item.href}
-              onClick={item.onClick}
-              className={`flex items-center px-3 py-2 text-base font-medium
-                ${
-                  isActive(item.href)
-                    ? 'bg-indigo-50 dark:bg-indigo-900/50 border-l-4 border-indigo-500 text-indigo-700 dark:text-indigo-400'
-                    : 'border-l-4 border-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
-                }`}
-            >
-              <item.icon className="w-5 h-5 mr-2" />
-              {item.name}
-            </Link>
-          ))}
+      {isMobileMenuOpen && (
+        <div className="sm:hidden" id="mobile-menu">
+          <div className="pt-2 pb-3 space-y-1">
+            {[
+              ...navigation.filter(item => !['Settings', 'Logout'].includes(item.name)),
+              ...profileDropdownItems
+            ].map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                onClick={item.onClick}
+                className={`flex items-center px-3 py-2 text-base font-medium
+                  ${
+                    isActive(item.href)
+                      ? 'bg-indigo-50 dark:bg-indigo-900/50 border-l-4 border-indigo-500 text-indigo-700 dark:text-indigo-400'
+                      : 'border-l-4 border-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                  }`}
+              >
+                <item.icon className="w-5 h-5 mr-2" />
+                {item.name}
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </nav>
   );
 }

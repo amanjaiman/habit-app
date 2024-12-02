@@ -51,7 +51,8 @@ export default function MonthView({ date, habits }: MonthViewProps) {
   return (
     <div className="space-y-4 p-6">
       <div className="text-center">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                      dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
           {format(monthStart, 'MMMM yyyy')}
         </h2>
       </div>

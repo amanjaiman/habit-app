@@ -43,7 +43,7 @@ export default function DayView({ date, habits }: DayViewProps) {
   return (
     <div className="space-y-6 p-8">
       <div className="flex justify-between items-center">
-        <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+        <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
           {formattedDate}
         </h3>
@@ -53,7 +53,7 @@ export default function DayView({ date, habits }: DayViewProps) {
           )}
           <span className="text-sm text-gray-600 dark:text-gray-400 bg-white/50 
                         dark:bg-gray-800/50 px-4 py-2 rounded-full">
-            {completedCount} of {habits.length} completed
+            {completedCount} of {habits.length}
           </span>
         </div>
       </div>

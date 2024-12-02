@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DEFAULT_CATEGORIES, Habit } from '../types/habit';
 import { habitApi, useHabits } from '../contexts/HabitContext';
 import HabitForm from './HabitForm';
-import { TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { TrashIcon, PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { useUser } from '../contexts/UserContext';
 
 interface HabitListProps {
@@ -11,6 +11,7 @@ interface HabitListProps {
 
 export default function HabitList({ habits }: HabitListProps) {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const { dispatch } = useHabits();
   const { state: userState } = useUser();
 
@@ -29,13 +30,27 @@ export default function HabitList({ habits }: HabitListProps) {
 
   return (
     <>
+      <div className="flex items-center space-x-4 mb-6">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                      dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+          Your Habits
+        </h2>
+        <button
+          onClick={() => setIsFormOpen(true)}
+          className="p-1.5 mt-0.5 rounded-lg bg-white/40 dark:bg-gray-800/40 hover:bg-white/70 
+                   dark:hover:bg-gray-800/70 transition-all duration-200 group"
+        >
+          <PlusIcon className="w-5 h-5 text-purple-600 dark:text-purple-400 transition-transform" />
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {habits.map((habit) => (
           <div
             key={habit.id}
             className="flex items-center p-4 rounded-xl transition-all duration-200 
-                         backdrop-blur-sm border border-white/20 dark:border-gray-800/30
-                         hover:shadow-xl"
+                      backdrop-blur-sm border border-white/20 dark:border-gray-800/30
+                      hover:shadow-xl"
           >
             <div className="flex-1 flex items-center space-x-3">
                 <span className="text-xl">{habit.emoji}</span>
@@ -70,6 +85,11 @@ export default function HabitList({ habits }: HabitListProps) {
         isOpen={!!editingHabit}
         onClose={() => setEditingHabit(null)}
         habitToEdit={editingHabit ?? undefined}
+      />
+
+      <HabitForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
       />
     </>
   );
