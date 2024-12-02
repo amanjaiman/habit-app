@@ -1,5 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { Habit, HabitCompletion } from '../types/habit';
+import { API_BASE_URL, handleApiResponse } from '../api/config';
+import { useUser } from './UserContext';
 
 interface HabitState {
   habits: Habit[];
@@ -28,38 +30,71 @@ const HabitContext = createContext<{
   dispatch: React.Dispatch<HabitAction>;
 } | undefined>(undefined);
 
+// Add API functions
+async function fetchHabits(userId: string): Promise<Habit[]> {
+  const response = await fetch(`${API_BASE_URL}/users/${userId}/habits`);
+  return handleApiResponse(response);
+}
+
+async function createHabitApi(userId: string, habit: Habit): Promise<Habit> {
+  const response = await fetch(`${API_BASE_URL}/users/${userId}/habits`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(habit),
+  });
+  return handleApiResponse(response);
+}
+
+async function updateHabitApi(userId: string, habit: Habit): Promise<Habit> {
+  const response = await fetch(`${API_BASE_URL}/users/${userId}/habits/${habit.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(habit),
+  });
+  return handleApiResponse(response);
+}
+
+async function deleteHabitApi(userId: string, habitId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/users/${userId}/habits/${habitId}`, {
+    method: 'DELETE',
+  });
+  return handleApiResponse(response);
+}
+
+async function toggleHabitApi(userId: string, habitId: string, date: string, completed: boolean): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/users/${userId}/habits/${habitId}/toggle`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date, completed }),
+  });
+  return handleApiResponse(response);
+}
+
+// Update the reducer to handle async operations
 function habitReducer(state: HabitState, action: HabitAction): HabitState {
-  let newState;
-  
   switch (action.type) {
     case 'ADD_HABIT':
-      newState = {
+      return {
         ...state,
         habits: [...state.habits, action.payload],
       };
-      localStorage.setItem('habits', JSON.stringify(newState.habits));
-      return newState;
     
     case 'REMOVE_HABIT':
-      newState = {
+      return {
         ...state,
         habits: state.habits.filter(habit => habit.id !== action.payload),
       };
-      localStorage.setItem('habits', JSON.stringify(newState.habits));
-      return newState;
     
     case 'UPDATE_HABIT':
-      newState = {
+      return {
         ...state,
         habits: state.habits.map(habit =>
           habit.id === action.payload.id ? action.payload : habit
         ),
       };
-      localStorage.setItem('habits', JSON.stringify(newState.habits));
-      return newState;
     
     case 'TOGGLE_COMPLETION':
-      newState = {
+      return {
         ...state,
         habits: state.habits.map(habit =>
           habit.id === action.payload.habitId
@@ -73,14 +108,23 @@ function habitReducer(state: HabitState, action: HabitAction): HabitState {
             : habit
         ),
       };
-      localStorage.setItem('habits', JSON.stringify(newState.habits));
-      return newState;
     
     case 'IMPORT_HABITS':
       return {
         ...state,
         habits: action.payload,
+        loading: false,
       };
+    
+    case 'SET_ERROR':
+      return {
+        ...state,
+        error: action.payload,
+        loading: false,
+      };
+    
+    case 'RESET_DATA':
+      return initialState;
     
     default:
       return state;
@@ -89,14 +133,22 @@ function habitReducer(state: HabitState, action: HabitAction): HabitState {
 
 export function HabitProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(habitReducer, initialState);
+  const { state: userState } = useUser();
 
-  // Load habits from localStorage on mount
+  // Load habits from API when user is authenticated
   useEffect(() => {
-    const savedHabits = localStorage.getItem('habits');
-    if (savedHabits) {
-      dispatch({ type: 'IMPORT_HABITS', payload: JSON.parse(savedHabits) });
+    if (userState.isAuthenticated && userState.profile) {
+      const loadHabits = async () => {
+        try {
+          const habits = await fetchHabits(userState.profile!.id);
+          dispatch({ type: 'IMPORT_HABITS', payload: habits });
+        } catch (error: any) {
+          dispatch({ type: 'SET_ERROR', payload: error.message });
+        }
+      };
+      loadHabits();
     }
-  }, []);
+  }, [userState.isAuthenticated, userState.profile]);
 
   return (
     <HabitContext.Provider value={{ state, dispatch }}>
@@ -105,17 +157,23 @@ export function HabitProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useHabits() {
-  const context = useContext(HabitContext);
-  if (context === undefined) {
-    throw new Error('useHabits must be used within a HabitProvider');
-  }
-  return context;
-}
+// Export API functions
+export const habitApi = {
+  fetch: fetchHabits,
+  create: createHabitApi,
+  update: updateHabitApi,
+  delete: deleteHabitApi,
+  toggle: toggleHabitApi,
+};
 
-// Utility functions for habit management
-export function createHabit(name: string, emoji: string, color?: string): Habit {
-  return {
+// Update utility function to use API
+export async function createHabit(
+  userId: string,
+  name: string,
+  emoji: string,
+  color?: string
+): Promise<Habit> {
+  const habit: Habit = {
     id: crypto.randomUUID(),
     name,
     emoji,
@@ -123,4 +181,14 @@ export function createHabit(name: string, emoji: string, color?: string): Habit 
     createdAt: new Date().toISOString(),
     completions: {},
   };
+  
+  return await createHabitApi(userId, habit);
+}
+
+export function useHabits() {
+  const context = useContext(HabitContext);
+  if (context === undefined) {
+    throw new Error('useHabits must be used within a HabitProvider');
+  }
+  return context;
 }

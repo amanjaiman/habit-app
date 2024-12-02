@@ -1,8 +1,9 @@
 import { format, startOfWeek, addDays, parseISO, isSameDay } from 'date-fns';
 import { Habit } from '../../types/habit';
-import { useHabits } from '../../contexts/HabitContext';
+import { habitApi, useHabits } from '../../contexts/HabitContext';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
+import { useUser } from '../../contexts/UserContext';
 
 interface WeekViewProps {
   startDate: string; // ISO date string
@@ -11,23 +12,31 @@ interface WeekViewProps {
 
 export default function WeekView({ startDate, habits }: WeekViewProps) {
   const { dispatch } = useHabits();
+  const { state: userState } = useUser();
   const weekStart = startOfWeek(parseISO(startDate), { weekStartsOn: 1 });
   
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  const toggleHabit = (habitId: string, date: Date) => {
+  const toggleHabit = async (habitId: string, date: Date) => {
+    if (!userState.profile?.id) return;
+
     const dateStr = format(date, 'yyyy-MM-dd');
     const habit = habits.find(h => h.id === habitId);
     const isCompleted = habit?.completions[dateStr] ?? false;
 
-    dispatch({
-      type: 'TOGGLE_COMPLETION',
-      payload: {
-        habitId,
-        date: dateStr,
-        completed: !isCompleted,
-      },
-    });
+    try {
+      await habitApi.toggle(userState.profile.id, habitId, dateStr, !isCompleted);
+      dispatch({
+        type: 'TOGGLE_COMPLETION',
+        payload: {
+          habitId,
+          date: dateStr,
+          completed: !isCompleted,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to toggle habit:', error);
+    }
   };
 
   const isHabitCompletedForWeek = (habit: Habit) => {

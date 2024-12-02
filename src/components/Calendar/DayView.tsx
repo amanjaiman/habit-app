@@ -1,9 +1,10 @@
 import { format, parseISO } from 'date-fns';
 import { Habit } from '../../types/habit';
-import { useHabits } from '../../contexts/HabitContext';
+import { habitApi, useHabits } from '../../contexts/HabitContext';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import { SparklesIcon } from '@heroicons/react/24/solid';
+import { useUser } from '../../contexts/UserContext';
 
 interface DayViewProps {
   date: string; // ISO date string
@@ -12,20 +13,28 @@ interface DayViewProps {
 
 export default function DayView({ date, habits }: DayViewProps) {
   const { dispatch } = useHabits();
+  const { state: userState } = useUser();
   const formattedDate = format(parseISO(date), 'EEEE, MMMM d');
 
-  const toggleHabit = (habitId: string) => {
+  const toggleHabit = async (habitId: string) => {
+    if (!userState.profile?.id) return;
+
     const habit = habits.find(h => h.id === habitId);
     const isCompleted = habit?.completions[date] ?? false;
 
-    dispatch({
-      type: 'TOGGLE_COMPLETION',
-      payload: {
-        habitId,
-        date,
-        completed: !isCompleted,
-      },
-    });
+    try {
+      await habitApi.toggle(userState.profile.id, habitId, date, !isCompleted);
+      dispatch({
+        type: 'TOGGLE_COMPLETION',
+        payload: {
+          habitId,
+          date,
+          completed: !isCompleted,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to toggle habit:', error);
+    }
   };
 
   const completedCount = habits.filter(habit => habit.completions[date]).length;

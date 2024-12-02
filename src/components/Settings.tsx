@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
-import { useHabits } from '../contexts/HabitContext';
-import { useUser } from '../contexts/UserContext';
+import { useHabits, habitApi } from '../contexts/HabitContext';
+import { useUser, userApi } from '../contexts/UserContext';
 import { Switch } from '@headlessui/react';
 import {
   SunIcon,
@@ -22,41 +22,53 @@ export default function Settings() {
   const [passwordError, setPasswordError] = useState('');
   const [profileImage, setProfileImage] = useState<string>(userState.profile?.profileImage || '');
 
-  const handleExportData = () => {
-    const data = {
-      habits: state.habits,
-      exportDate: new Date().toISOString(),
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: 'application/json',
-    });
-    
-    if (exportUrl) {
-      URL.revokeObjectURL(exportUrl);
+  const handleExportData = async () => {
+    if (!userState.profile?.id) return;
+
+    try {
+      const habits = await habitApi.fetch(userState.profile.id);
+      const data = {
+        habits,
+        exportDate: new Date().toISOString(),
+      };
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json',
+      });
+      
+      if (exportUrl) {
+        URL.revokeObjectURL(exportUrl);
+      }
+      
+      const url = URL.createObjectURL(blob);
+      setExportUrl(url);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `habits-export-${format(new Date(), 'yyyy-MM-dd')}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Failed to export data:', error);
     }
-    
-    const url = URL.createObjectURL(blob);
-    setExportUrl(url);
-    
-    // Create and click download link
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `habits-export-${format(new Date(), 'yyyy-MM-dd')}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   };
 
-  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportData = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!userState.profile?.id) return;
+
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const importedData = JSON.parse(e.target?.result as string);
         if (Array.isArray(importedData.habits)) {
+          // Update each habit through the API
+          for (const habit of importedData.habits) {
+            await habitApi.create(userState.profile!.id, habit);
+          }
           dispatch({ type: 'IMPORT_HABITS', payload: importedData.habits });
         }
       } catch (error) {
@@ -69,70 +81,111 @@ export default function Settings() {
     reader.readAsText(file);
   };
 
-  const handleResetData = () => {
+  const handleResetData = async () => {
+    if (!userState.profile?.id) return;
+
     if (window.confirm('Are you sure you want to reset all data? This cannot be undone.')) {
-      dispatch({ type: 'RESET_DATA' });
+      try {
+        // Delete all habits through the API
+        for (const habit of state.habits) {
+          await habitApi.delete(userState.profile.id, habit.id);
+        }
+        dispatch({ type: 'RESET_DATA' });
+      } catch (error) {
+        console.error('Failed to reset data:', error);
+      }
     }
   };
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userState.profile?.id) return;
+
     if (newPassword !== confirmPassword) {
       setPasswordError('Passwords do not match');
       return;
     }
     
-    userDispatch({
-      type: 'UPDATE_PROFILE',
-      payload: {
-        isAuthenticated: userState.isAuthenticated,
-        loading: userState.loading,
-        error: userState.error,
-        name: userState.name,
-        profile: {
-          id: userState.profile?.id || '',
-          email: userState.profile?.email || '',
-          name: userState.name,
-          isPremium: userState.profile?.isPremium || false,
-          createdAt: userState.profile?.createdAt || '',
-          password: newPassword,
-          profileImage: userState.profile?.profileImage || '',
-        }
-      },
-    });
-    setNewPassword('');
-    setConfirmPassword('');
-    setPasswordError('');
+    try {
+      await userApi.update(userState.profile.id, {
+        ...userState.profile,
+        password: newPassword,
+      });
+
+      userDispatch({
+        type: 'UPDATE_PROFILE',
+        payload: {
+          ...userState,
+          profile: {
+            ...userState.profile,
+            password: newPassword,
+          }
+        },
+      });
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordError('');
+    } catch (error) {
+      console.error('Failed to update password:', error);
+      setPasswordError('Failed to update password. Please try again.');
+    }
   };
 
-  const handleProfileImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!userState.profile?.id) return;
+
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const imageUrl = e.target?.result as string;
-      setProfileImage(imageUrl);
+      try {
+        await userApi.update(userState.profile!.id, {
+          ...userState.profile,
+          profileImage: imageUrl,
+        });
+
+        setProfileImage(imageUrl);
+        userDispatch({
+          type: 'UPDATE_PROFILE',
+          payload: {
+            ...userState,
+            profile: {
+              ...userState.profile!,
+              profileImage: imageUrl,
+              id: userState.profile!.id
+            }
+          },
+        });
+      } catch (error) {
+        console.error('Failed to update profile image:', error);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleTogglePremiumStatus = async () => {
+    if (!userState.profile?.id) return;
+
+    try {
+      const updatedProfile = {
+        ...userState.profile,
+        isPremium: !userState.profile.isPremium,
+      };
+
+      await userApi.update(userState.profile.id, updatedProfile);
+
       userDispatch({
         type: 'UPDATE_PROFILE',
         payload: {
-          isAuthenticated: userState.isAuthenticated,
-          loading: userState.loading,
-          error: userState.error,
-          name: userState.name,
-          profile: {
-            id: userState.profile?.id || '',
-            email: userState.profile?.email || '',
-            name: userState.name,
-            isPremium: userState.profile?.isPremium || false,
-            createdAt: userState.profile?.createdAt || '',
-            profileImage: imageUrl,
-            password: userState.profile?.password || '',
-          }
+          ...userState,
+          profile: updatedProfile,
         },
       });
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Failed to update premium status:', error);
+    }
   };
 
   return (
@@ -236,21 +289,7 @@ export default function Settings() {
                 </p>
               </div>
               <button
-                onClick={() => userDispatch({
-                  type: 'UPDATE_PROFILE',
-                  payload: {
-                    ...userState,
-                    profile: {
-                      id: userState.profile?.id || '',
-                      email: userState.profile?.email || '',
-                      name: userState.name,
-                      createdAt: userState.profile?.createdAt || '',
-                      profileImage: userState.profile?.profileImage || '',
-                      password: userState.profile?.password || '',
-                      isPremium: !userState.profile?.isPremium,
-                    }
-                  },
-                })}
+                onClick={handleTogglePremiumStatus}
                 className={`inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${
                   userState.profile?.isPremium 
                     ? 'bg-gray-600 hover:bg-gray-700' 

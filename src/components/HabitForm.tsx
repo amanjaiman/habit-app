@@ -1,6 +1,7 @@
 import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition, Popover, PopoverPanel, PopoverButton, DialogTitle, DialogPanel, TransitionChild } from '@headlessui/react';
-import { useHabits, createHabit } from '../contexts/HabitContext';
+import { useHabits, createHabit, habitApi } from '../contexts/HabitContext';
+import { useUser } from '../contexts/UserContext';
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { Habit, DEFAULT_CATEGORIES } from '../types/habit';
 
@@ -12,6 +13,7 @@ interface HabitFormProps {
 
 export default function HabitForm({ isOpen, onClose, habitToEdit }: HabitFormProps) {
   const { dispatch } = useHabits();
+  const { state: userState } = useUser();
   const [formData, setFormData] = useState({
     name: habitToEdit?.name || '',
     emoji: habitToEdit?.emoji || '',
@@ -37,28 +39,35 @@ export default function HabitForm({ isOpen, onClose, habitToEdit }: HabitFormPro
     }
   }, [habitToEdit, isOpen]);  // Add isOpen to dependencies
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!userState.profile?.id) return;
+
     // Ensure we have an emoji, use a default if none selected
     const habitData = {
       ...formData,
       emoji: formData.emoji || '📝', // Default emoji
     };
     
-    if (habitToEdit) {
-      dispatch({
-        type: 'UPDATE_HABIT',
-        payload: {
+    try {
+      if (habitToEdit) {
+        await habitApi.update(userState.profile.id, { ...habitToEdit, ...habitData });
+        dispatch({
+          type: 'UPDATE_HABIT',
+          payload: {
             ...habitToEdit,
             ...habitData,
             createdAt: habitToEdit.createdAt,
             completions: habitToEdit.completions
-        },
-      });
-    } else {
-      const newHabit = createHabit(habitData.name, habitData.emoji, habitData.color);
-      dispatch({ type: 'ADD_HABIT', payload: newHabit });
+          },
+        });
+      } else {
+        const newHabit = await createHabit(userState.profile.id, habitData.name, habitData.emoji, habitData.color);
+        dispatch({ type: 'ADD_HABIT', payload: newHabit });
+      }
+    } catch (error) {
+      console.error('Failed to save habit:', error);
     }
     
     onClose();

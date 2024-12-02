@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Habit } from '../types/habit';
-import { useHabits } from '../contexts/HabitContext';
+import { habitApi, useHabits } from '../contexts/HabitContext';
 import { format } from 'date-fns';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import HabitForm from './HabitForm';
 import { DEFAULT_CATEGORIES } from '../types/habit';
+import { useUser } from '../contexts/UserContext';
 
 interface HabitItemProps {
   habit: Habit;
@@ -14,18 +15,26 @@ interface HabitItemProps {
 
 export default function HabitItem({ habit, date = format(new Date(), 'yyyy-MM-dd') }: HabitItemProps) {
   const { dispatch } = useHabits();
+  const { state: userState } = useUser();
   const [showEdit, setShowEdit] = useState(false);
   const isCompleted = habit.completions[date] ?? false;
 
-  const toggleCompletion = () => {
-    dispatch({
-      type: 'TOGGLE_COMPLETION',
-      payload: {
-        habitId: habit.id,
-        date,
-        completed: !isCompleted,
-      },
-    });
+  const toggleCompletion = async () => {
+    if (!userState.profile?.id) return;
+    
+    try {
+      await habitApi.toggle(userState.profile.id, habit.id, date, !isCompleted);
+      dispatch({
+        type: 'TOGGLE_COMPLETION',
+        payload: {
+          habitId: habit.id,
+          date,
+          completed: !isCompleted,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to toggle completion:', error);
+    }
   };
 
   return (

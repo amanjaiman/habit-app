@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { DEFAULT_CATEGORIES, Habit } from '../types/habit';
-import { useHabits } from '../contexts/HabitContext';
+import { habitApi, useHabits } from '../contexts/HabitContext';
 import HabitForm from './HabitForm';
 import { TrashIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { useUser } from '../contexts/UserContext';
 
 interface HabitListProps {
   habits: Habit[];
@@ -11,10 +12,18 @@ interface HabitListProps {
 export default function HabitList({ habits }: HabitListProps) {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const { dispatch } = useHabits();
+  const { state: userState } = useUser();
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    if (!userState.profile?.id) return;
+
     if (window.confirm('Are you sure you want to delete this habit?')) {
-      dispatch({ type: 'REMOVE_HABIT', payload: id });
+      try {
+        await habitApi.delete(userState.profile.id, id);
+        dispatch({ type: 'REMOVE_HABIT', payload: id });
+      } catch (error) {
+        console.error('Failed to delete habit:', error);
+      }
     }
   };
 

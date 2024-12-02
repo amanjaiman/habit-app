@@ -32,20 +32,31 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Calendar Section */}
-      <div className="relative z-0">
-        <Calendar />
-      </div>
+      {state.habits.length === 0 && (
+        <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-400 text-lg">
+          No habits found. Add a habit to get started.
+        </div>
+      )}
 
-      {/* Habits List */}
-      <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                    border border-white/20 dark:border-gray-800/30 shadow-xl">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                     dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text mb-6">
-          Your Habits
-        </h2>
-        <HabitList habits={state.habits} />
-      </div>
+      {state.habits.length > 0 && (
+        <>
+          {/* Calendar Section */}
+          <div className="relative z-0">
+            <Calendar />
+          </div>
+
+          {/* Habits List */}
+          <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                        border border-white/20 dark:border-gray-800/30 shadow-xl">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text mb-6">
+              Your Habits
+            </h2>
+            <HabitList habits={state.habits} />
+          </div>
+        </>
+      )}
 
       {/* Add Habit Modal */}
       <HabitForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} />

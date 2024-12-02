@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import { API_BASE_URL, handleApiResponse } from '../api/config';
 
 interface UserProfile {
   id: string;
@@ -67,6 +68,39 @@ function userReducer(state: UserState, action: UserAction): UserState {
       return state;
   }
 }
+
+async function loginUser(email: string, password: string) {
+  const response = await fetch(`${API_BASE_URL}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  return handleApiResponse(response);
+}
+
+async function createUser(userData: Omit<UserProfile, 'id' | 'createdAt'>) {
+  const response = await fetch(`${API_BASE_URL}/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
+  });
+  return handleApiResponse(response);
+}
+
+async function updateUser(userId: string, userData: Partial<UserProfile>) {
+  const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
+  });
+  return handleApiResponse(response);
+}
+
+export const userApi = {
+  login: loginUser,
+  create: createUser,
+  update: updateUser,
+};
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(userReducer, initialState);
