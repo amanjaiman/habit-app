@@ -11,6 +11,7 @@ import Landing from './components/Landing';
 import LoginForm from './components/Auth/LoginForm';
 import SignupForm from './components/Auth/SignupForm';
 import { useEffect, useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 
 function AppContent() {
   const { state } = useUser();
@@ -74,15 +75,18 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <UserProvider>
-        <HabitProvider>
-          <Router>
-            <AppContent />
-          </Router>
-        </HabitProvider>
-      </UserProvider>
-    </ThemeProvider>
+    <>
+      <Toaster />
+      <ThemeProvider>
+        <UserProvider>
+          <HabitProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </HabitProvider>
+        </UserProvider>
+      </ThemeProvider>
+    </>
   );
 }
 

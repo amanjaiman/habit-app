@@ -11,6 +11,7 @@ import {
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 
 export default function Settings() {
   const { theme, toggleTheme } = useTheme();
@@ -19,7 +20,6 @@ export default function Settings() {
   const [exportUrl, setExportUrl] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [profileImage, setProfileImage] = useState<string>(userState.profile?.profileImage || '');
 
   const handleExportData = async () => {
@@ -102,7 +102,10 @@ export default function Settings() {
     if (!userState.profile?.id) return;
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('Passwords do not match');
+      toast.error('Passwords do not match', {
+        duration: 3000,
+        position: 'bottom-right',
+      });
       return;
     }
     
@@ -124,10 +127,16 @@ export default function Settings() {
       });
       setNewPassword('');
       setConfirmPassword('');
-      setPasswordError('');
+      toast.success('Password successfully updated', {
+        duration: 3000,
+        position: 'bottom-right',
+      });
     } catch (error) {
       console.error('Failed to update password:', error);
-      setPasswordError('Failed to update password. Please try again.');
+      toast.error('Failed to update password. Please try again.', {
+        duration: 3000,
+        position: 'bottom-right',
+      });
     }
   };
 
@@ -268,9 +277,6 @@ export default function Settings() {
                 className="p-1 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
               />
             </div>
-            {passwordError && (
-              <p className="text-sm text-red-600 dark:text-red-400">{passwordError}</p>
-            )}
             <button
               type="submit"
               className="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
