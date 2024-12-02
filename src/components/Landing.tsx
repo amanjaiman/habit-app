@@ -11,14 +11,13 @@ export default function Landing() {
     <div className="bg-transparent">
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 text-center">
-        <h1 className="text-6xl font-black bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-8 animate-pulse">
+        <h1 className="text-6xl font-black bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-8">
           Build Better Habits
         </h1>
         <p className="text-xl text-gray-600 dark:text-gray-400 max-w-3xl mx-auto mb-12">
           Track, analyze, and improve your daily habits with powerful insights and proven techniques.
         </p>
-        <img src={appScreenshot} alt="App Screenshot" className="mx-auto mb-12 rounded-lg shadow-lg" />
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-4 mb-12">
           <Link
             to="/signup"
             className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl 
@@ -34,6 +33,7 @@ export default function Landing() {
             Login
           </Link>
         </div>
+        <img src={appScreenshot} alt="App Screenshot" className="mx-auto mb-12 rounded-lg shadow-lg" />
       </div>
 
       {/* Features */}
