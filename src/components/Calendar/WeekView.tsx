@@ -104,7 +104,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                     <td
                       key={day.toISOString()}
                       className={`px-6 py-4 text-center ${
-                        isToday ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                        isToday ? 'bg-blue-100/40 dark:bg-blue-900/20' : ''
                       }`}
                     >
                       <button

@@ -85,11 +85,11 @@ export default function LoginForm() {
 
         <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
           Don't have an account?{' '}
-          <Link to="/signup" className="text-purple-600 hover:text-purple-500">
+          <Link to="/signup" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">
             Sign up
           </Link>
           {' · '}
-          <Link to="/" className="text-purple-600 hover:text-purple-500">
+          <Link to="/" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">
             Back to Home
           </Link>
         </p>

@@ -97,24 +97,6 @@ export default function SignupForm() {
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-700 dark:text-gray-300">Premium Account</span>
-            <Switch
-              checked={formData.isPremium}
-              onChange={(checked) => setFormData({ ...formData, isPremium: checked })}
-              className={`${
-                formData.isPremium ? 'bg-purple-600' : 'bg-gray-200'
-              } relative inline-flex h-6 w-11 items-center rounded-full transition-colors 
-              focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2`}
-            >
-              <span
-                className={`${
-                  formData.isPremium ? 'translate-x-6' : 'translate-x-1'
-                } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-              />
-            </Switch>
-          </div>
-
           <button
             type="submit"
             className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 
@@ -126,11 +108,11 @@ export default function SignupForm() {
 
         <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
           Already have an account?{' '}
-          <Link to="/login" className="text-purple-600 hover:text-purple-500">
+          <Link to="/login" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">
             Sign in
           </Link>
           {' · '}
-          <Link to="/" className="text-purple-600 hover:text-purple-500">
+          <Link to="/" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">
             Back to Home
           </Link>
         </p>

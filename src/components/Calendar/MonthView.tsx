@@ -79,8 +79,8 @@ export default function MonthView({ date, habits }: MonthViewProps) {
               key={day.toISOString()}
               className={`min-h-[100px] p-2 ${
                 isCurrentMonth
-                  ? 'bg-white/30 dark:bg-gray-900/30'
-                  : 'bg-gray-50 dark:bg-gray-900'
+                  ? 'bg-gray-50 dark:bg-gray-800'
+                  : 'bg-gray-100 dark:bg-gray-900'
               } ${isToday ? 'ring-2 ring-blue-500 ring-inset' : ''}`}
             >
               <div className="flex justify-between items-start">

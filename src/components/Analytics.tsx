@@ -15,6 +15,7 @@ import {
 import { Listbox } from '@headlessui/react';
 import { ChevronUpDownIcon } from '@heroicons/react/24/outline';
 import { useUser } from '../contexts/UserContext';
+import { LockClosedIcon } from '@heroicons/react/24/solid';
 
 export default function Analytics() {
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
@@ -65,7 +66,7 @@ export default function Analytics() {
               <Listbox.Option
                 value=""
                 className={({ active }) => `
-                  relative cursor-pointer select-none py-2 pl-4 pr-9
+                  relative cursor-pointer select-none py-2 pl-4 pr-9 text-gray-900 dark:text-gray-100
                   ${active ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
                 `}
               >
@@ -81,7 +82,7 @@ export default function Analytics() {
                   value={habit.id}
                   disabled={!userState.profile?.isPremium}
                   className={({ active, disabled }) => `
-                    relative cursor-pointer select-none py-2 pl-4 pr-9
+                    relative cursor-pointer select-none py-2 pl-4 pr-9 text-gray-900 dark:text-gray-100
                     ${active ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
                     ${disabled ? 'cursor-not-allowed opacity-50' : ''}
                   `}
@@ -89,8 +90,8 @@ export default function Analytics() {
                   {({ selected }) => (
                     <span className={`flex items-center gap-3 ${selected ? 'font-semibold' : ''}`}>
                       {!userState.profile?.isPremium && (
-                        <span className="py-1 px-1.5 rounded bg-gradient-to-r from-purple-600 to-pink-600 text-xs text-white font-medium">
-                          PREMIUM
+                        <span className="ml-2">
+                          <LockClosedIcon className="h-5 w-5 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />
                         </span>
                       )}
                       {habit.emoji} {habit.name}

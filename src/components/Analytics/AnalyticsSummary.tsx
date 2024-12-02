@@ -554,9 +554,54 @@ function calculateVolatility(rates: number[], isAllHabits: boolean = false): num
 }
 
 function calculateConsistencyScore(data: { rate: number; date: Date }[]): number {
-  // Implementation of consistency score calculation
-  // Consider pattern stability, time-of-day consistency, and streak quality
-  return 85; // Placeholder
+  if (data.length < 7) return 0;
+
+  // Calculate rolling 7-day averages
+  const weeklyAverages = [];
+  for (let i = 6; i < data.length; i++) {
+    const weekData = data.slice(i - 6, i + 1);
+    const avg = weekData.reduce((sum, d) => sum + d.rate, 0) / 7;
+    weeklyAverages.push(avg);
+  }
+
+  // Calculate components of consistency score
+  
+  // 1. Pattern Stability (40% of score)
+  const stabilityScore = calculateVolatility(weeklyAverages, true);
+
+  // 2. Completion Level (30% of score)
+  const avgCompletion = data.reduce((sum, d) => sum + d.rate, 0) / data.length;
+  const completionScore = Math.min(100, avgCompletion);
+
+  // 3. Trend Consistency (30% of score)
+  const trendScore = calculateTrendConsistency(weeklyAverages);
+
+  // Weighted average of components
+  const finalScore = (
+    (stabilityScore * 0.4) +
+    (completionScore * 0.3) +
+    (trendScore * 0.3)
+  );
+
+  return Math.round(finalScore);
+}
+
+// Helper function to calculate trend consistency
+function calculateTrendConsistency(averages: number[]): number {
+  if (averages.length < 2) return 0;
+
+  // Calculate week-over-week changes
+  const changes = [];
+  for (let i = 1; i < averages.length; i++) {
+    const change = averages[i] - averages[i - 1];
+    changes.push(Math.abs(change));
+  }
+
+  // Lower average change indicates more consistent trend
+  const avgChange = changes.reduce((sum, c) => sum + c, 0) / changes.length;
+  
+  // Convert to 0-100 score (20% change or more = 0, 0% change = 100)
+  return Math.max(0, 100 - (avgChange * 5));
 }
 
 function calculateMomentum(data: { rate: number; date: Date }[]): number {

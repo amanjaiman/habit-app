@@ -12,6 +12,7 @@ import {
 import { useUser } from '../../contexts/UserContext';
 import { Listbox } from '@headlessui/react';
 import { ChevronUpDownIcon } from '@heroicons/react/24/outline';
+import { LockClosedIcon } from '@heroicons/react/24/solid';
 
 type ViewType = 'day' | 'week' | 'month';
 
@@ -112,7 +113,7 @@ export default function Calendar() {
                     value={option.id}
                     disabled={option.premium && !userState.profile?.isPremium}
                     className={({ active, disabled }) => `
-                      relative cursor-pointer select-none py-2 px-4
+                      relative cursor-pointer select-none py-2 px-4 text-gray-900 dark:text-gray-100
                       ${active ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
                       ${disabled ? 'cursor-not-allowed opacity-50' : ''}
                     `}
@@ -122,9 +123,9 @@ export default function Calendar() {
                         <span className={`flex items-center justify-between ${selected ? 'font-semibold' : ''}`}>
                           {option.name}
                           {option.premium && !userState.profile?.isPremium && (
-                            <span className="ml-2 py-1 px-1.5 rounded bg-gradient-to-r from-purple-600 to-pink-600 text-xs text-white font-medium">
-                            PREMIUM
-                          </span>
+                            <span className="ml-2">
+                              <LockClosedIcon className="h-5 w-5 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />
+                            </span>
                           )}
                         </span>
                       </>

@@ -42,7 +42,7 @@ function AppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-tl from-fuchsia-100 via-teal-100 to-violet-200 dark:from-fuchsia-950 dark:via-teal-950 dark:to-violet-950 transition-all duration-500">
+    <div className="min-h-screen bg-gradient-to-tl from-sky-100 via-cyan-100 to-violet-100 dark:from-sky-950 dark:via-cyan-950 dark:to-violet-950 transition-all duration-500">
       {state.isAuthenticated && <Navbar />}
       <main className="max-w-7xl mx-auto py-8 px-6 sm:px-8 lg:px-12">
         <Routes>

@@ -113,7 +113,7 @@ export default function Navbar() {
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-lg py-2 
+                <div className="absolute right-0 mt-1 w-56 rounded-xl shadow-lg py-2 
                                 backdrop-blur-md bg-white/80 dark:bg-gray-800/80 
                                 ring-1 ring-black/5 dark:ring-white/5 
                                 border border-gray-100 dark:border-gray-700">

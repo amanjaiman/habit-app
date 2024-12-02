@@ -123,8 +123,8 @@ export default function HabitForm({ isOpen, onClose, habitToEdit }: HabitFormPro
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       className="mt-2 block w-full px-4 py-3 rounded-xl border-0 bg-white/50 dark:bg-gray-800/50 
-                               backdrop-blur-sm shadow-sm ring-1 ring-inset ring-gray-300/50 dark:ring-gray-700/50
-                               placeholder:text-gray-400 focus:ring-2 focus:ring-purple-500 transition-all"
+                               backdrop-blur-sm shadow-sm ring-1 ring-inset ring-gray-300/50 dark:ring-gray-700/50 text-gray-900 dark:text-gray-100
+                               placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:ring-2 focus:ring-purple-500 transition-all"
                       required
                     />
                   </div>
