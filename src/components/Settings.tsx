@@ -9,9 +9,17 @@ import {
   ArrowDownTrayIcon,
   ArrowUpTrayIcon,
   ExclamationTriangleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { Dialog } from '@headlessui/react';
+import { SparklesIcon } from '@heroicons/react/24/outline';
+
+import weekViewScreenshot from '../images/week_view_upsell.png';
+import aiScreenshot from '../images/ai_upsell.png';
+import correlationsScreenshot from '../images/correlation_upsell.png';
 
 export default function Settings() {
   const { theme, toggleTheme } = useTheme();
@@ -21,6 +29,9 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [profileImage, setProfileImage] = useState<string>(userState.profile?.profileImage || '');
+  const [isPremiumDialogOpen, setIsPremiumDialogOpen] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleExportData = async () => {
     if (!userState.profile?.id) return;
@@ -100,6 +111,14 @@ export default function Settings() {
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userState.profile?.id) return;
+
+    if (newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters long', {
+        duration: 3000,
+        position: 'bottom-right',
+      });
+      return;
+    }
 
     if (newPassword !== confirmPassword) {
       toast.error('Passwords do not match', {
@@ -293,6 +312,14 @@ export default function Settings() {
                 <p className={`text-sm ${userState.profile?.isPremium ? 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
                   {userState.profile?.isPremium ? 'Premium Member' : 'Free Plan'}
                 </p>
+                {!userState.profile?.isPremium && (
+                  <button
+                      onClick={() => setIsPremiumDialogOpen(true)}
+                      className="text-sm bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium"
+                  >
+                    View premium benefits
+                  </button>
+                )}
               </div>
               <button
                 onClick={handleTogglePremiumStatus}
@@ -414,6 +441,197 @@ export default function Settings() {
           </div>
         </div>
       </div>
+
+      {/* Premium Benefits Dialog */}
+      <Dialog
+        open={isPremiumDialogOpen}
+        onClose={() => {
+          if (selectedImage) {
+            setSelectedImage(null);
+          } else {
+            setIsPremiumDialogOpen(false);
+          }
+        }}
+        className="relative z-50"
+      >
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
+        
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Dialog.Panel className="mx-auto w-full max-w-4xl rounded-2xl backdrop-blur-sm p-6 shadow-xl bg-gradient-to-tl from-sky-100/85 to-violet-100/85 dark:from-sky-900/85 dark:to-fuchsia-900/50"
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' && selectedImage) {
+                e.stopPropagation();
+                setSelectedImage(null);
+              }
+            }}
+          >
+            <Dialog.Title className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-6">
+              <SparklesIcon className="h-6 w-6 text-purple-500" />
+              Upgrade to Premium
+            </Dialog.Title>
+
+            {/* Feature Showcase */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              {[
+                { 
+                  src: weekViewScreenshot, 
+                  title: "Week & Month Views", 
+                  desc: "Track your habits across longer time periods",
+                  preview: "See how your habits evolve over time with expanded calendar views"
+                },
+                { 
+                  src: aiScreenshot, 
+                  title: "AI-Powered Insights", 
+                  desc: "Get personalized recommendations",
+                  preview: "AI analyzes your patterns and suggests improvements"
+                },
+                { 
+                  src: correlationsScreenshot, 
+                  title: "Habit Correlations", 
+                  desc: "Discover patterns in your habits",
+                  preview: "Understand how your habits influence each other"
+                }
+              ].map((feature, index) => (
+                <div 
+                  key={index}
+                  onClick={() => setSelectedImage(feature.src)}
+                  className="group relative bg-white/80 dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                >
+                  <div className="aspect-video overflow-hidden rounded-lg mb-3 bg-gray-100 dark:bg-gray-700">
+                    <img
+                      src={feature.src}
+                      alt={feature.title}
+                      className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{feature.title}</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{feature.preview}</p>
+                  <div className="absolute inset-0 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900/10 dark:bg-gray-900/20">
+                    <span className="text-xs font-medium text-gray-900 dark:text-white px-3 py-1 bg-white/90 dark:bg-gray-800/90 rounded-full">
+                      Click to enlarge
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Image Preview Modal */}
+            {selectedImage && (
+              <div 
+                className="fixed inset-0 bg-black/70 dark:bg-gray-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 rounded-2xl"
+                onClick={() => setSelectedImage(null)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    e.stopPropagation();
+                    setSelectedImage(null);
+                  }
+                }}
+                tabIndex={0}
+              >
+                <div 
+                  className="relative max-w-3xl max-h-[90vh]"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <img
+                    src={selectedImage}
+                    alt="Preview"
+                    className="w-full h-full object-contain rounded-lg"
+                  />
+                  <button
+                    onClick={() => setSelectedImage(null)}
+                    className="absolute -top-4 -right-4 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Plan Comparison */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col justify-between rounded-xl border border-gray-400 dark:border-gray-700 p-6">
+                <div className="flex flex-col">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Free Plan</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Basic habit tracking</p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center text-sm">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span className="text-gray-600 dark:text-gray-300">Daily view for habit tracking</span>
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span className="text-gray-600 dark:text-gray-300">Basic habit analytics</span>
+                    </li>
+                  </ul>
+                </div>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">$0</p>
+              </div>
+
+              <div className="flex flex-col justify-between rounded-xl border-2 border-purple-500 bg-purple-50/50 dark:bg-purple-900/20 p-6 relative overflow-hidden">
+                <div className="absolute top-3 right-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full">
+                  RECOMMENDED
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                      Premium Plan
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Advanced features & insights</p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center text-sm">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span className="text-gray-600 dark:text-gray-300">Everything in Free</span>
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span className="text-gray-600 dark:text-gray-300">Week & month views for habit tracking</span>
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span className="text-gray-600 dark:text-gray-300">Advanced habit analytics</span>
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span className="text-gray-600 dark:text-gray-300">AI-powered key insights</span>
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span className="text-gray-600 dark:text-gray-300">Cross-habit correlation analysis</span>
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span className="text-gray-600 dark:text-gray-300">Trends and behavior analysis</span>
+                    </li>
+                  </ul>
+                </div>
+                <p className="mt-4 text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  $3.49<span className="text-sm font-normal text-gray-500 dark:text-gray-400">/month</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-8 flex justify-end gap-4">
+              <button
+                onClick={() => setIsPremiumDialogOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+              >
+                Maybe Later
+              </button>
+              <button
+                onClick={() => {
+                  handleTogglePremiumStatus();
+                  setIsPremiumDialogOpen(false);
+                }}
+                className="px-6 py-2 text-sm font-medium text-white rounded-md bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all"
+              >
+                Upgrade Now
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
     </div>
   );
 }

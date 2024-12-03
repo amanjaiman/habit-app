@@ -4,7 +4,7 @@ import {
   CheckCircleIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline';
-import appScreenshot from '../images/week_dashboard.png'; // Import an image of the app
+import appScreenshot from '../images/week_dashboard.png';
 
 export default function Landing() {
   return (

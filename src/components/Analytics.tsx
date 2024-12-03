@@ -80,7 +80,6 @@ export default function Analytics() {
                 <Listbox.Option
                   key={habit.id}
                   value={habit.id}
-                  disabled={!userState.profile?.isPremium}
                   className={({ active, disabled }) => `
                     relative cursor-pointer select-none py-2 pl-4 pr-9 text-gray-900 dark:text-gray-100
                     ${active ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
@@ -89,11 +88,6 @@ export default function Analytics() {
                 >
                   {({ selected }) => (
                     <span className={`flex items-center gap-3 ${selected ? 'font-semibold' : ''}`}>
-                      {!userState.profile?.isPremium && (
-                        <span className="ml-2">
-                          <LockClosedIcon className="h-5 w-5 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />
-                        </span>
-                      )}
                       {habit.emoji} {habit.name}
                     </span>
                   )}
@@ -118,12 +112,13 @@ export default function Analytics() {
             <TabList className="relative z-0 flex space-x-2 p-1 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 
                              rounded-xl border border-white/20 dark:border-gray-800/30 shadow-lg">
               {[
-                { icon: AcademicCapIcon, name: 'Summary' },
-                { icon: ArrowsPointingOutIcon, name: 'Correlations' },
-                { icon: DocumentTextIcon, name: 'Behavior Analysis' },
+                { icon: <AcademicCapIcon className="w-5 h-5 mr-2" />, name: 'Summary', disabled: false },
+                { icon: userState.profile?.isPremium ? <ArrowsPointingOutIcon className="w-5 h-5 mr-2" /> : <LockClosedIcon className="w-5 h-5 mr-2 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />, name: 'Correlations', disabled: !userState.profile?.isPremium },
+                { icon: userState.profile?.isPremium ? <DocumentTextIcon className="w-5 h-5 mr-2" /> : <LockClosedIcon className="w-5 h-5 mr-2 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />, name: 'Behavior Analysis', disabled: !userState.profile?.isPremium },
               ].map((tab) => (
                 <Tab
                   key={tab.name}
+                  disabled={tab.disabled}
                   className={({ selected }) =>
                     `flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium rounded-lg
                      transition-all duration-200 ${
@@ -133,7 +128,7 @@ export default function Analytics() {
                     }`
                   }
                 >
-                  <tab.icon className="w-5 h-5 mr-2" />
+                  {tab.icon}
                   {tab.name}
                 </Tab>
               ))}
