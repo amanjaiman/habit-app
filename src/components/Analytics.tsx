@@ -16,17 +16,31 @@ import { Listbox } from '@headlessui/react';
 import { ChevronUpDownIcon } from '@heroicons/react/24/outline';
 import { useUser } from '../contexts/UserContext';
 import { LockClosedIcon } from '@heroicons/react/24/solid';
+import { useAnalytics } from '../contexts/AnalyticsContext';
 
 export default function Analytics() {
+  const { state: analyticsState } = useAnalytics();
+  const { state: userState } = useUser();
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const { state } = useHabits();
-  const { state: userState } = useUser();
 
   useEffect(() => {
     if (!userState.profile?.isPremium && selectedHabitId) {
       setSelectedHabitId(null);
     }
   }, [userState.profile?.isPremium]);
+
+  if (analyticsState.loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (analyticsState.error) {
+    return <div className="flex items-center justify-center min-h-[50vh]">Error loading analytics: {analyticsState.error}</div>;
+  }
 
   return (
     <div className="space-y-8">
@@ -37,7 +51,7 @@ export default function Analytics() {
                      dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
           Analytics
         </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400 text-lg">
+        <p className="mt-2 text-gray-600 dark:text-gray-400 text-base sm:text-lg">
           Gain insights into your habit-building journey
         </p>
       </div>
@@ -118,44 +132,47 @@ export default function Analytics() {
           </div>
         ) : (
           // Show specific habit analytics when a habit is selected
-          <TabGroup>
-            <TabList className="relative z-0 flex space-x-2 p-1 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 
-                             rounded-xl border border-white/20 dark:border-gray-800/30 shadow-lg">
-              {[
-                { icon: <AcademicCapIcon className="w-5 h-5 mr-2" />, name: 'Summary', disabled: false },
-                { icon: userState.profile?.isPremium ? <ArrowsPointingOutIcon className="w-5 h-5 mr-2" /> : <LockClosedIcon className="w-5 h-5 mr-2 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />, name: 'Correlations', disabled: !userState.profile?.isPremium },
-                { icon: userState.profile?.isPremium ? <DocumentTextIcon className="w-5 h-5 mr-2" /> : <LockClosedIcon className="w-5 h-5 mr-2 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />, name: 'Behavior Analysis', disabled: !userState.profile?.isPremium },
-              ].map((tab) => (
-                <Tab
-                  key={tab.name}
-                  disabled={tab.disabled}
-                  className={({ selected }) =>
-                    `flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium rounded-lg
-                     transition-all duration-200 ${
-                      selected
-                        ? 'bg-white/50 dark:bg-gray-800/50 text-purple-600 dark:text-purple-400 shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-white/30 dark:hover:bg-gray-800/30'
-                    }`
-                  }
-                >
-                  {tab.icon}
-                  {tab.name}
-                </Tab>
-              ))}
-            </TabList>
+          <>
+            <TabGroup>
+              <TabList className="relative z-0 flex space-x-2 p-1 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 
+                              rounded-xl border border-white/20 dark:border-gray-800/30 shadow-lg">
+                {[
+                  { icon: <AcademicCapIcon className="w-5 h-5 mr-2" />, name: 'Summary', disabled: false },
+                  { icon: userState.profile?.isPremium ? <ArrowsPointingOutIcon className="w-5 h-5 mr-2" /> : <LockClosedIcon className="w-5 h-5 mr-2 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />, name: 'Correlations', disabled: !userState.profile?.isPremium },
+                  { icon: userState.profile?.isPremium ? <DocumentTextIcon className="w-5 h-5 mr-2" /> : <LockClosedIcon className="w-5 h-5 mr-2 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />, name: 'Behavior Analysis', disabled: !userState.profile?.isPremium },
+                ].map((tab) => (
+                  <Tab
+                    key={tab.name}
+                    disabled={tab.disabled}
+                    className={({ selected }) =>
+                      `flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium rounded-lg
+                      transition-all duration-200 ${
+                        selected
+                          ? 'bg-white/50 dark:bg-gray-800/90 text-purple-600 dark:text-purple-400 shadow-sm'
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-white/30 dark:hover:bg-gray-800/30'
+                      }`
+                    }
+                  >
+                    {tab.icon}
+                    {tab.name}
+                  </Tab>
+                ))}
+              </TabList>
 
-            <TabPanels className="relative z-0 mt-6">
-              <TabPanel>
-                <AnalyticsSummary habitId={selectedHabitId} isPremium={userState.profile?.isPremium} />
-              </TabPanel>
-              <TabPanel>
-                <HabitCorrelation habitId={selectedHabitId} />
-              </TabPanel>
-              <TabPanel>
-                <BehaviorChainAnalysis habitId={selectedHabitId} />
-              </TabPanel>
-            </TabPanels>
-          </TabGroup>
+              <TabPanels className="relative z-0 mt-6">
+                <TabPanel>
+                  <AnalyticsSummary habitId={selectedHabitId} isPremium={userState.profile?.isPremium} />
+                </TabPanel>
+                <TabPanel>
+                  <HabitCorrelation habitId={selectedHabitId} />
+                </TabPanel>
+                <TabPanel>
+                  <BehaviorChainAnalysis habitId={selectedHabitId} />
+                </TabPanel>
+              </TabPanels>
+            </TabGroup>
+            {userState.profile?.isPremium && <TrendChart habitId={selectedHabitId} />}
+          </>
           )}
         </div>
       )}

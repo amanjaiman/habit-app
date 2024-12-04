@@ -12,6 +12,7 @@ import LoginForm from './components/Auth/LoginForm';
 import SignupForm from './components/Auth/SignupForm';
 import { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { AnalyticsProvider } from './contexts/AnalyticsContext';
 
 function AppContent() {
   const { state } = useUser();
@@ -77,11 +78,13 @@ function App() {
       <Toaster />
       <ThemeProvider>
         <UserProvider>
-          <HabitProvider>
-            <Router>
-              <AppContent />
-            </Router>
-          </HabitProvider>
+          <AnalyticsProvider>
+            <HabitProvider>
+              <Router>
+                <AppContent />
+              </Router>
+            </HabitProvider>
+          </AnalyticsProvider>
         </UserProvider>
       </ThemeProvider>
     </>

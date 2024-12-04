@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useHabits } from '../../contexts/HabitContext';
 import {
   format,
@@ -21,6 +21,8 @@ import {
   SunIcon,
 } from '@heroicons/react/24/outline';
 import { Habit } from '../../types/habit';
+import { Link } from 'react-router-dom';
+import { KeyInsight, useAnalytics } from '../../contexts/AnalyticsContext';
 
 interface AnalyticsSummaryProps {
   habitId: string;
@@ -63,18 +65,25 @@ interface AnalyticsStats {
   title: string;
   primaryStats: PrimaryStat[];
   secondaryStats: SecondaryStat[];
-  insights: {
-    title: string;
-    description: string;
-    score: number;
-  }[];
+  insights: KeyInsight[];
 }
 
 export default function AnalyticsSummary({ habitId, isPremium = false }: AnalyticsSummaryProps) {
+  const { state: analyticsState } = useAnalytics();
+  const latestAnalytics = analyticsState.analytics.analytics.at(-1);
   const { state } = useHabits();
   const today = new Date();
 
   const [selectedPeriods, setSelectedPeriods] = useState<Record<string, CompletionPeriod>>({});
+
+  const getKeyInsights = useCallback((habitName: string | 'all') => {
+    if (!latestAnalytics) return [];
+
+    if (habitName === 'all') {
+      return latestAnalytics?.keyInsights.insights.sort((a, b) => b.impact_score - a.impact_score) || [];
+    }
+    return latestAnalytics?.individualHabitKeyInsights[habitName]?.insights.sort((a, b) => b.impact_score - a.impact_score) || [];
+  }, [latestAnalytics]);
 
   const stats = useMemo((): AnalyticsStats | null => {
     const last90Days = eachDayOfInterval({
@@ -167,25 +176,7 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
             alert: burnoutRisk.level === 'High',
           },
         ],
-        insights: [
-          {
-            title: 'Optimal Schedule',
-            description: `Your habits are most effective on ${optimalDay.day} at ${optimalDay.time}`,
-            score: optimalDay.score,
-          },
-          {
-            title: 'Stack Analysis',
-            description: `${stackEffectiveness.description}`,
-            score: stackEffectiveness.score,
-          },
-          {
-            title: 'Growth Opportunities',
-            description: momentum < 0 
-              ? 'Focus on rebuilding momentum with small wins'
-              : 'Ready to increase habit complexity',
-            score: momentum > 0 ? 85 : 65,
-          },
-        ],
+        insights: getKeyInsights('all'),
       };
     } else {
       // Single habit analysis
@@ -312,23 +303,7 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
             description: 'How quickly you restart after missing a day',
           },
         ],
-        insights: [
-          {
-            title: 'Streak Analysis',
-            description: streakAnalysis.recommendation,
-            score: streakAnalysis.score,
-          },
-          {
-            title: 'Timing Insight',
-            description: timeAnalysis.recommendation,
-            score: timeAnalysis.score,
-          },
-          {
-            title: 'Pattern Quality',
-            description: adaptability.recommendation,
-            score: adaptability.score,
-          },
-        ],
+        insights: getKeyInsights(habit.name),
       };
     }
   }, [state.habits, habitId]);
@@ -452,46 +427,62 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
         </div>
 
         {/* Insights - add premium gate */}
-        <div className="relative">
-          <div className={`backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                      border border-white/20 dark:border-gray-800/30 shadow-xl
-                      ${!isPremium && 'blur-sm pointer-events-none'}`}>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                      dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text mb-6">
-              Key Insights
-            </h3>
-            <div className="space-y-6">
-              {stats.insights.map((insight, index) => (
-                <div key={index} className="flex items-start bg-white/50 dark:bg-gray-800/50 
-                                        rounded-xl p-4 shadow-lg">
-                  <div className="flex-shrink-0">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center 
-                              backdrop-blur-sm shadow-inner"
-                      style={{
-                        backgroundColor: `rgba(${insight.score}, ${Math.min(insight.score * 2, 200)}, ${Math.min(insight.score * 3, 255)}, 0.1)`,
-                      }}
-                    >
-                      <span className="text-sm font-bold" style={{
-                        color: `rgb(${insight.score}, ${Math.min(insight.score * 2, 200)}, ${Math.min(insight.score * 3, 255)})`,
-                      }}>
-                        {insight.score}
-                      </span>
+        {stats.insights.length > 0 && (
+          <div className="relative">
+            <div className={`backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                        border border-white/20 dark:border-gray-800/30 shadow-xl
+                        ${!isPremium && 'blur-sm pointer-events-none'}`}>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text mb-6">
+                Key Insights
+              </h3>
+              <div className="space-y-6">
+                {stats.insights.map((insight, index) => (
+                  <div key={index} className="flex items-start bg-white/50 dark:bg-gray-800/50 
+                                          rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
+                    <div className="flex-shrink-0">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center 
+                                backdrop-blur-sm shadow-inner"
+                        style={{
+                          backgroundColor: `rgba(${insight.score}, ${Math.min(insight.score * 2, 200)}, ${Math.min(insight.score * 3, 255)}, 0.1)`,
+                        }}
+                      >
+                        <span className="text-sm font-bold" style={{
+                          color: `rgb(${insight.score}, ${Math.min(insight.score * 2, 200)}, ${Math.min(insight.score * 3, 255)})`,
+                        }}>
+                          {insight.score}
+                        </span>
+                      </div>
+                      <div className="mt-2 text-center">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                          insight.polarity === 'positive' 
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            : insight.polarity === 'negative'
+                              ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
+                              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                        }`}>
+                          {insight.polarity === 'positive' ? '↑' : insight.polarity === 'negative' ? '↓' : '→'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {insight.title}
+                      </h4>
+                      <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                        {insight.description}
+                      </p>
+                      <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
+                        {insight.explanation} <span className="text-xs font-medium text-violet-500 dark:text-violet-400">Impact: {insight.impact_score}</span>
+                      </p>
                     </div>
                   </div>
-                  <div className="ml-4">
-                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {insight.title}
-                    </h4>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                      {insight.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Single Premium Gate */}
         {!isPremium && (
@@ -504,9 +495,12 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Upgrade to unlock detailed analytics, insights, and personalized recommendations
               </p>
-              <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              <Link
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                to="/settings"
+              >
                 Upgrade to Premium
-              </button>
+              </Link>
             </div>
           </div>
         )}
@@ -800,6 +794,13 @@ function analyzeStreakPatterns(dates: Date[]) {
 }
 
 function analyzeTimePatterns(dates: Date[]) {
+  if (dates.length === 0) return {
+    optimalTime: 'Unknown',
+    optimalDay: 'Unknown',
+    successRate: 0,
+    daySuccessRate: 0,
+  };
+
   const timeMap = new Map<number, number>();
   const dayMap = new Map<number, number>();
   

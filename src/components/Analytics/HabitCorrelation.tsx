@@ -8,6 +8,7 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
+import { useAnalytics } from '../../contexts/AnalyticsContext';
 
 interface HabitCorrelationProps {
   habitId: string;
@@ -26,6 +27,7 @@ interface Correlation {
 }
 
 export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
+  const { state: analyticsState } = useAnalytics();
   const { state } = useHabits();
   const today = new Date();
   const startDate = subMonths(today, 3);
@@ -35,6 +37,11 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
 
     const targetHabit = state.habits.find(h => h.id === habitId);
     if (!targetHabit) return [];
+
+    const latestAnalytics = analyticsState.analytics.analytics.at(-1);
+    const habitCorrelations = latestAnalytics?.correlationInsights[targetHabit.name].correlations || [];
+
+    console.log(habitCorrelations);
 
     const days = eachDayOfInterval({ start: startDate, end: today });
     const otherHabits = state.habits.filter(h => h.id !== habitId);
@@ -74,24 +81,10 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
       const conflictRate = (conflicts / totalDays) * 100;
 
       // Generate insights based on the data
-      const insights = generateInsights({
-        correlationScore,
-        timeProximity,
-        successRate,
-        conflictRate,
-        habitName: habit.name,
-        targetHabitName: targetHabit.name,
-      });
+      const insights = habitCorrelations.find(c => c.correlating_habit === habit.name)?.insights || [];
 
       // Generate recommendations
-      const recommendations = generateRecommendations({
-        correlationScore,
-        timeProximity,
-        successRate,
-        conflictRate,
-        habitName: habit.name,
-        targetHabitName: targetHabit.name,
-      });
+      const recommendations = habitCorrelations.find(c => c.correlating_habit === habit.name)?.recommendations || [];
 
       return {
         habitId: habit.id,
@@ -109,8 +102,9 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
 
   if (!correlationData.length) {
     return (
-      <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-        Select a specific habit to see correlations
+      <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-400 text-lg">
+        Track habits for at least 7 days to see correlations!
       </div>
     );
   }
@@ -124,7 +118,7 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
                      dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text mb-6">
           Habit Correlations
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {correlationData.map((correlation) => (
             <div
               key={correlation.habitId}
@@ -140,9 +134,9 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
                   </span>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  correlation.correlationScore > 0.7
+                  correlation.correlationScore > 65
                     ? 'bg-green-100/50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                    : correlation.correlationScore > 0.4
+                    : correlation.correlationScore > 50
                     ? 'bg-yellow-100/50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
                     : 'bg-gray-100/50 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400'
                 }`}>
@@ -164,7 +158,7 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
 
               {/* Recommendations */}
               {correlation.recommendations.length > 0 && (
-                <div className="mt-4 bg-white/30 dark:bg-gray-700/30 rounded-lg p-4">
+                <div className="mt-4 bg-sky-100/60 dark:bg-gray-700/30 rounded-lg p-4">
                   <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
                     Recommendations
                   </h5>
