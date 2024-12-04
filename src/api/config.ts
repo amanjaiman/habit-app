@@ -1,5 +1,5 @@
-//export const API_BASE_URL = 'https://habit-server-et3v.onrender.com';
-export const API_BASE_URL = 'http://127.0.0.1:8000';
+export const API_BASE_URL = 'https://habit-server-et3v.onrender.com';
+//export const API_BASE_URL = 'http://127.0.0.1:8000';
 
 export async function handleApiResponse(response: Response) {
   if (!response.ok) {
