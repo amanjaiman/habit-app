@@ -132,7 +132,7 @@ export default function Analytics() {
           </div>
         ) : (
           // Show specific habit analytics when a habit is selected
-          <>
+          <div className="space-y-8">
             <TabGroup>
               <TabList className="relative z-0 flex space-x-2 p-1 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 
                               rounded-xl border border-white/20 dark:border-gray-800/30 shadow-lg">
@@ -172,7 +172,7 @@ export default function Analytics() {
               </TabPanels>
             </TabGroup>
             {userState.profile?.isPremium && <TrendChart habitId={selectedHabitId} />}
-          </>
+          </div>
           )}
         </div>
       )}

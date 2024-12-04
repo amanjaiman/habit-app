@@ -123,7 +123,14 @@ export default function TrendChart({ habitId }: TrendChartProps) {
         completed: habit.completions[format(date, 'yyyy-MM-dd')] ? 100 : 0,
       }));
 
-      const points = dailyCompletions.map((d, i) => ({ x: i, y: d.completed }));
+      const rollingAverage = dailyCompletions.map((_, index, arr) => {
+        const start = Math.max(0, index - 6);
+        const subset = arr.slice(start, index + 1);
+        const sum = subset.reduce((acc, val) => acc + val.completed, 0);
+        return sum / subset.length;
+      });
+
+      const points = rollingAverage.map((avg, i) => ({ x: i, y: avg }));
       const { slope, intercept } = calculateLinearRegression(points);
       const trendLineData = points.map(p => slope * p.x + intercept);
 
@@ -132,9 +139,9 @@ export default function TrendChart({ habitId }: TrendChartProps) {
         datasets: [
           {
             label: habit.name,
-            data: dailyCompletions.map(d => d.completed),
+            data: rollingAverage,
             borderColor: habit.color || 'rgb(99, 102, 241)',
-            backgroundColor: `${habit.color || 'rgb(99, 102, 241, 0.1)'}`,
+            backgroundColor: habit.color ? `${habit.color}1A` : 'rgba(99, 102, 241, 0.1)',
             tension: 0.4,
             fill: true,
             pointRadius: 4,
@@ -185,7 +192,20 @@ export default function TrendChart({ habitId }: TrendChartProps) {
         borderWidth: 0,
         cornerRadius: 8,
         callbacks: {
-          label: (context: any) => `${Math.round(context.raw)}% Complete`,
+          label: (context: any) => {
+            const value = Math.round(context.raw);
+            const isTrendLine = context.dataset.label === 'Trend';
+            
+            if (habitId === 'all') {
+              return isTrendLine 
+                ? `Trend: ${value}%`
+                : `Completion Rate: ${value}%`;
+            } else {
+              return isTrendLine
+                ? `Trend: ${value}%`
+                : `7-day Average: ${value}%`;
+            }
+          },
         },
       },
     },
@@ -243,10 +263,17 @@ export default function TrendChart({ habitId }: TrendChartProps) {
   return (
     <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
                     border border-white/20 dark:border-gray-800/30 shadow-xl w-full">
-      <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                     dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text mb-6">
-        Progress Trends
-      </h3>
+      <div className="mb-6">
+        <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                       dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+          Progress Trends
+        </h3>
+        {habitId !== 'all' && (
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Showing 7-day rolling average
+          </p>
+        )}
+      </div>
       <div className="h-[400px] w-full bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 
                       transition-all duration-200 hover:shadow-lg">
         <Line data={chartData} options={options as any} />
