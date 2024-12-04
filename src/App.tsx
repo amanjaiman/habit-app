@@ -32,8 +32,6 @@ function AppContent() {
     return null; // Or return a loading spinner
   }
 
-  console.log(state);
-
   function ProtectedRoute({ children }: { children: React.ReactNode }) {
     if (!state.isAuthenticated) {
       return <Navigate to="/login" />;

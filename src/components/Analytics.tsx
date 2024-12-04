@@ -42,66 +42,76 @@ export default function Analytics() {
         </p>
       </div>
 
+      {state.habits.length === 0 && (
+        <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-400 text-lg">
+          No habits found. Add a habit on the dashboard to get started.
+        </div>
+      )}
+
       {/* Habit Selector */}
-      <div className="relative z-[200] backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-xl p-6 
+      {state.habits.length > 0 && (
+        <div className="relative z-[200] backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-xl p-6 
                     border border-white/20 dark:border-gray-800/30 shadow-lg">
-        <Listbox value={selectedHabitId || ''} onChange={setSelectedHabitId}>
-          <div className="relative z-[200]">
-            <Listbox.Button className="relative w-full px-4 py-3 rounded-xl border-0 
-              bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white shadow-sm 
-              ring-1 ring-inset ring-gray-300/50 dark:ring-gray-700/50 focus:ring-2 
-              focus:ring-purple-500 transition-all text-left">
-              <span className="block truncate">
-                {selectedHabitId 
-                  ? `${state.habits.find(h => h.id === selectedHabitId)?.emoji} ${state.habits.find(h => h.id === selectedHabitId)?.name}`
-                  : 'All Habits'}
-              </span>
-              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-              </span>
-            </Listbox.Button>
-            <Listbox.Options className="absolute z-[200] mt-1 max-h-60 w-full overflow-auto 
-              rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black 
-              ring-opacity-5 focus:outline-none">
-              <Listbox.Option
-                value=""
-                className={({ active }) => `
-                  relative cursor-pointer select-none py-2 pl-4 pr-9 text-gray-900 dark:text-gray-100
-                  ${active ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
-                `}
-              >
-                {({ selected }) => (
-                  <span className={`block truncate ${selected ? 'font-semibold' : ''}`}>
-                    All Habits
-                  </span>
-                )}
-              </Listbox.Option>
-              {state.habits.map((habit) => (
+          <Listbox value={selectedHabitId || ''} onChange={setSelectedHabitId}>
+            <div className="relative z-[200]">
+              <Listbox.Button className="relative w-full px-4 py-3 rounded-xl border-0 
+                bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white shadow-sm 
+                ring-1 ring-inset ring-gray-300/50 dark:ring-gray-700/50 focus:ring-2 
+                focus:ring-purple-500 transition-all text-left">
+                <span className="block truncate">
+                  {selectedHabitId 
+                    ? `${state.habits.find(h => h.id === selectedHabitId)?.emoji} ${state.habits.find(h => h.id === selectedHabitId)?.name}`
+                    : 'All Habits'}
+                </span>
+                <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                  <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                </span>
+              </Listbox.Button>
+              <Listbox.Options className="absolute z-[200] mt-1 max-h-60 w-full overflow-auto 
+                rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black 
+                ring-opacity-5 focus:outline-none">
                 <Listbox.Option
-                  key={habit.id}
-                  value={habit.id}
-                  className={({ active, disabled }) => `
+                  value=""
+                  className={({ active }) => `
                     relative cursor-pointer select-none py-2 pl-4 pr-9 text-gray-900 dark:text-gray-100
                     ${active ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
-                    ${disabled ? 'cursor-not-allowed opacity-50' : ''}
                   `}
                 >
                   {({ selected }) => (
-                    <span className={`flex items-center gap-3 ${selected ? 'font-semibold' : ''}`}>
-                      {habit.emoji} {habit.name}
+                    <span className={`block truncate ${selected ? 'font-semibold' : ''}`}>
+                      All Habits
                     </span>
                   )}
                 </Listbox.Option>
-              ))}
-            </Listbox.Options>
-          </div>
-        </Listbox>
-      </div>
+                {state.habits.map((habit) => (
+                  <Listbox.Option
+                    key={habit.id}
+                    value={habit.id}
+                    className={({ active, disabled }) => `
+                      relative cursor-pointer select-none py-2 pl-4 pr-9 text-gray-900 dark:text-gray-100
+                      ${active ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
+                      ${disabled ? 'cursor-not-allowed opacity-50' : ''}
+                    `}
+                  >
+                    {({ selected }) => (
+                      <span className={`flex items-center gap-3 ${selected ? 'font-semibold' : ''}`}>
+                        {habit.emoji} {habit.name}
+                      </span>
+                    )}
+                  </Listbox.Option>
+                ))}
+              </Listbox.Options>
+            </div>
+          </Listbox>
+        </div>
+      )}
 
       {/* Content */}
-      <div className="relative z-0">
-        {!selectedHabitId ? (
-          // Show overview analytics when no specific habit is selected
+      {state.habits.length > 0 && (
+        <div className="relative z-0">
+          {!selectedHabitId ? (
+            // Show overview analytics when no specific habit is selected
           <div className="space-y-8">
             <AnalyticsSummary habitId="all" isPremium={userState.profile?.isPremium} />
             {userState.profile?.isPremium && <TrendChart habitId="all" />}
@@ -146,8 +156,9 @@ export default function Analytics() {
               </TabPanel>
             </TabPanels>
           </TabGroup>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition, Popover, PopoverPanel, PopoverButton, DialogTitle, DialogPanel, TransitionChild } from '@headlessui/react';
+import { HexColorPicker } from "react-colorful";
 import { useHabits, createHabit, habitApi } from '../contexts/HabitContext';
 import { useUser } from '../contexts/UserContext';
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
@@ -17,8 +18,8 @@ export default function HabitForm({ isOpen, onClose, habitToEdit }: HabitFormPro
   const [formData, setFormData] = useState({
     name: habitToEdit?.name || '',
     emoji: habitToEdit?.emoji || '',
-    color: habitToEdit?.color || '#6366F1', // Default indigo color
-    category: habitToEdit?.category || DEFAULT_CATEGORIES[0].id, // Use first category as default instead of 'other'
+    color: habitToEdit?.color || '#6366F1',
+    category: habitToEdit?.category || DEFAULT_CATEGORIES[0].id,
   });
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function HabitForm({ isOpen, onClose, habitToEdit }: HabitFormPro
         color: habitToEdit.color || '#6366F1',
         category: habitToEdit.category || DEFAULT_CATEGORIES[0].id,
       });
-    } else if (!habitToEdit && isOpen) {  // Only reset when opening a new habit form
+    } else if (!habitToEdit && isOpen) {
       setFormData({
         name: '',
         emoji: '',
@@ -37,7 +38,7 @@ export default function HabitForm({ isOpen, onClose, habitToEdit }: HabitFormPro
         category: DEFAULT_CATEGORIES[0].id,
       });
     }
-  }, [habitToEdit, isOpen]);  // Add isOpen to dependencies
+  }, [habitToEdit, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,35 +115,36 @@ export default function HabitForm({ isOpen, onClose, habitToEdit }: HabitFormPro
                 </DialogTitle>
                 
                 <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Habit Name
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="mt-2 block w-full px-4 py-3 rounded-xl border-0 bg-white/50 dark:bg-gray-800/50 
-                               backdrop-blur-sm shadow-sm ring-1 ring-inset ring-gray-300/50 dark:ring-gray-700/50 text-gray-900 dark:text-gray-100
-                               placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:ring-2 focus:ring-purple-500 transition-all"
-                      required
-                    />
-                  </div>
+                  <div className="flex gap-4">
+                    <div className="w-full">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Habit Name
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        className="mt-2 block w-full px-3 py-2 rounded-lg border-0 bg-white/50 dark:bg-gray-800/50 
+                                   backdrop-blur-sm shadow-sm ring-1 ring-inset ring-gray-300/50 dark:ring-gray-700/50 text-gray-900 dark:text-gray-100
+                                   focus:ring-2 focus:ring-purple-500 transition-all"
+                        placeholder="e.g., Go to the gym"
+                        required
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Emoji
-                    </label>
-                    <div className="mt-1">
-                      <Popover className="relative">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Emoji
+                      </label>
+                      <Popover className="relative mt-2">
                         <PopoverButton
-                          className="inline-flex items-center px-3 py-2 border border-gray-300 
+                          className="flex items-center justify-center w-10 h-10 border border-gray-300 
                                    dark:border-gray-600 rounded-md shadow-sm text-sm font-medium 
                                    text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 
                                    hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none 
                                    focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
-                          {formData.emoji ? formData.emoji : 'Select Emoji'}
+                          {formData.emoji ? formData.emoji : '📝'}
                         </PopoverButton>
 
                         <PopoverPanel className="absolute z-[100] mt-2">
@@ -153,16 +155,33 @@ export default function HabitForm({ isOpen, onClose, habitToEdit }: HabitFormPro
                         </PopoverPanel>
                       </Popover>
                     </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Color
+                      </label>
+                      <div className="relative mt-2">
+                        <Popover className="relative">
+                          <PopoverButton className="block w-10 h-10 rounded-lg cursor-pointer" style={{ backgroundColor: formData.color }} />
+                          <PopoverPanel className="absolute z-[100] mt-2">
+                            <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+                              <HexColorPicker color={formData.color} onChange={(color) => setFormData({ ...formData, color: color })} />
+                            </div>
+                          </PopoverPanel>
+                        </Popover>
+                      </div>
+                      
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Category
                     </label>
                     <select
                       value={formData.category || 'other'}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="p-1.5 mt-1 block rounded-md border-gray-300 dark:border-gray-600 
+                      className="mt-2 block w-full px-3 py-2 rounded-lg border-gray-300 dark:border-gray-600 
                                 dark:bg-gray-700 text-gray-900 dark:text-white 
                                 focus:ring-indigo-500 focus:border-indigo-500"
                     >
@@ -172,18 +191,6 @@ export default function HabitForm({ isOpen, onClose, habitToEdit }: HabitFormPro
                         </option>
                       ))}
                     </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Color
-                    </label>
-                    <input
-                      type="color"
-                      value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                      className="mt-1 block w-full h-10 rounded-md bg-transparent border-gray-300"
-                    />
                   </div>
 
                   <div className="mt-6 flex justify-end space-x-3">

@@ -30,8 +30,6 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [profileImage, setProfileImage] = useState<string>(userState.profile?.profileImage || '');
   const [isPremiumDialogOpen, setIsPremiumDialogOpen] = useState(false);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleExportData = async () => {
     if (!userState.profile?.id) return;
@@ -266,6 +264,11 @@ export default function Settings() {
                 <span className="text-sm text-gray-500 dark:text-gray-400">
                   Click the edit icon to change your profile picture
                 </span>
+                {userState.profile?.email && (
+                  <span className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    {userState.profile.email}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -445,109 +448,17 @@ export default function Settings() {
       {/* Premium Benefits Dialog */}
       <Dialog
         open={isPremiumDialogOpen}
-        onClose={() => {
-          if (selectedImage) {
-            setSelectedImage(null);
-          } else {
-            setIsPremiumDialogOpen(false);
-          }
-        }}
+        onClose={() => setIsPremiumDialogOpen(false)}
         className="relative z-50"
       >
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
         
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Dialog.Panel className="mx-auto w-full max-w-4xl rounded-2xl backdrop-blur-sm p-6 shadow-xl bg-gradient-to-tl from-sky-100/85 to-violet-100/85 dark:from-sky-900/85 dark:to-fuchsia-900/50"
-            onKeyDown={(e) => {
-              if (e.key === 'Escape' && selectedImage) {
-                e.stopPropagation();
-                setSelectedImage(null);
-              }
-            }}
-          >
+          <Dialog.Panel className="mx-auto w-full max-w-4xl rounded-2xl backdrop-blur-sm p-6 shadow-xl bg-gradient-to-tl from-sky-200/90 to-violet-200/90 dark:from-sky-900/85 dark:to-violet-950/85">
             <Dialog.Title className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2 mb-6">
               <SparklesIcon className="h-6 w-6 text-purple-500" />
               Upgrade to Premium
             </Dialog.Title>
-
-            {/* Feature Showcase */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              {[
-                { 
-                  src: weekViewScreenshot, 
-                  title: "Week & Month Views", 
-                  desc: "Track your habits across longer time periods",
-                  preview: "See how your habits evolve over time with expanded calendar views"
-                },
-                { 
-                  src: aiScreenshot, 
-                  title: "AI-Powered Insights", 
-                  desc: "Get personalized recommendations",
-                  preview: "AI analyzes your patterns and suggests improvements"
-                },
-                { 
-                  src: correlationsScreenshot, 
-                  title: "Habit Correlations", 
-                  desc: "Discover patterns in your habits",
-                  preview: "Understand how your habits influence each other"
-                }
-              ].map((feature, index) => (
-                <div 
-                  key={index}
-                  onClick={() => setSelectedImage(feature.src)}
-                  className="group relative bg-white/80 dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-all cursor-pointer"
-                >
-                  <div className="aspect-video overflow-hidden rounded-lg mb-3 bg-gray-100 dark:bg-gray-700">
-                    <img
-                      src={feature.src}
-                      alt={feature.title}
-                      className="w-full h-full object-contain transform group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">{feature.title}</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{feature.preview}</p>
-                  <div className="absolute inset-0 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900/10 dark:bg-gray-900/20">
-                    <span className="text-xs font-medium text-gray-900 dark:text-white px-3 py-1 bg-white/90 dark:bg-gray-800/90 rounded-full">
-                      Click to enlarge
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Image Preview Modal */}
-            {selectedImage && (
-              <div 
-                className="fixed inset-0 bg-black/70 dark:bg-gray-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 rounded-2xl"
-                onClick={() => setSelectedImage(null)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    e.stopPropagation();
-                    setSelectedImage(null);
-                  }
-                }}
-                tabIndex={0}
-              >
-                <div 
-                  className="relative max-w-3xl max-h-[90vh]"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <img
-                    src={selectedImage}
-                    alt="Preview"
-                    className="w-full h-full object-contain rounded-lg"
-                  />
-                  <button
-                    onClick={() => setSelectedImage(null)}
-                    className="absolute -top-4 -right-4 bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Plan Comparison */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -574,7 +485,7 @@ export default function Settings() {
                   RECOMMENDED
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                  <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent mb-2">
                       Premium Plan
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Advanced features & insights</p>
@@ -605,7 +516,7 @@ export default function Settings() {
                     </li>
                   </ul>
                 </div>
-                <p className="mt-4 text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <p className="mt-4 text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
                   $3.49<span className="text-sm font-normal text-gray-500 dark:text-gray-400">/month</span>
                 </p>
               </div>

@@ -3,8 +3,10 @@ import { useHabits, createHabit } from '../contexts/HabitContext';
 import HabitForm from './HabitForm';
 import HabitList from './HabitList';
 import Calendar from './Calendar/Calendar';
+import { useUser } from '../contexts/UserContext';
 
 export default function Dashboard() {
+  const { state: userState } = useUser();
   const { state } = useHabits();
   const [isFormOpen, setIsFormOpen] = useState(false);
 
@@ -16,7 +18,7 @@ export default function Dashboard() {
         <div>
           <h1 className="sm:text-start text-4xl leading-[3rem] font-black bg-gradient-to-r from-purple-600 to-pink-600 
                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
-            Dashboard
+            Hello, {userState.name}!
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-400 text-base sm:text-lg">
             Track your daily habits and build consistency
