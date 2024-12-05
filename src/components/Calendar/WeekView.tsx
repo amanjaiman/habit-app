@@ -55,7 +55,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                         shadow-xl border border-white/20 dark:border-gray-800/30">
         <thead>
           <tr>
-            <th className="px-4 py-4 text-left">
+            <th className="px-6 py-4 text-left">
               <span className="text-sm font-medium bg-gradient-to-r from-purple-600 
                               to-pink-600 dark:from-purple-400 dark:to-pink-400 
                               text-transparent bg-clip-text uppercase">
@@ -63,7 +63,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
               </span>
             </th>
             {weekDays.map((day) => (
-              <th key={day.toString()} className="px-4 py-4 text-center">
+              <th key={day.toString()} className="px-6 py-4 text-center">
                 <div className="flex flex-col items-center">
                   <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
                     {format(day, 'EEE')}
@@ -90,7 +90,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                                ? 'bg-gradient-to-r from-green-100/75 to-emerald-100/75 dark:from-green-900/30 dark:to-emerald-900/30' 
                                : 'hover:bg-white/50 dark:hover:bg-gray-800/50'
                              }`}>
-                <td className="px-4 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-3">
                     <span className="text-xl">{habit.emoji}</span>
                     <div>
@@ -118,7 +118,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                   return (
                     <td
                       key={day.toISOString()}
-                      className={`px-4 py-4 text-center ${
+                      className={`px-6 py-4 text-center ${
                         isToday ? 'bg-blue-100/40 dark:bg-blue-900/20' : ''
                       }`}
                     >
