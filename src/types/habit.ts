@@ -32,15 +32,16 @@ export interface HabitCategory {
   id: string;
   name: string;
   color: string;
+  darkColor: string;
 }
 
 // Predefined categories
 export const DEFAULT_CATEGORIES: HabitCategory[] = [
-  { id: 'health', name: 'Health', color: '#10B981' },
-  { id: 'productivity', name: 'Productivity', color: '#6366F1' },
-  { id: 'learning', name: 'Learning', color: '#F59E0B' },
-  { id: 'fitness', name: 'Fitness', color: '#EF4444' },
-  { id: 'mindfulness', name: 'Mindfulness', color: '#8B5CF6' },
-  { id: 'social', name: 'Social', color: '#EC4899' },
-  { id: 'other', name: 'Other', color: '#6B7280' },
+  { id: 'health', name: 'Health', color: '#34D399', darkColor: '#059669' },         // Light/dark green
+  { id: 'productivity', name: 'Productivity', color: '#818CF8', darkColor: '#4F46E5' }, // Light/dark indigo
+  { id: 'learning', name: 'Learning', color: '#FBBF24', darkColor: '#D97706' },     // Light/dark amber
+  { id: 'fitness', name: 'Fitness', color: '#F87171', darkColor: '#DC2626' },       // Light/dark red
+  { id: 'mindfulness', name: 'Mindfulness', color: '#A78BFA', darkColor: '#7C3AED' }, // Light/dark purple
+  { id: 'social', name: 'Social', color: '#F472B6', darkColor: '#DB2777' },         // Light/dark pink
+  { id: 'other', name: 'Other', color: '#9CA3AF', darkColor: '#4B5563' },          // Light/dark gray
 ];

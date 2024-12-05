@@ -123,7 +123,7 @@ export default function Landing() {
             <div className="text-4xl font-bold mb-8 md:mb-[60px] dark:text-white">$0</div>
             <Link
               to="/signup"
-              className="block text-center px-6 py-3 bg-gray-200 dark:bg-gray-700 rounded-xl font-medium mb-8 dark:text-white"
+              className="block text-center px-6 py-3 bg-gray-200 dark:bg-gray-700 rounded-xl font-medium mb-8 dark:text-white transform hover:scale-105 transition-transform"
             >
               Get Started Free
             </Link>
