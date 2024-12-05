@@ -111,24 +111,17 @@ export default function Settings() {
     if (!userState.profile?.id) return;
 
     if (newPassword.length < 8) {
-      toast.error('Password must be at least 8 characters long', {
-        duration: 3000,
-        position: 'bottom-right',
-      });
+      toast.error('Password must be at least 8 characters long');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error('Passwords do not match', {
-        duration: 3000,
-        position: 'bottom-right',
-      });
+      toast.error('Passwords do not match');
       return;
     }
     
     try {
-      await userApi.update(userState.profile.id, {
-        ...userState.profile,
+      const updatedUser = await userApi.update(userState.profile.id, {
         password: newPassword,
       });
 
@@ -136,24 +129,15 @@ export default function Settings() {
         type: 'UPDATE_PROFILE',
         payload: {
           ...userState,
-          profile: {
-            ...userState.profile,
-            password: newPassword,
-          }
+          profile: updatedUser,
         },
       });
       setNewPassword('');
       setConfirmPassword('');
-      toast.success('Password successfully updated', {
-        duration: 3000,
-        position: 'bottom-right',
-      });
+      toast.success('Password successfully updated');
     } catch (error) {
       console.error('Failed to update password:', error);
-      toast.error('Failed to update password. Please try again.', {
-        duration: 3000,
-        position: 'bottom-right',
-      });
+      toast.error('Failed to update password. Please try again.');
     }
   };
 
@@ -167,8 +151,7 @@ export default function Settings() {
     reader.onload = async (e) => {
       const imageUrl = e.target?.result as string;
       try {
-        await userApi.update(userState.profile!.id, {
-          ...userState.profile,
+        const updatedUser = await userApi.update(userState.profile!.id, {
           profileImage: imageUrl,
         });
 
@@ -177,11 +160,7 @@ export default function Settings() {
           type: 'UPDATE_PROFILE',
           payload: {
             ...userState,
-            profile: {
-              ...userState.profile!,
-              profileImage: imageUrl,
-              id: userState.profile!.id
-            }
+            profile: updatedUser,
           },
         });
       } catch (error) {
@@ -195,8 +174,7 @@ export default function Settings() {
     if (!userState.profile?.id) return;
 
     try {
-      await userApi.update(userState.profile!.id, {
-        ...userState.profile,
+      const updatedUser = await userApi.update(userState.profile.id, {
         isPremium: !userState.profile.isPremium,
       });
 
@@ -204,11 +182,7 @@ export default function Settings() {
         type: 'UPDATE_PROFILE',
         payload: {
           ...userState,
-          profile: {
-            ...userState.profile!,
-            isPremium: !userState.profile!.isPremium,
-            id: userState.profile!.id,
-          },
+          profile: updatedUser,
         },
       });
     } catch (error) {

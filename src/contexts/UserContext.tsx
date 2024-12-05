@@ -87,11 +87,11 @@ async function createUser(userData: Omit<UserProfile, 'id' | 'createdAt'>) {
   return handleApiResponse(response);
 }
 
-async function updateUser(userId: string, userData: Partial<UserProfile>) {
+async function updateUser(userId: string, updatedFields: Partial<UserProfile>) {
   const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
+    body: JSON.stringify(updatedFields),
   });
   return handleApiResponse(response);
 }
