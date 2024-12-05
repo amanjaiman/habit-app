@@ -33,7 +33,7 @@ export default function SignupForm() {
           profile: user,
         },
       });
-      navigate('/');
+      navigate('/dashboard');
     } catch (err: any) {
       setError(err.message);
     }
@@ -109,11 +109,7 @@ export default function SignupForm() {
         <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
           Already have an account?{' '}
           <Link to="/login" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">
-            Sign in
-          </Link>
-          {' · '}
-          <Link to="/" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">
-            Back to Home
+            Login
           </Link>
         </p>
       </div>

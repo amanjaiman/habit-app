@@ -42,32 +42,29 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-tl from-sky-100 via-cyan-100 to-violet-200 dark:from-sky-950 dark:via-cyan-950 dark:to-violet-950 transition-all duration-500">
-      {state.isAuthenticated && <Navbar />}
-      <main className="max-w-7xl mx-auto py-8 px-6 sm:px-8 lg:px-12">
-        <Routes>
-          <Route path="/" element={
-            state.isAuthenticated ? (
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            ) : (
-              <Landing />
-            )
-          } />
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/signup" element={<SignupForm />} />
-          <Route path="/analytics" element={
-            <ProtectedRoute>
-              <Analytics />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </main>
+      <Navbar />
+      <Routes>
+        <Route path="/" element={
+            <Landing />
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/signup" element={<SignupForm />} />
+        <Route path="/analytics" element={
+          <ProtectedRoute>
+            <Analytics />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        } />
+      </Routes>
     </div>
   );
 }

@@ -25,7 +25,7 @@ export default function LoginForm() {
           profile: user,
         },
       });
-      navigate('/');
+      navigate('/dashboard');
     } catch (err: any) {
       setError(err.message);
     }
@@ -87,10 +87,6 @@ export default function LoginForm() {
           Don't have an account?{' '}
           <Link to="/signup" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">
             Sign up
-          </Link>
-          {' · '}
-          <Link to="/" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">
-            Back to Home
           </Link>
         </p>
       </div>

@@ -21,12 +21,12 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navigation = [
-    { name: 'Dashboard', href: '/', icon: HomeIcon },
+  const navigation = userState.isAuthenticated ? [
+    { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
     { name: 'Logout', href: '', icon: ArrowRightOnRectangleIcon, onClick: () => dispatch({ type: 'LOGOUT' }) },
-  ];
+  ] : [];
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -51,11 +51,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between h-20">
           <div className="flex items-center gap-8">
-            <div className="flex-shrink-0 flex items-center">
+            <Link to="/" className="flex-shrink-0 flex items-center">
               <span className="text-3xl font-black bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
                 🎯 HabitsAI
               </span>
-            </div>
+            </Link>
 
             <div className="hidden sm:flex sm:gap-4">
               {navigation.filter(item => !['Settings', 'Logout'].includes(item.name)).map((item) => (
@@ -84,110 +84,126 @@ export default function Navbar() {
                        dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 
                        focus:ring-indigo-500"
             >
-              {theme === 'dark' ? (
-                <SunIcon className="w-6 h-6" />
-              ) : (
-                <MoonIcon className="w-6 h-6" />
-              )}
+              {theme === 'dark' ? <SunIcon className="w-6 h-6" /> : <MoonIcon className="w-6 h-6" />}
             </button>
 
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-2 p-2 rounded-full hover:bg-white/30 dark:hover:bg-gray-800/30"
-              >
-                {userState.profile?.profileImage ? (
-                  <img
-                    src={userState.profile.profileImage}
-                    alt={userState.name || 'User'}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white font-medium">
-                    {userState.name ? userState.name[0].toUpperCase() : '?'}
+            {userState.isAuthenticated ? (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center space-x-2 p-2 rounded-full hover:bg-white/30 dark:hover:bg-gray-800/30"
+                >
+                  {userState.profile?.profileImage ? (
+                    <img
+                      src={userState.profile.profileImage}
+                      alt={userState.name || 'User'}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white font-medium">
+                      {userState.name ? userState.name[0].toUpperCase() : '?'}
+                    </div>
+                  )}
+                  <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {userState.name || 'User'}
+                  </span>
+                </button>
+
+                {isDropdownOpen && (
+                  <div className="absolute right-0 mt-1 w-56 rounded-xl shadow-lg py-2 
+                                  backdrop-blur-md bg-white/80 dark:bg-gray-800/80 
+                                  ring-1 ring-black/5 dark:ring-white/5 
+                                  border border-gray-100 dark:border-gray-700">
+                    {profileDropdownItems.map((item) => (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        onClick={(e) => {
+                          if (item.onClick) {
+                            e.preventDefault();
+                            item.onClick();
+                          }
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`flex items-center px-4 py-2.5 text-sm font-medium
+                          transition-colors duration-200 
+                          ${item.name === 'Logout' 
+                            ? 'text-red-600 dark:text-red-400 hover:bg-red-50/50 dark:hover:bg-red-900/20' 
+                            : 'text-gray-700 dark:text-gray-200 hover:bg-purple-50/50 dark:hover:bg-purple-900/20'
+                          }
+                          ${item.name === 'Settings' ? 'mb-1' : ''}
+                          group relative`}
+                      >
+                        <item.icon 
+                          className={`w-5 h-5 mr-3 transition-transform group-hover:scale-110
+                            ${item.name === 'Logout' 
+                              ? 'text-red-500 dark:text-red-400' 
+                              : 'text-purple-500 dark:text-purple-400'
+                            }`}
+                        />
+                        {item.name}
+                        {item.name === 'Settings' && (
+                          <div className="h-px absolute bottom-0 left-4 right-4 
+                                        bg-gray-200 dark:bg-gray-700" />
+                        )}
+                      </Link>
+                    ))}
                   </div>
                 )}
-                <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {userState.name || 'User'}
-                </span>
-              </button>
-
-              {isDropdownOpen && (
-                <div className="absolute right-0 mt-1 w-56 rounded-xl shadow-lg py-2 
-                                backdrop-blur-md bg-white/80 dark:bg-gray-800/80 
-                                ring-1 ring-black/5 dark:ring-white/5 
-                                border border-gray-100 dark:border-gray-700">
-                  {profileDropdownItems.map((item) => (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={(e) => {
-                        if (item.onClick) {
-                          e.preventDefault();
-                          item.onClick();
-                        }
-                        setIsDropdownOpen(false);
-                      }}
-                      className={`flex items-center px-4 py-2.5 text-sm font-medium
-                        transition-colors duration-200 
-                        ${item.name === 'Logout' 
-                          ? 'text-red-600 dark:text-red-400 hover:bg-red-50/50 dark:hover:bg-red-900/20' 
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-purple-50/50 dark:hover:bg-purple-900/20'
-                        }
-                        ${item.name === 'Settings' ? 'mb-1' : ''}
-                        group relative`}
-                    >
-                      <item.icon 
-                        className={`w-5 h-5 mr-3 transition-transform group-hover:scale-110
-                          ${item.name === 'Logout' 
-                            ? 'text-red-500 dark:text-red-400' 
-                            : 'text-purple-500 dark:text-purple-400'
-                          }`}
-                      />
-                      {item.name}
-                      {item.name === 'Settings' && (
-                        <div className="h-px absolute bottom-0 left-4 right-4 
-                                      bg-gray-200 dark:bg-gray-700" />
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-            {/* Mobile menu button */}
-            <div className="flex items-center sm:hidden">
-              <button
-                type="button"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 
-                        hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 
-                        focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-                aria-controls="mobile-menu"
-                aria-expanded={isMobileMenuOpen}
-              >
-                <span className="sr-only">Open main menu</span>
-                {/* Icon for menu button */}
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              </div>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Link
+                  to="/login"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 text-sm font-medium"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              </button>
-            </div>
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
+            
+            {/* Mobile menu button - only show if authenticated */}
+            {userState.isAuthenticated && (
+              <div className="flex items-center sm:hidden">
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 
+                          hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 
+                          focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                  aria-controls="mobile-menu"
+                  aria-expanded={isMobileMenuOpen}
+                >
+                  <span className="sr-only">Open main menu</span>
+                  {/* Icon for menu button */}
+                  <svg
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {isMobileMenuOpen && (
+      {/* Mobile menu - only render if authenticated */}
+      {userState.isAuthenticated && isMobileMenuOpen && (
         <div className="sm:hidden" id="mobile-menu">
           <div className="pt-2 pb-3 space-y-1">
             {[

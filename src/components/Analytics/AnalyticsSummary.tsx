@@ -23,6 +23,8 @@ import {
 import { Habit } from '../../types/habit';
 import { Link } from 'react-router-dom';
 import { KeyInsight, useAnalytics } from '../../contexts/AnalyticsContext';
+import TrendChart from './TrendChart';
+import { useUser } from '../../contexts/UserContext';
 
 interface AnalyticsSummaryProps {
   habitId: string;
@@ -70,6 +72,7 @@ interface AnalyticsStats {
 
 export default function AnalyticsSummary({ habitId, isPremium = false }: AnalyticsSummaryProps) {
   const { state: analyticsState } = useAnalytics();
+  const { state: userState } = useUser();
   const latestAnalytics = analyticsState.analytics.analytics.at(-1);
   const { state } = useHabits();
   const today = new Date();
@@ -80,9 +83,9 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
     if (!latestAnalytics) return [];
 
     if (habitName === 'all') {
-      return latestAnalytics?.keyInsights.insights.sort((a, b) => b.impact_score - a.impact_score) || [];
+      return latestAnalytics?.keyInsights.insights.sort((a, b) => b.score - a.score) || [];
     }
-    return latestAnalytics?.individualHabitKeyInsights[habitName]?.insights.sort((a, b) => b.impact_score - a.impact_score) || [];
+    return latestAnalytics?.individualHabitKeyInsights[habitName]?.insights.sort((a, b) => b.score - a.score) || [];
   }, [latestAnalytics]);
 
   const stats = useMemo((): AnalyticsStats | null => {
@@ -434,9 +437,9 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
                         ${!isPremium && 'blur-sm pointer-events-none'}`}>
               <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
                         dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text mb-6">
-                Key Insights
+                Personalized Insights
               </h3>
-              <div className="space-y-6">
+              <div className='space-y-6'>
                 {stats.insights.map((insight, index) => (
                   <div key={index} className="flex items-start bg-white/50 dark:bg-gray-800/50 
                                           rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
@@ -458,23 +461,21 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                           insight.polarity === 'positive' 
                             ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : insight.polarity === 'negative'
-                              ? 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
-                              : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                            : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
                         }`}>
-                          {insight.polarity === 'positive' ? '↑' : insight.polarity === 'negative' ? '↓' : '→'}
+                          {insight.polarity === 'positive' ? '↑' : '↓'}
                         </span>
                       </div>
                     </div>
                     <div className="ml-4 flex-1">
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                      <h4 className="text-base font-medium text-gray-900 dark:text-white">
                         {insight.title}
                       </h4>
-                      <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         {insight.description}
                       </p>
-                      <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
-                        {insight.explanation} <span className="text-xs font-medium text-violet-500 dark:text-violet-400">Impact: {insight.impact_score}</span>
+                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                        {insight.explanation}
                       </p>
                     </div>
                   </div>
@@ -483,6 +484,8 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
             </div>
           </div>
         )}
+
+        {userState.profile?.isPremium && <TrendChart habitId={habitId} />}
 
         {/* Single Premium Gate */}
         {!isPremium && (

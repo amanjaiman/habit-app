@@ -5,6 +5,8 @@ import { useHabits, createHabit, habitApi } from '../contexts/HabitContext';
 import { useUser } from '../contexts/UserContext';
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { Habit, DEFAULT_CATEGORIES } from '../types/habit';
+import { Listbox } from '@headlessui/react';
+import { ChevronUpDownIcon } from '@heroicons/react/24/outline';
 
 interface HabitFormProps {
   isOpen: boolean;
@@ -178,19 +180,41 @@ export default function HabitForm({ isOpen, onClose, habitToEdit }: HabitFormPro
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Category
                     </label>
-                    <select
-                      value={formData.category || 'other'}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      className="mt-2 block w-full px-3 py-2 rounded-lg border-gray-300 dark:border-gray-600 
-                                dark:bg-gray-700 text-gray-900 dark:text-white 
-                                focus:ring-indigo-500 focus:border-indigo-500"
-                    >
-                      {DEFAULT_CATEGORIES.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
+                    <Listbox value={formData.category} onChange={(category) => setFormData({ ...formData, category })}>
+                      <div className="relative mt-2">
+                        <Listbox.Button className="relative w-full px-3 py-2 rounded-lg border-0 
+                          bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white shadow-sm 
+                          ring-1 ring-inset ring-gray-300/50 dark:ring-gray-700/50 focus:ring-2 
+                          focus:ring-purple-500 transition-all text-left">
+                          <span className="block truncate">
+                            {DEFAULT_CATEGORIES.find(cat => cat.id === formData.category)?.name}
+                          </span>
+                          <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                            <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                          </span>
+                        </Listbox.Button>
+                        <Listbox.Options className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto 
+                          rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black 
+                          ring-opacity-5 focus:outline-none">
+                          {DEFAULT_CATEGORIES.map((category) => (
+                            <Listbox.Option
+                              key={category.id}
+                              value={category.id}
+                              className={({ active }) => `
+                                relative cursor-pointer select-none py-2 px-4 text-gray-900 dark:text-gray-100
+                                ${active ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
+                              `}
+                            >
+                              {({ selected }) => (
+                                <span className={`block truncate ${selected ? 'font-semibold' : ''}`}>
+                                  {category.name}
+                                </span>
+                              )}
+                            </Listbox.Option>
+                          ))}
+                        </Listbox.Options>
+                      </div>
+                    </Listbox>
                   </div>
 
                   <div className="mt-6 flex justify-end space-x-3">
