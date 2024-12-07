@@ -545,12 +545,12 @@ export default function Settings() {
                   </div>
                   <div className="flex items-end gap-3">
                     <div className="mt-4 text-xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                      $0.99<span className="text-xs font-normal text-gray-600 dark:text-gray-300">/month</span>
+                      $1.99<span className="text-xs font-normal text-gray-600 dark:text-gray-300">/month</span>
                       <span className="mx-4 text-xs font-normal text-gray-600 dark:text-gray-300">or</span>
-                      $9.99<span className="text-xs font-normal text-gray-600 dark:text-gray-300">/year</span>
+                      $19.99<span className="text-xs font-normal text-gray-600 dark:text-gray-300">/year</span>
                     </div>
                     <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full">
-                      Save 16.5%
+                      Save 16%
                     </div>
                   </div>
                 </div>

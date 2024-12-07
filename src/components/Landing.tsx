@@ -157,16 +157,16 @@ export default function Landing() {
             </h3>
             <p className="text-gray-600 dark:text-gray-300 mb-6">For serious habit builders</p>
             <div className="text-4xl font-bold mb-2 dark:text-white">
-              $3.99<span className="text-base font-normal text-gray-600 dark:text-gray-300">/month</span>
+              $1.99<span className="text-base font-normal text-gray-600 dark:text-gray-300">/month</span>
             </div>
             <div className="mb-8 text-sm text-gray-600 dark:text-gray-300">
-              or $39.99/year <span className="text-emerald-500 font-semibold">(save 16.5%)</span>
+              or $19.99/year <span className="text-emerald-500 font-semibold">(save 16%)</span>
             </div>
             <Link
               to="/signup"
               className="block text-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium mb-8 transform hover:scale-105 transition-transform"
             >
-              Start Premium Trial
+              Upgrade after sign up
             </Link>
             <ul className="space-y-4">
               {comparisonFeatures.map((feature, index) => {
