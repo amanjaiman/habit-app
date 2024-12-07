@@ -19,6 +19,9 @@ import {
   BoltIcon,
   FireIcon,
   SunIcon,
+  LightBulbIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import { Habit } from '../../types/habit';
 import { Link } from 'react-router-dom';
@@ -78,6 +81,7 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
   const today = new Date();
 
   const [selectedPeriods, setSelectedPeriods] = useState<Record<string, CompletionPeriod>>({});
+  const [currentInsightPage, setCurrentInsightPage] = useState(0);
 
   const getKeyInsights = useCallback((habitName: string | 'all') => {
     if (!latestAnalytics) return [];
@@ -433,53 +437,98 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
         {stats.insights.length > 0 && (
           <div className="relative">
             <div className={`backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                        border border-white/20 dark:border-gray-800/30 shadow-xl
-                        ${!premium && 'blur-sm pointer-events-none'}`}>
-              <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text mb-6">
-                Personalized Insights
-              </h3>
-              <div className='space-y-6'>
-                {stats.insights.map((insight, index) => (
-                  <div key={index} className="flex items-start bg-white/50 dark:bg-gray-800/50 
-                                          rounded-xl p-4 shadow-lg hover:shadow-xl transition-all">
-                    <div className="flex-shrink-0">
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center 
-                                backdrop-blur-sm shadow-inner"
-                        style={{
-                          backgroundColor: `rgba(${insight.score}, ${Math.min(insight.score * 2, 200)}, ${Math.min(insight.score * 3, 255)}, 0.1)`,
-                        }}
-                      >
-                        <span className="text-sm font-bold" style={{
-                          color: `rgb(${insight.score}, ${Math.min(insight.score * 2, 200)}, ${Math.min(insight.score * 3, 255)})`,
-                        }}>
-                          {insight.score}
-                        </span>
-                      </div>
-                      <div className="mt-2 text-center">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                          insight.polarity === 'positive' 
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
-                        }`}>
-                          {insight.polarity === 'positive' ? '↑' : '↓'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-4 flex-1">
-                      <h4 className="text-base font-medium text-gray-900 dark:text-white">
-                        {insight.title}
-                      </h4>
-                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                        {insight.description}
-                      </p>
-                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                        {insight.explanation}
-                      </p>
-                    </div>
+                            border border-white/20 dark:border-gray-800/30 shadow-xl
+                            ${!premium && 'blur-sm pointer-events-none'}`}>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                              dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+                  Personalized Insights
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentInsightPage(prev => Math.max(0, prev - 1))}
+                    disabled={currentInsightPage === 0}
+                    className="p-1 rounded-lg transition-all hover:bg-white/50 dark:hover:bg-gray-800/50
+                              disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  </button>
+                  <div className="flex w-max text-sm text-gray-600 dark:text-gray-300">
+                    {currentInsightPage + 1} / {Math.ceil(stats.insights.length / 3)}
                   </div>
-                ))}
+                  <button
+                    onClick={() => setCurrentInsightPage(prev => Math.min(Math.ceil(stats.insights.length / 3) - 1, prev + 1))}
+                    disabled={currentInsightPage >= Math.ceil(stats.insights.length / 3) - 1}
+                    className="p-1 rounded-lg transition-all hover:bg-white/50 dark:hover:bg-gray-800/50
+                              disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronRightIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-4">
+                {stats.insights
+                  .slice(currentInsightPage * 3, (currentInsightPage + 1) * 3)
+                  .map((insight, index) => (
+                    <div key={index} 
+                        className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-5 
+                                  border border-white/20 dark:border-gray-800/30 shadow-lg 
+                                  hover:shadow-xl transition-all">
+                      <div className="flex flex-col md:flex-row md:items-start md:space-x-4">
+                        <div className="flex-shrink-0">
+                          <div
+                            className="w-8 md:w-10 h-8 md:h-10 rounded-xl flex items-center justify-center 
+                                      backdrop-blur-sm bg-gradient-to-br shadow-inner"
+                            style={{
+                              backgroundColor: `rgba(${insight.score}, ${Math.min(insight.score * 2, 200)}, ${Math.min(insight.score * 3, 255)}, 0.1)`,
+                            }}
+                          >
+                            <span className="text-sm md:text-md font-bold" style={{
+                              color: `rgb(${insight.score}, ${Math.min(insight.score * 2, 200)}, ${Math.min(insight.score * 3, 255)})`,
+                            }}>
+                              {insight.score}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mt-3 md:mt-0">
+                            <h4 className="text-base font-medium text-gray-900 dark:text-white">
+                              {insight.title}
+                            </h4>
+                            <span className={`text-sm font-medium px-2.5 py-1 rounded-full ${
+                              insight.polarity === 'positive' 
+                                ? 'bg-green-100/50 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
+                                : 'bg-rose-100/50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'
+                            }`}>
+                              <div className="sm:hidden">{insight.polarity === 'positive' ? '↑' : '↓'}</div>
+                              <div className="hidden sm:flex">{insight.polarity === 'positive' ? '↑ Positive' : '↓ Needs Focus'}</div>
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                            {insight.description}
+                          </p>
+                          {insight.explanation && (
+                            <div className="mt-4 relative">
+                              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 dark:from-purple-500/20 dark:to-pink-500/20 rounded-lg" />
+                              <div className="relative backdrop-blur-sm rounded-lg border border-purple-200/50 dark:border-purple-700/30">
+                                <div className="px-4 py-3">
+                                  <div className="flex items-center space-x-2 mb-2">
+                                    <LightBulbIcon className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+                                    <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                                      Key Insight
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                                    {insight.explanation}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
               </div>
             </div>
           </div>

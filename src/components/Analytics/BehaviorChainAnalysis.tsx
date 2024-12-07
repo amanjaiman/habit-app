@@ -154,7 +154,7 @@ export default function BehaviorChainAnalysis({ habitId }: BehaviorChainAnalysis
 
 function PatternCard({ pattern }: { pattern: SuccessFailurePattern }) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
+    <div>
       <div className="flex items-center justify-between">
         <h4 className="font-medium text-gray-900 dark:text-white">
           {pattern.title}

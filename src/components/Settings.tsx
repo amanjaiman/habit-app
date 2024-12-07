@@ -406,51 +406,58 @@ export default function Settings() {
               Data Management
             </h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                    Export Data
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Download your habits and progress
-                  </p>
+              {/* Export Data */}
+              {premium && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                      Export Data
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Download your habits and progress
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleExportData}
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 
+                            rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 
+                            bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 
+                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                  >
+                    <ArrowDownTrayIcon className="w-5 h-5 mr-2" />
+                    Export
+                  </button>
                 </div>
-                <button
-                  onClick={handleExportData}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 
-                          rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 
-                          bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 
-                          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                >
-                  <ArrowDownTrayIcon className="w-5 h-5 mr-2" />
-                  Export
-                </button>
-              </div>
+              )}
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                    Import Data
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Restore from a backup file
-                  </p>
+              {/* Import Data */}
+              {premium && (
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                      Import Data
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Restore from a backup file
+                    </p>
+                  </div>
+                  <label className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 
+                                  rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 
+                                  bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 
+                                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 cursor-pointer">
+                    <ArrowUpTrayIcon className="w-5 h-5 mr-2" />
+                    Import
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".json"
+                      onChange={handleImportData}
+                    />
+                  </label>
                 </div>
-                <label className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 
-                                rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 
-                                bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 
-                                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 cursor-pointer">
-                  <ArrowUpTrayIcon className="w-5 h-5 mr-2" />
-                  Import
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept=".json"
-                    onChange={handleImportData}
-                  />
-                </label>
-              </div>
+              )}
 
+              {/* Reset Data */}
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-medium text-gray-900 dark:text-white">

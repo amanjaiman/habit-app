@@ -10,7 +10,6 @@ import Navbar from './components/Navbar';
 import Landing from './components/Landing';
 import LoginForm from './components/Auth/LoginForm';
 import SignupForm from './components/Auth/SignupForm';
-import { useEffect, useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { AnalyticsProvider } from './contexts/AnalyticsContext';
 

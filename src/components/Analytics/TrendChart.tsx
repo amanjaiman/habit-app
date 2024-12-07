@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useHabits } from '../../contexts/HabitContext';
 import { format, eachDayOfInterval, subDays } from 'date-fns';
 import { Line } from 'react-chartjs-2';
@@ -50,6 +50,14 @@ export default function TrendChart({ habitId }: TrendChartProps) {
   const { state } = useHabits();
   const today = new Date();
   const yesterday = subDays(today, 1);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const chartData = useMemo(() => {
     const earliestDate = habitId === 'all'
@@ -66,7 +74,7 @@ export default function TrendChart({ habitId }: TrendChartProps) {
 
     const startDate = new Date(Math.max(
       earliestDate,
-      subDays(yesterday, 29).getTime()
+      subDays(yesterday, isMobile ? 13 : 29).getTime()
     ));
 
     const dateRange = eachDayOfInterval({
@@ -160,7 +168,7 @@ export default function TrendChart({ habitId }: TrendChartProps) {
         ],
       };
     }
-  }, [state.habits, habitId]);
+  }, [state.habits, habitId, isMobile]);
 
   const options = {
     responsive: true,

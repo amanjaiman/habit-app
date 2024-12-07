@@ -90,7 +90,7 @@ export default function Navbar() {
             </button>
 
             {userState.isAuthenticated ? (
-              <div className="relative" ref={dropdownRef}>
+              <div className="hidden sm:flex relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className={`${premium ? 'bg-gradient-to-r from-purple-600 to-pink-600 rounded-full' : ''} flex items-center space-x-2 p-1 rounded-full hover:bg-white/30 dark:hover:bg-gray-800/30`}
@@ -114,7 +114,7 @@ export default function Navbar() {
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-1 w-56 rounded-xl shadow-lg py-2 
+                  <div className="absolute top-10 right-0 mt-1 w-56 rounded-xl shadow-lg py-2 
                                   backdrop-blur-md bg-white/80 dark:bg-gray-800/80 
                                   ring-1 ring-black/5 dark:ring-white/5 
                                   border border-gray-100 dark:border-gray-700">
@@ -156,7 +156,7 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="hidden sm:flex items-center space-x-4">
                 <Link
                   to="/login"
                   className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 text-sm font-medium"
@@ -217,7 +217,13 @@ export default function Navbar() {
               <Link
                 key={item.name}
                 to={item.href}
-                onClick={item.onClick}
+                onClick={(e) => {
+                  setIsMobileMenuOpen(false); // Close mobile menu
+                  if (item.onClick) {
+                    e.preventDefault();
+                    item.onClick();
+                  }
+                }}
                 className={`flex items-center px-3 py-2 text-base font-medium
                   ${
                     isActive(item.href)

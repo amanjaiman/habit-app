@@ -11,7 +11,7 @@ export default function Dashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   return (
-    <main className="max-w-7xl mx-auto py-8 px-6 sm:px-8 lg:px-12">
+    <main className="max-w-7xl mx-auto py-6 px-4 sm:px-8 lg:px-12">
       <div className="space-y-8">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-center backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 

@@ -65,7 +65,7 @@ export default function Landing() {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-950 dark:to-pink-950 opacity-50" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-20">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left Column - Text Content */}
             <div className="text-left">

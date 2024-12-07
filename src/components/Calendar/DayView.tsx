@@ -98,7 +98,7 @@ export default function DayView({ date, habits }: DayViewProps) {
                   <div className="flex items-center space-x-3">
                     <span className="text-2xl">{habit.emoji}</span>
                     <div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-2">
                         <h4 className="text-base font-semibold text-gray-900 dark:text-white">
                           {habit.name}
                         </h4>
@@ -128,19 +128,19 @@ export default function DayView({ date, habits }: DayViewProps) {
                                } hover:opacity-80`}
                   >
                     {isCompleted ? (
-                      <>
-                        <CheckCircleSolidIcon className="w-4 h-4" />
-                        <span className="text-xs font-medium">
+                      <div className="flex items-center space-x-1.5">
+                        <CheckCircleSolidIcon className="w-5 h-5" />
+                        <div className="text-xs font-medium hidden sm:flex">
                           Done
-                        </span>
-                      </>
+                        </div>
+                      </div>
                     ) : (
-                      <>
-                        <CheckCircleIcon className="w-4 h-4" />
-                        <span className="text-xs font-medium">
+                      <div className="flex items-center space-x-1.5">
+                        <CheckCircleIcon className="w-5 h-5" />
+                        <div className="text-xs font-medium hidden sm:flex">
                           Complete
-                        </span>
-                      </>
+                        </div>
+                      </div>
                     )}
                   </button>
                 </div>

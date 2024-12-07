@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { format, addDays, addWeeks, addMonths, startOfDay, startOfWeek } from 'date-fns';
+import { format, addDays, addWeeks, addMonths, startOfDay, startOfWeek, parseISO } from 'date-fns';
 import { useHabits } from '../../contexts/HabitContext';
 import DayView from './DayView';
 import WeekView from './WeekView';
@@ -30,6 +30,10 @@ export default function Calendar() {
   const [currentDate, setCurrentDate] = useState(startOfDay(new Date()));
   const [viewType, setViewType] = useState<ViewType>('day');
 
+  const dateStr = format(currentDate, 'yyyy-MM-dd');
+  const weekStart = startOfWeek(parseISO(dateStr), { weekStartsOn: 1 });
+  
+
   const navigate = (direction: 'prev' | 'next') => {
     setCurrentDate(current => {
       switch (viewType) {
@@ -57,7 +61,6 @@ export default function Calendar() {
   };
 
   const renderView = () => {
-    const dateStr = format(currentDate, 'yyyy-MM-dd');
     switch (viewType) {
       case 'day':
         return <DayView date={dateStr} habits={state.habits} />;
@@ -73,7 +76,7 @@ export default function Calendar() {
       case 'day':
         return format(currentDate, 'EEEE, MMMM d, yyyy');
       case 'week':
-        return `Week of ${format(currentDate, 'MMMM d, yyyy')}`;
+        return `Week of ${format(weekStart, 'MMMM d, yyyy')}`;
       case 'month':
         return format(currentDate, 'MMMM yyyy');
     }

@@ -49,7 +49,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
   };
 
   return (
-    <div className="overflow-x-auto p-6">
+    <div className="overflow-x-auto p-4 sm:p-6">
       <table className="min-w-full divide-y divide-gray-200/50 dark:divide-gray-700/50 
                         backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl 
                         shadow-xl border border-white/20 dark:border-gray-800/30">

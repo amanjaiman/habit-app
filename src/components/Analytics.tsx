@@ -45,7 +45,7 @@ export default function Analytics() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto py-8 px-6 sm:px-8 lg:px-12">
+    <main className="max-w-7xl mx-auto py-6 px-4 sm:px-8 lg:px-12">
       <div className="space-y-8">
         {/* Header */}
         <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
@@ -156,7 +156,7 @@ export default function Analytics() {
                       }
                     >
                       {tab.icon}
-                      {tab.name}
+                      <div className="hidden sm:flex">{tab.name}</div>
                     </Tab>
                   ))}
                 </TabList>
