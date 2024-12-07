@@ -13,6 +13,7 @@ import { useUser } from '../../contexts/UserContext';
 import { Listbox } from '@headlessui/react';
 import { ChevronUpDownIcon } from '@heroicons/react/24/outline';
 import { LockClosedIcon } from '@heroicons/react/24/solid';
+import { useUserPremium } from '../../hooks/useUserPremium';
 
 type ViewType = 'day' | 'week' | 'month';
 
@@ -24,6 +25,7 @@ const viewOptions = [
 
 export default function Calendar() {
   const { state: userState } = useUser();
+  const { premium } = useUserPremium();
   const { state } = useHabits();
   const [currentDate, setCurrentDate] = useState(startOfDay(new Date()));
   const [viewType, setViewType] = useState<ViewType>('day');
@@ -44,7 +46,7 @@ export default function Calendar() {
   };
 
   const setView = (view: ViewType) => {
-    if (userState.profile?.isPremium) {
+    if (premium) {
       localStorage.setItem('view', view);
       setViewType(view);
     }
@@ -101,7 +103,7 @@ export default function Calendar() {
                   {viewOptions.find(opt => opt.id === viewType)?.name}
                 </span>
                 <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                  <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  <ChevronUpDownIcon className="h-5 w-5 text-gray-300" aria-hidden="true" />
                 </span>
               </Listbox.Button>
               <Listbox.Options className="absolute z-[200] mt-1 max-h-60 w-full overflow-auto 
@@ -111,7 +113,7 @@ export default function Calendar() {
                   <Listbox.Option
                     key={option.id}
                     value={option.id}
-                    disabled={option.premium && !userState.profile?.isPremium}
+                    disabled={option.premium && !premium}
                     className={({ active, disabled }) => `
                       relative cursor-pointer select-none py-2 px-4 text-gray-900 dark:text-gray-100
                       ${active ? 'bg-purple-100 dark:bg-purple-900/30' : ''}
@@ -122,7 +124,7 @@ export default function Calendar() {
                       <>
                         <span className={`flex items-center justify-between ${selected ? 'font-semibold' : ''}`}>
                           {option.name}
-                          {option.premium && !userState.profile?.isPremium && (
+                          {option.premium && !premium && (
                             <span className="ml-2">
                               <LockClosedIcon className="h-5 w-5 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />
                             </span>
@@ -152,7 +154,7 @@ export default function Calendar() {
           <button
             onClick={() => navigate('prev')}
             className="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 
-                     text-gray-600 dark:text-gray-400 transition-all duration-200"
+                     text-gray-600 dark:text-gray-300 transition-all duration-200"
           >
             <ChevronLeftIcon className="w-5 h-5" />
           </button>
@@ -162,7 +164,7 @@ export default function Calendar() {
           <button
             onClick={() => navigate('next')}
             className="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 
-                     text-gray-600 dark:text-gray-400 transition-all duration-200"
+                     text-gray-600 dark:text-gray-300 transition-all duration-200"
           >
             <ChevronRightIcon className="w-5 h-5" />
           </button>

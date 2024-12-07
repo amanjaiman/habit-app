@@ -50,8 +50,8 @@ export default function HabitItem({ habit, date = format(new Date(), 'yyyy-MM-dd
             {isCompleted ? (
               <CheckCircleSolidIcon className="w-8 h-8 text-green-500 dark:text-green-400" />
             ) : (
-              <CheckCircleIcon className="w-8 h-8 text-gray-400 dark:text-gray-500 
-                                       hover:text-gray-500 dark:hover:text-gray-400" />
+              <CheckCircleIcon className="w-8 h-8 text-gray-300 dark:text-gray-600 
+                                       hover:text-gray-600 dark:hover:text-gray-300" />
             )}
           </button>
 
@@ -68,13 +68,13 @@ export default function HabitItem({ habit, date = format(new Date(), 'yyyy-MM-dd
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: habit.color }}
                 />
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   {habit.color}
                 </span>
               </div>
             )}
             {habit.category && (
-              <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+              <span className="text-sm text-gray-600 dark:text-gray-300 ml-2">
                 {DEFAULT_CATEGORIES.find(c => c.id === habit.category)?.name}
               </span>
             )}
@@ -83,8 +83,8 @@ export default function HabitItem({ habit, date = format(new Date(), 'yyyy-MM-dd
 
         <button
           onClick={() => setShowEdit(true)}
-          className="opacity-0 group-hover:opacity-100 px-3 py-1 text-sm text-gray-500 
-                   dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 
+          className="opacity-0 group-hover:opacity-100 px-3 py-1 text-sm text-gray-600 
+                   dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-300 
                    transition-opacity duration-200"
         >
           Edit

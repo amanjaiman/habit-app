@@ -258,7 +258,12 @@ export default function TrendChart({ habitId }: TrendChartProps) {
     },
   };
 
-  if (!chartData) return null;
+  if (!chartData) return (
+    <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg">
+      Track habits for at least 7 days to see your trends chart!
+    </div>
+  );
 
   return (
     <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
@@ -269,7 +274,7 @@ export default function TrendChart({ habitId }: TrendChartProps) {
           Progress Trends
         </h3>
         {habitId !== 'all' && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
             Showing 7-day rolling average
           </p>
         )}

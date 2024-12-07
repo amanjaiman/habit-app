@@ -76,7 +76,7 @@ export default function BehaviorChainAnalysis({ habitId }: BehaviorChainAnalysis
 
   if (!chainAnalysis?.patterns.success.length && !chainAnalysis?.patterns.failure.length && !chainAnalysis?.recommendations.length) return (
     <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-400 text-lg">
+                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg">
       Track habits for at least 7 days to see patterns and recommendations!
     </div>
   );
@@ -136,7 +136,7 @@ export default function BehaviorChainAnalysis({ habitId }: BehaviorChainAnalysis
                 <h4 className="font-medium text-gray-900 dark:text-white">
                   {rec.title}
                 </h4>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                   {rec.description}
                 </p>
                 <div className="mt-3 flex items-center text-sm text-purple-600 dark:text-purple-400">
@@ -159,15 +159,15 @@ function PatternCard({ pattern }: { pattern: SuccessFailurePattern }) {
         <h4 className="font-medium text-gray-900 dark:text-white">
           {pattern.title}
         </h4>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-gray-600">
           {pattern.confidence}% confidence
         </span>
       </div>
-      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
         {pattern.description}
       </p>
       <div className="mt-3 space-y-2">
-        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
           <CalendarIcon className="w-4 h-4 mr-2" />
           {pattern.time_period}
         </div>

@@ -11,10 +11,12 @@ import {
 } from '@heroicons/react/24/outline';
 import { useUser } from '../contexts/UserContext';
 import { useState, useRef, useEffect } from 'react';
+import { useUserPremium } from '../hooks/useUserPremium';
 
 export default function Navbar() {
   const { dispatch } = useUser();
   const { theme, toggleTheme } = useTheme();
+  const { premium } = useUserPremium();
   const location = useLocation();
   const { state: userState } = useUser();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -80,7 +82,7 @@ export default function Navbar() {
           <div className="flex items-center space-x-4">
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-md text-gray-500 dark:text-gray-400 hover:text-gray-700 
+              className="p-2 rounded-md text-gray-600 dark:text-gray-300 hover:text-gray-700 
                        dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 
                        focus:ring-indigo-500"
             >
@@ -91,14 +93,16 @@ export default function Navbar() {
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center space-x-2 p-2 rounded-full hover:bg-white/30 dark:hover:bg-gray-800/30"
+                  className={`${premium ? 'bg-gradient-to-r from-purple-600 to-pink-600 rounded-full' : ''} flex items-center space-x-2 p-1 rounded-full hover:bg-white/30 dark:hover:bg-gray-800/30`}
                 >
                   {userState.profile?.profileImage ? (
+                    <div className={`${premium ? 'bg-gradient-to-r from-purple-600 to-pink-600 rounded-full' : ''}`}>
                     <img
                       src={userState.profile.profileImage}
                       alt={userState.name || 'User'}
                       className="w-8 h-8 rounded-full object-cover"
                     />
+                    </div>
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white font-medium">
                       {userState.name ? userState.name[0].toUpperCase() : '?'}
@@ -174,9 +178,9 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 
-                          hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 
-                          focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                  className={`${premium ? 'text-purple-500 dark:text-purple-400' : 'text-gray-300'} inline-flex items-center justify-center p-2 rounded-md 
+                          hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 
+                          focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500`}
                   aria-controls="mobile-menu"
                   aria-expanded={isMobileMenuOpen}
                 >
@@ -218,7 +222,7 @@ export default function Navbar() {
                   ${
                     isActive(item.href)
                       ? 'bg-indigo-50 dark:bg-indigo-900/50 border-l-4 border-indigo-500 text-indigo-700 dark:text-indigo-400'
-                      : 'border-l-4 border-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      : 'border-l-4 border-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
               >
                 <item.icon className="w-5 h-5 mr-2" />

@@ -71,7 +71,7 @@ export default function DayView({ date, habits }: DayViewProps) {
               </span>
             </div>
           )}
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300 
                           bg-white/50 dark:bg-gray-800/50 px-3 py-1 rounded-full">
             {completedCount} of {habits.length} completed
           </span>

@@ -17,18 +17,20 @@ import { ChevronUpDownIcon } from '@heroicons/react/24/outline';
 import { useUser } from '../contexts/UserContext';
 import { LockClosedIcon } from '@heroicons/react/24/solid';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import { useUserPremium } from '../hooks/useUserPremium';
 
 export default function Analytics() {
   const { state: analyticsState } = useAnalytics();
   const { state: userState } = useUser();
+  const { premium } = useUserPremium();
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const { state } = useHabits();
 
   useEffect(() => {
-    if (!userState.profile?.isPremium && selectedHabitId) {
+    if (premium && selectedHabitId) {
       setSelectedHabitId(null);
     }
-  }, [userState.profile?.isPremium]);
+  }, [premium]);
 
   if (analyticsState.loading) {
     return (
@@ -52,14 +54,14 @@ export default function Analytics() {
                         dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
             Analytics
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400 text-base sm:text-lg">
+          <p className="mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">
             Gain insights into your habit-building journey
           </p>
         </div>
 
         {state.habits.length === 0 && (
           <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                          border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-400 text-lg">
+                          border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg">
             No habits found. Add a habit on the dashboard to get started.
           </div>
         )}
@@ -80,7 +82,7 @@ export default function Analytics() {
                       : 'All Habits'}
                   </span>
                   <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                    <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    <ChevronUpDownIcon className="h-5 w-5 text-gray-300" aria-hidden="true" />
                   </span>
                 </Listbox.Button>
                 <Listbox.Options className="absolute z-[200] mt-1 max-h-60 w-full overflow-auto 
@@ -128,7 +130,7 @@ export default function Analytics() {
             {!selectedHabitId ? (
               // Show overview analytics when no specific habit is selected
             <div className="space-y-8">
-              <AnalyticsSummary habitId="all" isPremium={userState.profile?.isPremium} />
+              <AnalyticsSummary habitId="all" />
             </div>
           ) : (
             // Show specific habit analytics when a habit is selected
@@ -138,8 +140,8 @@ export default function Analytics() {
                                 rounded-xl border border-white/20 dark:border-gray-800/30 shadow-lg">
                   {[
                     { icon: <AcademicCapIcon className="w-5 h-5 mr-2" />, name: 'Summary', disabled: false },
-                    { icon: userState.profile?.isPremium ? <ArrowsPointingOutIcon className="w-5 h-5 mr-2" /> : <LockClosedIcon className="w-5 h-5 mr-2 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />, name: 'Correlations', disabled: !userState.profile?.isPremium },
-                    { icon: userState.profile?.isPremium ? <DocumentTextIcon className="w-5 h-5 mr-2" /> : <LockClosedIcon className="w-5 h-5 mr-2 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />, name: 'Behavior Analysis', disabled: !userState.profile?.isPremium },
+                    { icon: premium ? <ArrowsPointingOutIcon className="w-5 h-5 mr-2" /> : <LockClosedIcon className="w-5 h-5 mr-2 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />, name: 'Correlations', disabled: !premium },
+                    { icon: premium ? <DocumentTextIcon className="w-5 h-5 mr-2" /> : <LockClosedIcon className="w-5 h-5 mr-2 fill-purple-600 dark:fill-purple-400" aria-hidden="true" />, name: 'Behavior Analysis', disabled: !premium },
                   ].map((tab) => (
                     <Tab
                       key={tab.name}
@@ -149,7 +151,7 @@ export default function Analytics() {
                         transition-all duration-200 ${
                           selected
                             ? 'bg-white/50 dark:bg-gray-800/90 text-purple-600 dark:text-purple-400 shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:bg-white/30 dark:hover:bg-gray-800/30'
+                            : 'text-gray-600 dark:text-gray-300 hover:bg-white/30 dark:hover:bg-gray-800/30'
                         }`
                       }
                     >
@@ -161,7 +163,7 @@ export default function Analytics() {
 
                 <TabPanels className="relative z-0 mt-6">
                   <TabPanel>
-                    <AnalyticsSummary habitId={selectedHabitId} isPremium={userState.profile?.isPremium} />
+                    <AnalyticsSummary habitId={selectedHabitId} />
                   </TabPanel>
                   <TabPanel>
                     <HabitCorrelation habitId={selectedHabitId} />

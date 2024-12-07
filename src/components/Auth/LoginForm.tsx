@@ -15,6 +15,14 @@ export default function LoginForm() {
     e.preventDefault();
     try {
       const user = await userApi.login(formData.email, formData.password);
+      
+      let subscription = null;
+      try {
+        subscription = await userApi.getSubscription(user.id);
+      } catch (err) {
+        console.error('Failed to fetch subscription:', err);
+      }
+
       dispatch({
         type: 'LOGIN_SUCCESS',
         payload: {
@@ -23,6 +31,7 @@ export default function LoginForm() {
           error: null,
           name: user.name,
           profile: user,
+          subscription,
         },
       });
       navigate('/dashboard');
@@ -83,7 +92,7 @@ export default function LoginForm() {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-300">
           Don't have an account?{' '}
           <Link to="/signup" className="text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">
             Sign up

@@ -103,7 +103,7 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
   if (!correlationData.length) {
     return (
       <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-400 text-lg">
+                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg">
         Track habits for at least 7 days to see correlations!
       </div>
     );
@@ -138,7 +138,7 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
                     ? 'bg-green-100/50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
                     : correlation.correlationScore > 50
                     ? 'bg-yellow-100/50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
-                    : 'bg-gray-100/50 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400'
+                    : 'bg-gray-100/50 dark:bg-gray-900/30 text-gray-600 dark:text-gray-300'
                 }`}>
                   {(correlation.correlationScore).toFixed(1)}% correlation
                 </span>

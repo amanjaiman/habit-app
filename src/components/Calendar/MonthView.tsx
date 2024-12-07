@@ -174,7 +174,7 @@ export default function MonthView({ date, habits }: MonthViewProps) {
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
           <div
             key={day}
-            className="bg-gray-50 dark:bg-gray-800 p-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
+            className="bg-gray-50 dark:bg-gray-800 p-2 text-center text-sm font-medium text-gray-600 dark:text-gray-300"
           >
             {day}
           </div>
@@ -203,7 +203,7 @@ export default function MonthView({ date, habits }: MonthViewProps) {
                     className={`text-sm ${
                       isCurrentMonth
                         ? 'text-gray-900 dark:text-white'
-                        : 'text-gray-400 dark:text-gray-600'
+                        : 'text-gray-300 dark:text-gray-600'
                     }`}
                   >
                     {format(day, 'd')}

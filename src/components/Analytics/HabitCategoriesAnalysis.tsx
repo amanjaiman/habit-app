@@ -27,7 +27,7 @@ export default function HabitCategoriesAnalysis() {
       </h3>
       <ul>
         {categoryData.map((category, index) => (
-          <li key={index} className="text-sm text-gray-600 dark:text-gray-400">
+          <li key={index} className="text-sm text-gray-600 dark:text-gray-300">
             {category.category}: {category.completionRate.toFixed(1)}%
           </li>
         ))}

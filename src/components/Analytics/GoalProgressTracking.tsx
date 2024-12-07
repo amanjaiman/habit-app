@@ -33,7 +33,7 @@ export default function GoalProgressTracking({ habitId }: GoalProgressTrackingPr
         />
       </div>
       <div className="mt-4">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-300">
           Current Completion Rate: {completionRate.toFixed(1)}%
         </p>
         <p className={`text-sm font-medium ${completionRate >= goal ? 'text-green-500' : 'text-red-500'}`}>

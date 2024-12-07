@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useHabits, habitApi } from '../contexts/HabitContext';
 import { useUser, userApi } from '../contexts/UserContext';
@@ -20,11 +20,14 @@ import { SparklesIcon } from '@heroicons/react/24/outline';
 import weekViewScreenshot from '../images/week_view_upsell.png';
 import aiScreenshot from '../images/ai_upsell.png';
 import correlationsScreenshot from '../images/correlation_upsell.png';
+import { API_BASE_URL } from '../api/config';
+import { useUserPremium } from '../hooks/useUserPremium';
 
 export default function Settings() {
   const { theme, toggleTheme } = useTheme();
   const { state, dispatch } = useHabits();
   const { state: userState, dispatch: userDispatch } = useUser();
+  const { premium, nextBillingDate, cancelAtPeriodEnd } = useUserPremium();
   const [exportUrl, setExportUrl] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -173,22 +176,62 @@ export default function Settings() {
   const handleTogglePremiumStatus = async () => {
     if (!userState.profile?.id) return;
 
-    try {
-      const updatedUser = await userApi.update(userState.profile.id, {
-        isPremium: !userState.profile.isPremium,
-      });
+    if (!premium) {
+      // Upgrade to premium
+      try {
+        const response = await fetch(`${API_BASE_URL}/users/${userState.profile.id}/create-checkout-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
 
-      userDispatch({
-        type: 'UPDATE_PROFILE',
-        payload: {
-          ...userState,
-          profile: updatedUser,
-        },
-      });
-    } catch (error) {
-      console.error('Failed to update premium status:', error);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // Store the user ID in localStorage so we can refresh data after redirect
+        localStorage.setItem('pendingPremiumSignup', userState.profile.id);
+        
+        window.location.href = data.url; // Redirect to Stripe Checkout
+      } catch (error) {
+        console.error("Error creating checkout session:", error);
+      }
+    } else {
+      window.location.href = 'https://billing.stripe.com/p/login/test_cN27sz4KU0ctbpm8ww';
     }
   };
+
+  // Add this effect to check for successful premium signup
+  useEffect(() => {
+    const pendingSignupUserId = localStorage.getItem('pendingPremiumSignup');
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+
+    if (pendingSignupUserId && success === 'true') {
+      // Clear the pending signup
+      localStorage.removeItem('pendingPremiumSignup');
+      
+      // Fetch updated subscription data
+      userApi.getSubscription(pendingSignupUserId)
+        .then(subscription => {
+          if (subscription) {
+            userDispatch({
+              type: 'UPDATE_PROFILE',
+              payload: {
+                ...userState,
+                subscription
+              },
+            });
+            toast.success('Welcome to HabitsAI Premium!');
+          }
+        })
+        .catch(error => {
+          console.error('Failed to fetch subscription:', error);
+          toast.error('Failed to verify premium status. Try again later.');
+        });
+    }
+  }, [userState.profile?.id, userDispatch]);
 
   return (
     <main className="max-w-7xl mx-auto py-8 px-6 sm:px-8 lg:px-12">
@@ -197,7 +240,7 @@ export default function Settings() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Settings
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-gray-600 dark:text-gray-300">
             Manage your preferences and data
           </p>
         </div>
@@ -238,11 +281,11 @@ export default function Settings() {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-900 dark:text-white">Profile Picture</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
                     Click the edit icon to change your profile picture
                   </span>
                   {userState.profile?.email && (
-                    <span className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <span className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                       {userState.profile.email}
                     </span>
                   )}
@@ -289,13 +332,23 @@ export default function Settings() {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-medium text-gray-900 dark:text-white">Premium Status</h3>
-                  <p className={`text-sm ${userState.profile?.isPremium ? 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
-                    {userState.profile?.isPremium ? 'Premium Member' : 'Free Plan'}
+                  <p className={`text-sm ${premium ? 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium' : 'text-gray-600 dark:text-gray-300'}`}>
+                    {premium ? cancelAtPeriodEnd ? 'Premium Member (Canceled)' : 'Premium Member' : 'Free Plan'}
                   </p>
-                  {!userState.profile?.isPremium && (
+                  {premium && nextBillingDate && !cancelAtPeriodEnd && (
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                      Next billing date: <span className="font-medium">{format(new Date(nextBillingDate), 'MMMM d, yyyy')}</span>
+                    </p>
+                  )}
+                  {premium && nextBillingDate && cancelAtPeriodEnd && (
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                      You will have access until {format(new Date(nextBillingDate), 'MMMM d, yyyy')}
+                    </p>
+                  )}
+                  {!premium && (
                     <button
-                        onClick={() => setIsPremiumDialogOpen(true)}
-                        className="text-sm bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium"
+                      onClick={() => setIsPremiumDialogOpen(true)}
+                      className="text-sm bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium"
                     >
                       View premium benefits
                     </button>
@@ -304,12 +357,12 @@ export default function Settings() {
                 <button
                   onClick={handleTogglePremiumStatus}
                   className={`inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${
-                    userState.profile?.isPremium 
+                    premium 
                       ? 'bg-gray-600 hover:bg-gray-700' 
                       : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
                   } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
                 >
-                  {userState.profile?.isPremium ? 'Downgrade to Free' : 'Upgrade to Premium'}
+                  {premium ? cancelAtPeriodEnd ? 'Renew Premium' : 'Downgrade to Free' : 'Upgrade to Premium'}
                 </button>
               </div>
             </div>
@@ -325,9 +378,9 @@ export default function Settings() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 {theme === 'dark' ? (
-                  <MoonIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  <MoonIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 ) : (
-                  <SunIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  <SunIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 )}
                 <span className="text-gray-900 dark:text-white">Dark Mode</span>
               </div>
@@ -358,7 +411,7 @@ export default function Settings() {
                   <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                     Export Data
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Download your habits and progress
                   </p>
                 </div>
@@ -379,7 +432,7 @@ export default function Settings() {
                   <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                     Import Data
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Restore from a backup file
                   </p>
                 </div>
@@ -403,7 +456,7 @@ export default function Settings() {
                   <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                     Reset Data
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Clear all habits and progress
                   </p>
                 </div>
@@ -439,10 +492,10 @@ export default function Settings() {
 
               {/* Plan Comparison */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex flex-col justify-between rounded-xl border border-gray-400 dark:border-gray-700 p-6">
+                <div className="flex flex-col justify-between rounded-xl border border-gray-300 dark:border-gray-700 p-6">
                   <div className="flex flex-col">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Free Plan</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Basic habit tracking</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Basic habit tracking</p>
                     <ul className="space-y-3">
                       <li className="flex items-center text-sm">
                         <span className="text-green-500 mr-2">✓</span>
@@ -462,7 +515,7 @@ export default function Settings() {
                     <h3 className="text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent mb-2">
                         Premium Plan
                     </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Advanced features & insights</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Advanced features & insights</p>
                     <ul className="space-y-3">
                       <li className="flex items-center text-sm">
                         <span className="text-green-500 mr-2">✓</span>
@@ -492,9 +545,9 @@ export default function Settings() {
                   </div>
                   <div className="flex items-end gap-3">
                     <div className="mt-4 text-xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                      $3.99<span className="text-xs font-normal text-gray-500 dark:text-gray-300">/month</span>
-                      <span className="mx-4 text-xs font-normal text-gray-500 dark:text-gray-300">or</span>
-                      $39.99<span className="text-xs font-normal text-gray-500 dark:text-gray-300">/year</span>
+                      $0.99<span className="text-xs font-normal text-gray-600 dark:text-gray-300">/month</span>
+                      <span className="mx-4 text-xs font-normal text-gray-600 dark:text-gray-300">or</span>
+                      $9.99<span className="text-xs font-normal text-gray-600 dark:text-gray-300">/year</span>
                     </div>
                     <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs px-2 py-1 rounded-full">
                       Save 16.5%

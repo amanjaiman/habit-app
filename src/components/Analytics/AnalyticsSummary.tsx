@@ -25,10 +25,10 @@ import { Link } from 'react-router-dom';
 import { KeyInsight, useAnalytics } from '../../contexts/AnalyticsContext';
 import TrendChart from './TrendChart';
 import { useUser } from '../../contexts/UserContext';
+import { useUserPremium } from '../../hooks/useUserPremium';
 
 interface AnalyticsSummaryProps {
   habitId: string;
-  isPremium?: boolean;
 }
 
 type CompletionPeriod = 'lifetime' | 'year' | 'twoWeeks';
@@ -70,9 +70,9 @@ interface AnalyticsStats {
   insights: KeyInsight[];
 }
 
-export default function AnalyticsSummary({ habitId, isPremium = false }: AnalyticsSummaryProps) {
+export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
   const { state: analyticsState } = useAnalytics();
-  const { state: userState } = useUser();
+  const { premium } = useUserPremium();
   const latestAnalytics = analyticsState.analytics.analytics.at(-1);
   const { state } = useHabits();
   const today = new Date();
@@ -333,7 +333,7 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
                       className={`p-1.5 rounded-lg transition-all ${
                         (selectedPeriods[index] || 'lifetime') === 'twoWeeks'
                           ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400'
-                          : 'hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-500 dark:text-gray-400'
+                          : 'hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300'
                       }`}
                       title="Last two weeks"
                     >
@@ -344,7 +344,7 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
                       className={`p-1.5 rounded-lg transition-all ${
                         (selectedPeriods[index] || 'lifetime') === 'year'
                           ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400'
-                          : 'hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-500 dark:text-gray-400'
+                          : 'hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300'
                       }`}
                       title="This year"
                     >
@@ -355,7 +355,7 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
                       className={`p-1.5 rounded-lg transition-all ${
                         (selectedPeriods[index] || 'lifetime') === 'lifetime'
                           ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400'
-                          : 'hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-500 dark:text-gray-400'
+                          : 'hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300'
                       }`}
                       title="Lifetime"
                     >
@@ -386,7 +386,7 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
                   {stat.value}
                 </p>
               )}
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                 {stat.isPeriodToggleable ? stat.periods?.[selectedPeriods[index] || 'lifetime'].label : stat.description}
               </p>
               {stat.details && (
@@ -402,7 +402,7 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
       <div className="relative space-y-8">
         {/* Secondary Stats - add premium gate */}
         <div className="relative">
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${!isPremium && 'blur-sm pointer-events-none'}`}>
+          <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${!premium && 'blur-sm pointer-events-none'}`}>
             {stats.secondaryStats.map((stat, index) => (
               <div
                 key={index}
@@ -412,7 +412,7 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
                         ${stat.alert ? 'border-l-4 border-rose-500 dark:border-rose-400' : ''}`}
               >
                 <div className="flex items-center">
-                  <stat.icon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  <stat.icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                   <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     {stat.name}
                   </span>
@@ -421,7 +421,7 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
                           dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
                   {stat.value}
                 </p>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                   {stat.description}
                 </p>
               </div>
@@ -434,7 +434,7 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
           <div className="relative">
             <div className={`backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
                         border border-white/20 dark:border-gray-800/30 shadow-xl
-                        ${!isPremium && 'blur-sm pointer-events-none'}`}>
+                        ${!premium && 'blur-sm pointer-events-none'}`}>
               <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
                         dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text mb-6">
                 Personalized Insights
@@ -471,7 +471,7 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
                       <h4 className="text-base font-medium text-gray-900 dark:text-white">
                         {insight.title}
                       </h4>
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                         {insight.description}
                       </p>
                       <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
@@ -484,18 +484,24 @@ export default function AnalyticsSummary({ habitId, isPremium = false }: Analyti
             </div>
           </div>
         )}
+        {stats.insights.length === 0 && (
+          <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+          border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg">
+            <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium">AI is analyzing your habits. Insights will be published every Monday!</span>
+          </div>
+        )}
 
-        {userState.profile?.isPremium && <TrendChart habitId={habitId} />}
+        {premium && <TrendChart habitId={habitId} />}
 
         {/* Single Premium Gate */}
-        {!isPremium && (
+        {!premium && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center bg-white/95 dark:bg-gray-900/95 rounded-xl p-6 shadow-xl border border-purple-200 dark:border-purple-900">
               <SparklesIcon className="w-8 h-8 text-purple-500 mx-auto mb-3" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 Premium Analytics
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                 Upgrade to unlock detailed analytics, insights, and personalized recommendations
               </p>
               <Link

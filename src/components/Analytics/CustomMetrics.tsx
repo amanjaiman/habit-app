@@ -33,7 +33,7 @@ export default function CustomMetrics({ habitId }: CustomMetricsProps) {
         />
       </div>
       <div className="mt-4">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-gray-600 dark:text-gray-300">
           Custom Metric: {customMetric}
         </p>
       </div>

@@ -62,7 +62,7 @@ export default function HabitList({ habits }: HabitListProps) {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setEditingHabit(habit)}
-                className="p-2 text-gray-500 hover:text-purple-600 dark:text-gray-400 
+                className="p-2 text-gray-600 hover:text-purple-600 dark:text-gray-300 
                          dark:hover:text-purple-400 rounded-lg hover:bg-purple-100/50 
                          dark:hover:bg-purple-900/30 transition-all duration-200"
               >
@@ -70,7 +70,7 @@ export default function HabitList({ habits }: HabitListProps) {
               </button>
               <button
                 onClick={() => handleDelete(habit.id)}
-                className="p-2 text-gray-500 hover:text-pink-600 dark:text-gray-400 
+                className="p-2 text-gray-600 hover:text-pink-600 dark:text-gray-300 
                          dark:hover:text-pink-400 rounded-lg hover:bg-pink-100/50 
                          dark:hover:bg-pink-900/30 transition-all duration-200"
               >

@@ -6,9 +6,25 @@ interface UserProfile {
   email: string;
   password: string;
   name: string;
-  isPremium: boolean;
+  isPremium: boolean; // deprecated TODO: remove
   createdAt: string;
   profileImage?: string;
+}
+
+interface Subscription {
+  userId: string;
+  stripeId?: string;
+  stripeSubscriptionId?: string;
+  customerEmail?: string;
+  customerName?: string;
+  invoiceUrl?: string;
+  status: string;
+  created?: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  nextBillingDate?: string;
+  priceId?: string;
+  cancelAtPeriodEnd?: boolean;
 }
 
 interface UserState {
@@ -17,6 +33,7 @@ interface UserState {
   loading: boolean;
   error: string | null;
   name: string;
+  subscription: Subscription | null;
 }
 
 type UserAction =
@@ -32,6 +49,7 @@ const initialState: UserState = {
   loading: true,
   error: null,
   name: '',
+  subscription: null,
 };
 
 const UserContext = createContext<{
@@ -42,26 +60,28 @@ const UserContext = createContext<{
 function userReducer(state: UserState, action: UserAction): UserState {
   switch (action.type) {
     case 'LOGIN_SUCCESS':
-      localStorage.setItem('user', JSON.stringify(action.payload));
       return action.payload;
     
     case 'LOGOUT':
-      localStorage.removeItem('user');
+      localStorage.removeItem('userId');
       return {
-        ...state,
-        isAuthenticated: false,
-        profile: null,
+        ...initialState,
+        loading: false,
       };
     
     case 'UPDATE_PROFILE':
-      const updatedProfile = action.payload;
-      localStorage.setItem('user', JSON.stringify(updatedProfile));
-      return updatedProfile;
+      return action.payload;
     
     case 'SET_ERROR':
       return {
         ...state,
         error: action.payload,
+      };
+    
+    case 'CLEAR_ERROR':
+      return {
+        ...state,
+        error: null,
       };
     
     default:
@@ -75,7 +95,9 @@ async function loginUser(email: string, password: string) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
-  return handleApiResponse(response);
+  const data = await handleApiResponse(response);
+  localStorage.setItem('userId', data.id);
+  return data;
 }
 
 async function createUser(userData: Omit<UserProfile, 'id' | 'createdAt'>) {
@@ -96,20 +118,60 @@ async function updateUser(userId: string, updatedFields: Partial<UserProfile>) {
   return handleApiResponse(response);
 }
 
+async function getSubscription(userId: string) {
+  const response = await fetch(`${API_BASE_URL}/users/${userId}/subscription`);
+  return handleApiResponse(response);
+}
+
+async function getCurrentUser(userId: string) {
+  const response = await fetch(`${API_BASE_URL}/users/${userId}`);
+  return handleApiResponse(response);
+}
+
 export const userApi = {
   login: loginUser,
   create: createUser,
   update: updateUser,
+  getSubscription: getSubscription,
+  getCurrent: getCurrentUser,
 };
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(userReducer, initialState);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      dispatch({ type: 'LOGIN_SUCCESS', payload: JSON.parse(savedUser) });
-    }
+    const loadUserData = async () => {
+      const userId = localStorage.getItem('userId');
+      console.log(userId);
+      
+      if (!userId) {
+        dispatch({ type: 'LOGOUT' });
+        return;
+      }
+
+      try {
+        const user = await getCurrentUser(userId);
+        if (user) {
+          const subscription = await getSubscription(user.id);
+          dispatch({
+            type: 'LOGIN_SUCCESS',
+            payload: {
+              isAuthenticated: true,
+              loading: false,
+              error: null,
+              name: user.name,
+              profile: user,
+              subscription,
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+        dispatch({ type: 'LOGOUT' });
+      }
+    };
+
+    loadUserData();
   }, []);
 
   return (

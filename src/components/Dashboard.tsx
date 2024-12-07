@@ -21,7 +21,7 @@ export default function Dashboard() {
                         dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
               Hello, {userState.name}!
             </h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-400 text-base sm:text-lg">
+            <p className="mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">
               Track your daily habits and build consistency
             </p>
           </div>
@@ -37,7 +37,7 @@ export default function Dashboard() {
 
         {state.habits.length === 0 && (
           <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                          border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-400 text-lg">
+                          border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg">
             No habits found. Add a habit to get started.
           </div>
         )}
