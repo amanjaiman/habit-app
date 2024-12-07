@@ -38,7 +38,8 @@ function AppContent() {
     <div className="min-h-screen bg-gradient-to-tl from-sky-100 via-cyan-100 to-violet-200 dark:from-sky-950 dark:via-cyan-950 dark:to-violet-950 transition-all duration-500">
       <Navbar />
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={state.isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/landing" />} />
+        <Route path="/landing" element={<Landing />} />
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />

@@ -53,7 +53,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between h-20">
           <div className="flex items-center gap-8">
-            <Link to="/" className="flex-shrink-0 flex items-center">
+            <Link to="/landing" className="flex-shrink-0 flex items-center">
               <span className="text-3xl font-black bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
                 🎯 HabitsAI
               </span>
