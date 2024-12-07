@@ -41,8 +41,6 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
     const latestAnalytics = analyticsState.analytics.analytics.at(-1);
     const habitCorrelations = latestAnalytics?.correlationInsights[targetHabit.name].correlations || [];
 
-    console.log(habitCorrelations);
-
     const days = eachDayOfInterval({ start: startDate, end: today });
     const otherHabits = state.habits.filter(h => h.id !== habitId);
     

@@ -198,7 +198,7 @@ export default function Settings() {
         console.error("Error creating checkout session:", error);
       }
     } else {
-      window.location.href = 'https://billing.stripe.com/p/login/test_cN27sz4KU0ctbpm8ww';
+      window.location.href = 'https://billing.stripe.com/p/login/28o6rz66Afkp9JC000';
     }
   };
 

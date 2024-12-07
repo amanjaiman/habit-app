@@ -142,7 +142,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const loadUserData = async () => {
       const userId = localStorage.getItem('userId');
-      console.log(userId);
       
       if (!userId) {
         dispatch({ type: 'LOGOUT' });

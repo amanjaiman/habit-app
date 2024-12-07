@@ -10,8 +10,6 @@ export function useUserPremium(): PremiumStatus {
   const { state } = useUser();
   const { subscription } = state;
 
-  console.log(state);
-
   return {
     premium: subscription?.status === 'active',
     nextBillingDate: subscription?.nextBillingDate 
