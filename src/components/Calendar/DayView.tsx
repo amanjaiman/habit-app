@@ -119,7 +119,7 @@ export default function DayView({ date, habits }: DayViewProps) {
                         className={`rounded-xl transition-all duration-200 overflow-hidden
                                   border border-white/20 dark:border-gray-800/30
                                   ${isCompleted 
-                                    ? 'bg-green-100/50 dark:bg-green-900/20' 
+                                    ? 'bg-green-300/25 dark:bg-green-900/30' 
                                     : 'bg-white/30 dark:bg-gray-900/30'}`}
                       >
                         <div className="p-3">
