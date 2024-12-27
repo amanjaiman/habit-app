@@ -9,6 +9,7 @@ import { FireIcon } from '@heroicons/react/24/solid';
 import { useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { calculateStreak } from '../../utils/helpers';
+import { useHabitDisplay } from '../../contexts/HabitDisplayContext';
 
 interface DayViewProps {
   date: string; // ISO date string
@@ -19,6 +20,7 @@ export default function DayView({ date, habits }: DayViewProps) {
   const { dispatch } = useHabits();
   const { state: userState } = useUser();
   const { theme } = useTheme();
+  const { groupHabits } = useHabitDisplay();
   const formattedDate = format(parseISO(date), 'EEEE, MMMM d');
 
   const toggleHabit = async (habitId: string) => {
@@ -54,6 +56,15 @@ export default function DayView({ date, habits }: DayViewProps) {
     );
   }, []);
 
+  const groupedHabits = habits.reduce((acc, habit) => {
+    const categoryId = habit.category || 'uncategorized';
+    if (!acc[categoryId]) {
+      acc[categoryId] = [];
+    }
+    acc[categoryId].push(habit);
+    return acc;
+  }, {} as Record<string, Habit[]>);
+
   return (
     <div className="space-y-6 p-8">
       <div className="flex justify-between items-center">
@@ -78,76 +89,148 @@ export default function DayView({ date, habits }: DayViewProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 gap-4">
-        {habits.map((habit) => {
-          const isCompleted = habit.completions[date] ?? false;
-          const streak = calculateStreak(habit.completions);
-
-          return (
-            <div
-              key={habit.id}
-              className={`rounded-xl transition-all duration-200 overflow-hidden
-                         border border-white/20 dark:border-gray-800/30
-                         ${isCompleted 
-                           ? 'bg-green-100/50 dark:bg-green-900/20' 
-                           : 'bg-white/30 dark:bg-gray-900/30'
-                         }`}
-            >
-              <div className="p-3">
+      <div className="space-y-6">
+        {groupHabits ? (
+          Object.entries(groupedHabits).map(([categoryId, categoryHabits]) => {
+            const category = DEFAULT_CATEGORIES.find(c => c.id === categoryId) || {
+              id: 'uncategorized',
+              name: 'Other',
+              color: '#6B7280',
+              darkColor: '#9CA3AF'
+            };
+            
+            return (
+              <div key={categoryId} className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-2xl">{habit.emoji}</span>
-                    <div>
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-2">
-                        <h4 className="text-base font-semibold text-gray-900 dark:text-white">
-                          {habit.name}
-                        </h4>
-                        {streak > 0 && (
-                          <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-orange-100/50 dark:bg-orange-900/30">
-                            <FireIcon className="w-3 h-3 text-orange-500" />
-                            <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
-                              {streak}d
-                            </span>
+                  <h3 className="text-lg font-semibold" 
+                      style={{ color: theme === 'dark' ? category.darkColor : category.color }}>
+                    {category.name}
+                  </h3>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {categoryHabits.map((habit) => {
+                    const isCompleted = habit.completions[date] ?? false;
+                    const streak = calculateStreak(habit.completions);
+
+                    return (
+                      <div
+                        key={habit.id}
+                        className={`rounded-xl transition-all duration-200 overflow-hidden
+                                  border border-white/20 dark:border-gray-800/30
+                                  ${isCompleted 
+                                    ? 'bg-green-100/50 dark:bg-green-900/20' 
+                                    : 'bg-white/30 dark:bg-gray-900/30'}`}
+                      >
+                        <div className="p-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <span className="text-2xl">{habit.emoji}</span>
+                              <div>
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-2">
+                                  <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+                                    {habit.name}
+                                  </h4>
+                                  {streak > 0 && (
+                                    <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-orange-100/50 dark:bg-orange-900/30">
+                                      <FireIcon className="w-3 h-3 text-orange-500" />
+                                      <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
+                                        {streak}d
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                {habit.category && (
+                                  <div>
+                                    {formatCategory(habit.category)}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => toggleHabit(habit.id)}
+                              className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md transition-all duration-200 hover:opacity-80"
+                            >
+                              {isCompleted ? (
+                                <div className="flex items-center space-x-1.5">
+                                  <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-1.5">
+                                  <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+                                </div>
+                              )}
+                            </button>
                           </div>
-                        )}
-                      </div>
-                      {habit.category && (
-                        <div>
-                          {formatCategory(habit.category)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => toggleHabit(habit.id)}
-                    className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md
-                               transition-all duration-200
-                               ${isCompleted 
-                                 ? 'bg-green-200/50 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
-                                 : 'bg-gray-200/50 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                               } hover:opacity-80`}
-                  >
-                    {isCompleted ? (
-                      <div className="flex items-center space-x-1.5">
-                        <CheckCircleSolidIcon className="w-5 h-5" />
-                        <div className="text-xs font-medium hidden sm:flex">
-                          Done
                         </div>
                       </div>
-                    ) : (
-                      <div className="flex items-center space-x-1.5">
-                        <CheckCircleIcon className="w-5 h-5" />
-                        <div className="text-xs font-medium hidden sm:flex">
-                          Complete
-                        </div>
-                      </div>
-                    )}
-                  </button>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {habits.map((habit) => {
+              const isCompleted = habit.completions[date] ?? false;
+              const streak = calculateStreak(habit.completions);
+
+              return (
+                <div
+                  key={habit.id}
+                  className={`rounded-xl transition-all duration-200 overflow-hidden
+                            border border-white/20 dark:border-gray-800/30
+                            ${isCompleted 
+                              ? 'bg-green-100/50 dark:bg-green-900/20' 
+                              : 'bg-white/30 dark:bg-gray-900/30'}`}
+                >
+                  <div className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-2xl">{habit.emoji}</span>
+                        <div>
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-2">
+                            <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+                              {habit.name}
+                            </h4>
+                            {streak > 0 && (
+                              <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-orange-100/50 dark:bg-orange-900/30">
+                                <FireIcon className="w-3 h-3 text-orange-500" />
+                                <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
+                                  {streak}d
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          {habit.category && (
+                            <div>
+                              {formatCategory(habit.category)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => toggleHabit(habit.id)}
+                        className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md transition-all duration-200 hover:opacity-80"
+                      >
+                        {isCompleted ? (
+                          <div className="flex items-center space-x-1.5">
+                            <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-1.5">
+                            <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+                          </div>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

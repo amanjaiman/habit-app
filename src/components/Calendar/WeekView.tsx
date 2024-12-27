@@ -1,11 +1,14 @@
 import { format, startOfWeek, addDays, parseISO, isSameDay } from 'date-fns';
-import { Habit } from '../../types/habit';
+import { DEFAULT_CATEGORIES, Habit } from '../../types/habit';
 import { habitApi, useHabits } from '../../contexts/HabitContext';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import { useUser } from '../../contexts/UserContext';
 import { FireIcon } from '@heroicons/react/24/solid';
 import { calculateStreak } from '../../utils/helpers';
+import React from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useHabitDisplay } from '../../contexts/HabitDisplayContext';
 
 interface WeekViewProps {
   startDate: string; // ISO date string
@@ -15,6 +18,8 @@ interface WeekViewProps {
 export default function WeekView({ startDate, habits }: WeekViewProps) {
   const { dispatch } = useHabits();
   const { state: userState } = useUser();
+  const { theme } = useTheme();
+  const { groupHabits } = useHabitDisplay();
   const weekStart = startOfWeek(parseISO(startDate), { weekStartsOn: 1 });
   
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -48,6 +53,15 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
     });
   };
 
+  const groupedHabits = habits.reduce((acc, habit) => {
+    const categoryId = habit.category || 'uncategorized';
+    if (!acc[categoryId]) {
+      acc[categoryId] = [];
+    }
+    acc[categoryId].push(habit);
+    return acc;
+  }, {} as Record<string, Habit[]>);
+
   return (
     <div className="overflow-x-auto p-4 sm:p-6">
       <table className="min-w-full divide-y divide-gray-200/50 dark:divide-gray-700/50 
@@ -79,17 +93,91 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200/50 dark:divide-gray-700/50">
-          {habits.map((habit) => {
-            const completedWeek = isHabitCompletedForWeek(habit);
-            const streak = calculateStreak(habit.completions);
-            
-            return (
-              <tr key={habit.id} 
-                  className={`transition-colors duration-300
-                             ${completedWeek 
-                               ? 'bg-gradient-to-r from-green-100/75 to-emerald-100/75 dark:from-green-900/30 dark:to-emerald-900/30' 
-                               : 'hover:bg-white/50 dark:hover:bg-gray-800/50'
-                             }`}>
+          {groupHabits ? (
+            Object.entries(groupedHabits).map(([categoryId, categoryHabits]) => {
+              const category = DEFAULT_CATEGORIES.find(c => c.id === categoryId) || {
+                id: 'uncategorized',
+                name: 'Other',
+                color: '#6B7280',
+                darkColor: '#9CA3AF'
+              };
+
+              return (
+                <React.Fragment key={categoryId}>
+                  <tr className="bg-gray-50/50 dark:bg-gray-800/50">
+                    <td colSpan={8} className="px-6 py-2">
+                      <span className="text-sm font-medium"
+                            style={{ color: theme === 'dark' ? category.darkColor : category.color }}>
+                        {category.name}
+                      </span>
+                    </td>
+                  </tr>
+                  
+                  {categoryHabits.map((habit) => {
+                    const completedWeek = isHabitCompletedForWeek(habit);
+                    const streak = calculateStreak(habit.completions);
+                    
+                    return (
+                      <tr key={habit.id} 
+                          className={`transition-colors duration-300
+                                     ${completedWeek 
+                                       ? 'bg-gradient-to-r from-green-100/75 to-emerald-100/75 dark:from-green-900/30 dark:to-emerald-900/30' 
+                                       : 'hover:bg-white/50 dark:hover:bg-gray-800/50'
+                                     }`}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-xl">{habit.emoji}</span>
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <span className="font-medium text-gray-900 dark:text-white">
+                                  {habit.name}
+                                </span>
+                                {streak > 0 && (
+                                  <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-orange-100/50 dark:bg-orange-900/30">
+                                    <FireIcon className="w-3 h-3 text-orange-500" />
+                                    <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
+                                      {streak}d
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        {weekDays.map((day) => {
+                          const dateStr = format(day, 'yyyy-MM-dd');
+                          const isCompleted = habit.completions[dateStr] ?? false;
+                          const isToday = isSameDay(day, new Date());
+
+                          return (
+                            <td
+                              key={day.toISOString()}
+                              className={`px-6 py-4 text-center ${
+                                isToday ? 'bg-blue-100/40 dark:bg-blue-900/20' : ''
+                              }`}
+                            >
+                              <button
+                                onClick={() => toggleHabit(habit.id, day)}
+                                className="inline-flex items-center justify-center"
+                              >
+                                {isCompleted ? (
+                                  <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
+                                ) : (
+                                  <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+                                )}
+                              </button>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })
+          ) : (
+            habits.map((habit) => (
+              <tr key={habit.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-3">
                     <span className="text-xl">{habit.emoji}</span>
@@ -98,11 +186,11 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                         <span className="font-medium text-gray-900 dark:text-white">
                           {habit.name}
                         </span>
-                        {streak > 0 && (
+                        {calculateStreak(habit.completions) > 0 && (
                           <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-orange-100/50 dark:bg-orange-900/30">
                             <FireIcon className="w-3 h-3 text-orange-500" />
                             <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
-                              {streak}d
+                              {calculateStreak(habit.completions)}d
                             </span>
                           </div>
                         )}
@@ -136,8 +224,8 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                   );
                 })}
               </tr>
-            );
-          })}
+            ))
+          )}
         </tbody>
       </table>
     </div>

@@ -12,6 +12,7 @@ import LoginForm from './components/Auth/LoginForm';
 import SignupForm from './components/Auth/SignupForm';
 import { Toaster } from 'react-hot-toast';
 import { AnalyticsProvider } from './contexts/AnalyticsContext';
+import { HabitDisplayProvider } from './contexts/HabitDisplayContext';
 
 function AppContent() {
   const { state } = useUser();
@@ -69,11 +70,13 @@ function App() {
       <ThemeProvider>
         <UserProvider>
           <AnalyticsProvider>
-            <HabitProvider>
-              <Router>
-                <AppContent />
-              </Router>
-            </HabitProvider>
+            <HabitDisplayProvider>
+              <HabitProvider>
+                <Router>
+                  <AppContent />
+                </Router>
+              </HabitProvider>
+            </HabitDisplayProvider>
           </AnalyticsProvider>
         </UserProvider>
       </ThemeProvider>

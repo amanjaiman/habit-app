@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useHabits, habitApi } from '../contexts/HabitContext';
 import { useUser, userApi } from '../contexts/UserContext';
+import { useHabitDisplay } from '../contexts/HabitDisplayContext';
 import { Switch } from '@headlessui/react';
 import {
   SunIcon,
@@ -33,6 +34,7 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [profileImage, setProfileImage] = useState<string>(userState.profile?.profileImage || '');
   const [isPremiumDialogOpen, setIsPremiumDialogOpen] = useState(false);
+  const { groupHabits, toggleGroupHabits } = useHabitDisplay();
 
   const handleExportData = async () => {
     if (!userState.profile?.id) return;
@@ -382,7 +384,7 @@ export default function Settings() {
                 ) : (
                   <SunIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 )}
-                <span className="text-gray-900 dark:text-white">Dark Mode</span>
+                <span className="text-gray-900 dark:text-white">Dark mode</span>
               </div>
               <Switch
                 checked={theme === 'dark'}
@@ -394,6 +396,28 @@ export default function Settings() {
                 <span
                   className={`${
                     theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                />
+              </Switch>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 0 1-1.125-1.125v-3.75Zm12 1.5c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-8.25ZM2.25 16.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-3.75Z" />
+                </svg>
+                <span className="text-gray-900 dark:text-white">Group habits by category</span>
+              </div>
+              <Switch
+                checked={groupHabits}
+                onChange={toggleGroupHabits}
+                className={`${
+                  groupHabits ? 'bg-purple-600' : 'bg-gray-200'
+                } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2`}
+              >
+                <span
+                  className={`${
+                    groupHabits ? 'translate-x-6' : 'translate-x-1'
                   } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                 />
               </Switch>
