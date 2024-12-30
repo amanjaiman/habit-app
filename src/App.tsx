@@ -13,6 +13,9 @@ import SignupForm from './components/Auth/SignupForm';
 import { Toaster } from 'react-hot-toast';
 import { AnalyticsProvider } from './contexts/AnalyticsContext';
 import { HabitDisplayProvider } from './contexts/HabitDisplayContext';
+import { GroupProvider } from './contexts/GroupContext';
+import Groups from './components/Groups/Groups';
+import GroupPage from './components/Groups/GroupPage';
 
 function AppContent() {
   const { state } = useUser();
@@ -48,6 +51,16 @@ function AppContent() {
         } />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/signup" element={<SignupForm />} />
+        <Route path="/groups" element={
+          <ProtectedRoute>
+            <Groups />
+          </ProtectedRoute>
+        } />
+        <Route path="/groups/:groupId" element={
+          <ProtectedRoute>
+            <GroupPage />
+          </ProtectedRoute>
+        } />
         <Route path="/analytics" element={
           <ProtectedRoute>
             <Analytics />
@@ -69,15 +82,17 @@ function App() {
       <Toaster />
       <ThemeProvider>
         <UserProvider>
-          <AnalyticsProvider>
-            <HabitDisplayProvider>
-              <HabitProvider>
-                <Router>
-                  <AppContent />
-                </Router>
-              </HabitProvider>
-            </HabitDisplayProvider>
-          </AnalyticsProvider>
+          <GroupProvider>
+            <HabitProvider>
+              <AnalyticsProvider>
+                <HabitDisplayProvider>
+                  <Router>
+                    <AppContent />
+                  </Router>
+                </HabitDisplayProvider>
+              </AnalyticsProvider>
+            </HabitProvider>
+          </GroupProvider>
         </UserProvider>
       </ThemeProvider>
     </>

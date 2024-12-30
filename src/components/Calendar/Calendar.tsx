@@ -143,7 +143,7 @@ export default function Calendar() {
 
           <button
             onClick={resetToToday}
-            className="inline-flex items-center px-4 py-2 bg-white/50 dark:bg-gray-800/50 
+            className="inline-flex items-center px-4 py-2.5 bg-white/50 dark:bg-gray-800/50 
                      rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 
                      hover:bg-white/70 dark:hover:bg-gray-700/70 transition-all duration-200 
                      shadow-sm ring-1 ring-inset ring-gray-300/50 dark:ring-gray-700/50"

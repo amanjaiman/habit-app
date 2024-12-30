@@ -10,7 +10,7 @@ const HabitDisplayContext = createContext<HabitDisplayContextType | undefined>(u
 export function HabitDisplayProvider({ children }: { children: React.ReactNode }) {
   const [groupHabits, setGroupHabits] = useState(() => {
     const stored = localStorage.getItem('habitGrouping');
-    return stored ? JSON.parse(stored) : true; // Default to true
+    return stored ? JSON.parse(stored) : false; // Default to false
   });
 
   useEffect(() => {

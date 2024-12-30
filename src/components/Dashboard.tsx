@@ -4,11 +4,25 @@ import HabitForm from './HabitForm';
 import HabitList from './HabitList';
 import Calendar from './Calendar/Calendar';
 import { useUser } from '../contexts/UserContext';
+import { useGroups } from '../contexts/GroupContext';
 
 export default function Dashboard() {
   const { state: userState } = useUser();
   const { state } = useHabits();
+  const { state: groupState } = useGroups();
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // Combine individual and group habits
+  const allGroupHabits = groupState.groups.flatMap(group => 
+    group.habits.map(habit => ({
+      ...habit,
+      groupName: group.name,
+      groupEmoji: group.emoji,
+      groupId: group.id
+    }))
+  );
+
+  const hasAnyHabits = state.habits.length > 0 || allGroupHabits.length > 0;
 
   return (
     <main className="max-w-7xl mx-auto py-6 px-4 sm:px-8 lg:px-12">
@@ -35,14 +49,14 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {state.habits.length === 0 && (
+        {!hasAnyHabits && (
           <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
                           border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg">
             No habits found. Add a habit to get started.
           </div>
         )}
 
-        {state.habits.length > 0 && (
+        {hasAnyHabits && (
           <>
             {/* Calendar Section */}
             <div className="relative z-0">
@@ -52,7 +66,10 @@ export default function Dashboard() {
             {/* Habits List */}
             <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
                           border border-white/20 dark:border-gray-800/30 shadow-xl">
-              <HabitList habits={state.habits} />
+              <HabitList 
+                habits={state.habits} 
+                groupHabits={allGroupHabits}
+              />
             </div>
           </>
         )}

@@ -8,6 +8,7 @@ import {
   MoonIcon,
   ArrowRightOnRectangleIcon,
   UserCircleIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline';
 import { useUser } from '../contexts/UserContext';
 import { useState, useRef, useEffect } from 'react';
@@ -25,12 +26,18 @@ export default function Navbar() {
 
   const navigation = userState.isAuthenticated ? [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
+    { name: 'Groups', href: '/groups', icon: UsersIcon },
     { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
     { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
     { name: 'Logout', href: '', icon: ArrowRightOnRectangleIcon, onClick: () => dispatch({ type: 'LOGOUT' }) },
   ] : [];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    if (path === '/groups' && location.pathname.startsWith('/groups')) {
+      return true;
+    }
+    return location.pathname === path;
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
