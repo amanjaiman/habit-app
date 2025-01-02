@@ -21,6 +21,7 @@ export default function GroupPage() {
   const [error, setError] = useState<string | null>(null);
   const [group, setGroup] = useState<Group | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     const fetchGroup = async () => {
@@ -54,6 +55,18 @@ export default function GroupPage() {
   const handleCopyCode = () => {
     navigator.clipboard.writeText(group?.joinCode || '');
     toast.success('Join code copied to clipboard');
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!userState.profile) return;
+    
+    try {
+      await groupApi.delete(group?.id || '', userState.profile.id);
+      dispatch({ type: 'DELETE_GROUP', payload: group?.id || '' });
+      navigate('/groups');
+    } catch (error) {
+      console.error('Failed to delete group:', error);
+    }
   };
 
   const renderMemberInfo = () => {
@@ -241,6 +254,63 @@ export default function GroupPage() {
               </div>
             )}
           </>
+        )}
+
+        {isAdmin && (
+          <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                        border border-white/20 dark:border-gray-800/30 shadow-xl">
+            <div>
+              <h2 className="text-xl font-bold mb-4 text-red-500 dark:text-red-400">
+                Danger Zone
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Once you delete a group, there is no going back. Please be certain.
+              </p>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg 
+                         transition-colors duration-200 flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Delete Group
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+               style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, marginTop: '0px' }}
+          >
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-md w-full shadow-xl relative z-[101]">
+              <h3 className="text-xl font-bold mb-4">Delete Group?</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Are you sure you want to delete "{group.name}"? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 
+                           dark:hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    handleDeleteGroup();
+                    setShowDeleteConfirm(false);
+                  }}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg 
+                           transition-colors duration-200 flex items-center justify-center gap-2"
+                >
+                  Delete Group
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Add Habit Modal */}
