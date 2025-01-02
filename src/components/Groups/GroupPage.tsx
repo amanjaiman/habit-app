@@ -3,9 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useGroups, groupApi, Group, GroupHabit } from '../../contexts/GroupContext';
 import { useUser } from '../../contexts/UserContext';
 import GroupHabitForm from './GroupHabitForm';
-import GroupHabitList from './GroupHabitList';
 import GroupCalendar from './GroupCalendar';
 import toast from 'react-hot-toast';
+import GroupAchievements from './GroupAchievements';
+import GroupTrendChart from './GroupTrendChart';
+import GroupLeaderboard from './GroupLeaderboard';
+import GroupStats from './GroupStats';
+import GroupHabitList from './GroupHabitList';
 
 export default function GroupPage() {
   const { groupId } = useParams();
@@ -84,26 +88,6 @@ export default function GroupPage() {
           </div>
           <span>{group?.memberDetails.length} members</span>
         </div>
-        {group?.adminId === userState.profile?.id && (
-          <>
-            <span>•</span>
-            <div className="flex items-center gap-1">
-              {admin?.profileImage ? (
-                <img
-                  src={admin.profileImage}
-                  alt={admin.name}
-                  className="w-5 h-5 rounded-full"
-                />
-              ) : (
-                <div className="w-5 h-5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 
-                              flex items-center justify-center text-white text-xs font-medium">
-                  {admin?.name[0].toUpperCase()}
-                </div>
-              )}
-              <span>Admin: {admin?.name}</span>
-            </div>
-          </>
-        )}
         <span>•</span>
         <button
           onClick={handleCopyCode}
@@ -146,77 +130,116 @@ export default function GroupPage() {
     <main className="max-w-7xl mx-auto py-6 px-4 sm:px-8 lg:px-12">
       <div className="space-y-8">
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row justify-between items-center backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 
+        <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 
                       rounded-2xl p-8 border border-white/20 dark:border-gray-800/30 shadow-xl">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/groups')}
-              className="p-2 hover:bg-white/10 dark:hover:bg-gray-800/30 rounded-lg transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div>
-              <h1 className="sm:text-start text-4xl leading-[3rem] font-black flex items-center gap-2">
-                <span className="bg-gradient-to-r from-purple-600 to-pink-600 
-                          dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
-                  {group.name}
-                </span>
-                <span className="mb-2">{group.emoji}</span>
-              </h1>
-              {group.description && (
-                <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
-                  {group.description}
-                </p>
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-4 flex-1">
+              <button
+                onClick={() => navigate('/groups')}
+                className="p-2 hover:bg-white/10 dark:hover:bg-gray-800/30 rounded-lg transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div>
+                <h1 className="sm:text-start text-4xl leading-[3rem] font-black flex items-center gap-2">
+                  <span className="bg-gradient-to-r from-purple-600 to-pink-600 
+                            dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+                    {group.name}
+                  </span>
+                  <span className="mb-2">{group.emoji}</span>
+                </h1>
+                {group.description && (
+                  <p className="text-gray-600 dark:text-gray-300 text-base sm:text-lg">
+                    {group.description}
+                  </p>
+                )}
+                {renderMemberInfo()}
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-4">
+              {group.habits.length > 0 && (
+                <div className="lg:min-w-[300px]">
+                  <GroupStats group={group} />
+                </div>
               )}
-              {renderMemberInfo()}
             </div>
           </div>
-          {isAdmin && (
-            <button
-              onClick={() => setIsHabitFormOpen(true)}
-              className="mt-4 sm:mt-0 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 
-                      hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg hover:shadow-xl 
-                      transition-all duration-200 flex items-center space-x-2 font-medium"
-            >
-              <span>Add Habit</span>
-            </button>
-          )}
         </div>
 
         {group.habits.length === 0 ? (
-          <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center">
-            <p className="text-gray-600 dark:text-gray-300 text-lg">
-              {isAdmin 
-                ? "No habits added yet. Create a habit to get started!" 
-                : "No habits have been added to this group yet."}
-            </p>
-          </div>
+          <>
+            <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                          border border-white/20 dark:border-gray-800/30 shadow-xl text-center">
+              <p className="text-gray-600 dark:text-gray-300 text-lg">
+                {isAdmin 
+                  ? "No habits added yet. Create a habit to get started!" 
+                  : "No habits have been added to this group yet."}
+              </p>
+            </div>
+            {/* Admin Habit Management Section */}
+            {isAdmin && (
+              <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                            border border-white/20 dark:border-gray-800/30 shadow-xl">
+                <GroupHabitList
+                  habits={group.habits}
+                  groupId={group.id}
+                  isAdmin={isAdmin}
+                />
+              </div>
+            )}
+          </>
         ) : (
           <>
             {/* Group Progress Section */}
             <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
                           border border-white/20 dark:border-gray-800/30 shadow-xl">
-              <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 
-                          dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
-                Group Progress
-              </h2>
               <GroupCalendar group={group} />
             </div>
 
-            {/* Habits List */}
-            <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+            {/* Trends Section */}
+            <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
                           border border-white/20 dark:border-gray-800/30 shadow-xl">
-              <GroupHabitList 
-                habits={group.habits} 
-                groupId={group.id}
-                isAdmin={isAdmin}
-                groupMembersLength={group.memberDetails.length}
-                members={group.memberDetails}
-              />
+              <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 
+                          dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+                Completion Trends
+              </h2>
+              <GroupTrendChart group={group} />
             </div>
+
+            {/* Achievements Section */}
+            <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                          border border-white/20 dark:border-gray-800/30 shadow-xl">
+              <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 
+                          dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+                Group Achievements
+              </h2>
+              <GroupAchievements group={group} />
+            </div>
+
+            {/* Leaderboard Section */}
+            <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                          border border-white/20 dark:border-gray-800/30 shadow-xl">
+              <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-purple-600 to-pink-600 
+                          dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+                Leaderboard
+              </h2>
+              <GroupLeaderboard group={group} />
+            </div>
+
+            {/* Admin Habit Management Section */}
+            {isAdmin && (
+              <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                            border border-white/20 dark:border-gray-800/30 shadow-xl">
+                <GroupHabitList
+                  habits={group.habits}
+                  groupId={group.id}
+                  isAdmin={isAdmin}
+                />
+              </div>
+            )}
           </>
         )}
 

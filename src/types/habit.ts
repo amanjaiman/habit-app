@@ -1,23 +1,43 @@
+export enum HabitType {
+  BOOLEAN = "boolean",
+  NUMERIC = "numeric",
+  RATING = "rating"
+}
+
+export interface NumericHabitConfig {
+  goal: number;
+  unit: string;
+  higherIsBetter: boolean;
+}
+
+export interface RatingHabitConfig {
+  min: number;
+  max: number;
+  goal: number;
+}
+
+export type HabitConfig = NumericHabitConfig | RatingHabitConfig;
+
+// Update completion type to support numbers
+export type HabitCompletionValue = boolean | number;
+
 export interface Habit {
   id: string;
   name: string;
   emoji: string;
   color?: string;
   createdAt: string;
-  completions: HabitCompletions;
+  completions: Record<string, HabitCompletionValue>;
   category?: string;
+  type: HabitType;
+  config?: HabitConfig;
 }
 
-// This represents a map of dates to completion status
-export interface HabitCompletions {
-  [date: string]: boolean;
-}
-
-// For database operations
+// Update this to support numeric values
 export interface HabitCompletion {
   habitId: string;
   date: string;
-  completed: boolean;
+  completed: HabitCompletionValue;
 }
 
 export interface HabitStats {

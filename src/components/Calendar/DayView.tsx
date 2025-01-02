@@ -1,5 +1,5 @@
 import { format, parseISO } from 'date-fns';
-import { DEFAULT_CATEGORIES, Habit, HabitCategory, HabitCompletions } from '../../types/habit';
+import { DEFAULT_CATEGORIES, Habit, HabitCategory, HabitType, RatingHabitConfig, NumericHabitConfig } from '../../types/habit';
 import { habitApi, useHabits } from '../../contexts/HabitContext';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
@@ -11,14 +11,31 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { calculateStreak } from '../../utils/helpers';
 import { useHabitDisplay } from '../../contexts/HabitDisplayContext';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { GroupHabitCompletion, useGroups } from '../../contexts/GroupContext';
+import { GroupHabit, GroupHabitCompletion, useGroups } from '../../contexts/GroupContext';
 import { groupApi } from '../../contexts/GroupContext';
 import { Link } from 'react-router-dom';
+import HabitCompletionControl from './HabitCompletionControl';
+import { getCompletionIcon } from '../../utils/habitUtils';
 
 interface DayViewProps {
   date: string; // ISO date string
   habits: Habit[];
 }
+
+const isFullyCompleted = (habit: Habit | GroupHabit, value: boolean | number) => {
+  if (habit.type === HabitType.BOOLEAN) {
+    return value === true;
+  }
+  if (habit.type === HabitType.NUMERIC) {
+    const config = habit.config as NumericHabitConfig;
+    return typeof value === 'number' && (config.higherIsBetter ? value >= config.goal : value <= config.goal);
+  }
+  if (habit.type === HabitType.RATING) {
+    const config = habit.config as RatingHabitConfig;
+    return typeof value === 'number' && value === config.goal;
+  }
+  return false;
+};
 
 export default function DayView({ date, habits }: DayViewProps) {
   const { dispatch } = useHabits();
@@ -29,21 +46,25 @@ export default function DayView({ date, habits }: DayViewProps) {
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const { state: groupState, dispatch: groupDispatch } = useGroups();
   const [groupHabitsCollapsed, setGroupHabitsCollapsed] = useState(false);
+  const [selectedHabit, setSelectedHabit] = useState<Habit | undefined>();
+  const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
+  const [selectedGroupHabit, setSelectedGroupHabit] = useState<(GroupHabit & { groupId: string }) | undefined>();
+  const [isGroupCompletionDialogOpen, setIsGroupCompletionDialogOpen] = useState(false);
 
-  const toggleHabit = async (habitId: string) => {
+  const toggleHabit = async (habitId: string, value: boolean | number) => {
     if (!userState.profile?.id) return;
 
     const habit = habits.find(h => h.id === habitId);
-    const isCompleted = habit?.completions[date] ?? false;
+    if (!habit) return;
 
     try {
-      await habitApi.toggle(userState.profile.id, habitId, date, !isCompleted);
+      await habitApi.toggle(userState.profile.id, habitId, date, value);
       dispatch({
         type: 'TOGGLE_COMPLETION',
         payload: {
           habitId,
           date,
-          completed: !isCompleted,
+          completed: value,
         },
       });
     } catch (error) {
@@ -51,15 +72,24 @@ export default function DayView({ date, habits }: DayViewProps) {
     }
   };
 
-  const completedCount = habits.filter(habit => habit.completions[date]).length;
+  const completedCount = habits.filter(habit => 
+    isFullyCompleted(habit, habit.completions[date])
+  ).length;
   const allCompleted = completedCount === habits.length && habits.length > 0;
 
-  const formatCategory = useCallback((categoryId: string) => {
+  const formatCategory = useCallback((categoryId: string, habit: Habit) => {
     const category = DEFAULT_CATEGORIES.find((c: HabitCategory) => c.id === categoryId);
     return (
-      <span className="text-xs font-medium" style={{ color: theme === 'dark' ? category?.darkColor : category?.color }}>
-        {category?.name}
-      </span>
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-medium" style={{ color: theme === 'dark' ? category?.darkColor : category?.color }}>
+          {category?.name}
+        </span>
+        {(habit.type === HabitType.NUMERIC || habit.type === HabitType.RATING) && (
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            Goal: {habit.config?.goal}
+          </span>
+        )}
+      </div>
     );
   }, []);
 
@@ -84,17 +114,17 @@ export default function DayView({ date, habits }: DayViewProps) {
     });
   };
 
-  const toggleGroupHabit = async (groupId: string, habitId: string) => {
+  const toggleGroupHabit = async (groupId: string, habitId: string, value: boolean | number) => {
     if (!userState.profile?.id) return;
 
     const group = groupState.groups.find(g => g.id === groupId);
     const habit = group?.habits.find(h => h.id === habitId);
-    const isCompleted = habit?.completions.some(
-      c => c.userId === userState.profile?.id && c.date === date
-    ) ?? false;
+    if (!habit) return;
 
+    // For boolean habits, we use the value directly (which comes from handleGroupHabitClick)
+    // For numeric/rating habits, we also use the value directly
     try {
-      await groupApi.toggleHabit(groupId, habitId, date, !isCompleted, userState.profile.id);
+      await groupApi.toggleHabit(groupId, habitId, date, value, userState.profile.id);
       groupDispatch({
         type: 'TOGGLE_HABIT_COMPLETION',
         payload: {
@@ -103,7 +133,7 @@ export default function DayView({ date, habits }: DayViewProps) {
           completion: {
             userId: userState.profile.id,
             date,
-            completed: !isCompleted
+            completed: value
           }
         }
       });
@@ -123,7 +153,7 @@ export default function DayView({ date, habits }: DayViewProps) {
     );
   };
 
-  const calculateGroupHabitStreak = (completions: GroupHabitCompletion[], userId: string) => {
+  const calculateGroupHabitStreak = (completions: GroupHabitCompletion[], userId: string, habit: GroupHabit) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     let streak = 0;
@@ -131,16 +161,54 @@ export default function DayView({ date, habits }: DayViewProps) {
 
     while (true) {
       const dateStr = format(currentDate, 'yyyy-MM-dd');
-      const isCompleted = completions.some(
-        c => c.userId === userId && c.date === dateStr && c.completed
+      const completion = completions.find(
+        c => c.userId === userId && c.date === dateStr
       );
-
-      if (!isCompleted) break;
+      
+      if (!completion || !isFullyCompleted(habit, completion.completed)) break;
+      
       streak++;
       currentDate.setDate(currentDate.getDate() - 1);
     }
 
     return streak;
+  };
+
+  const handleHabitClick = (habit: Habit) => {
+    if (habit.type === HabitType.BOOLEAN) {
+      toggleHabit(habit.id, !habit.completions[date]);
+    } else if (habit.type === HabitType.NUMERIC || habit.type === HabitType.RATING) {
+      setSelectedHabit(habit);
+      setIsCompletionDialogOpen(true);
+    }
+  };
+
+  const handleCompletionSubmit = (value: number) => {
+    if (selectedHabit) {
+      toggleHabit(selectedHabit.id, value);
+      setIsCompletionDialogOpen(false);
+      setSelectedHabit(undefined);
+    }
+  };
+
+  const handleGroupHabitClick = (groupId: string, habit: GroupHabit) => {
+    if (habit.type === HabitType.BOOLEAN) {
+      const isCompleted = habit.completions.some(
+        c => c.userId === userState.profile?.id && c.date === date
+      );
+      toggleGroupHabit(groupId, habit.id, !isCompleted);
+    } else if (habit.type === HabitType.NUMERIC || habit.type === HabitType.RATING) {
+      setSelectedGroupHabit({ ...habit, groupId });
+      setIsGroupCompletionDialogOpen(true);
+    }
+  };
+
+  const handleGroupCompletionSubmit = (value: number) => {
+    if (selectedGroupHabit) {
+      toggleGroupHabit(selectedGroupHabit.groupId, selectedGroupHabit.id, value);
+      setIsGroupCompletionDialogOpen(false);
+      setSelectedGroupHabit(undefined);
+    }
   };
 
   return (
@@ -199,8 +267,8 @@ export default function DayView({ date, habits }: DayViewProps) {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 
                                 transition-all duration-300 ease-in-out">
                     {categoryHabits.map((habit) => {
-                      const isCompleted = habit.completions[date] ?? false;
-                      const streak = calculateStreak(habit.completions);
+                      const isCompleted = isFullyCompleted(habit, habit.completions[date]);
+                      const streak = calculateStreak(habit);
 
                       return (
                         <div
@@ -231,24 +299,16 @@ export default function DayView({ date, habits }: DayViewProps) {
                                   </div>
                                   {habit.category && (
                                     <div>
-                                      {formatCategory(habit.category)}
+                                      {formatCategory(habit.category, habit)}
                                     </div>
                                   )}
                                 </div>
                               </div>
                               <button
-                                onClick={() => toggleHabit(habit.id)}
+                                onClick={() => handleHabitClick(habit)}
                                 className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md transition-all duration-200 hover:opacity-80"
                               >
-                                {isCompleted ? (
-                                  <div className="flex items-center space-x-1.5">
-                                    <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center space-x-1.5">
-                                    <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
-                                  </div>
-                                )}
+                                {getCompletionIcon(habit, habit.completions[date], true)}
                               </button>
                             </div>
                           </div>
@@ -263,8 +323,8 @@ export default function DayView({ date, habits }: DayViewProps) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {habits.map((habit) => {
-              const isCompleted = habit.completions[date] ?? false;
-              const streak = calculateStreak(habit.completions);
+              const isCompleted = isFullyCompleted(habit, habit.completions[date]);
+              const streak = calculateStreak(habit);
 
               return (
                 <div
@@ -295,24 +355,16 @@ export default function DayView({ date, habits }: DayViewProps) {
                           </div>
                           {habit.category && (
                             <div>
-                              {formatCategory(habit.category)}
+                              {formatCategory(habit.category, habit)}
                             </div>
                           )}
                         </div>
                       </div>
                       <button
-                        onClick={() => toggleHabit(habit.id)}
+                        onClick={() => handleHabitClick(habit)}
                         className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md transition-all duration-200 hover:opacity-80"
                       >
-                        {isCompleted ? (
-                          <div className="flex items-center space-x-1.5">
-                            <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
-                          </div>
-                        ) : (
-                          <div className="flex items-center space-x-1.5">
-                            <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
-                          </div>
-                        )}
+                        {getCompletionIcon(habit, habit.completions[date], true)}
                       </button>
                     </div>
                   </div>
@@ -342,10 +394,11 @@ export default function DayView({ date, habits }: DayViewProps) {
           {!groupHabitsCollapsed && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {getAllGroupHabits().map((habit) => {
-                const isCompleted = habit.completions.some(
+                const completionValue = habit.completions.find(
                   c => c.userId === userState.profile?.id && c.date === date
-                );
-                const streak = calculateGroupHabitStreak(habit.completions, userState.profile?.id || '');
+                )?.completed;
+                const isCompleted = completionValue !== undefined && isFullyCompleted(habit, completionValue);
+                const streak = calculateGroupHabitStreak(habit.completions, userState.profile?.id || '', habit);
 
                 return (
                   <div
@@ -380,19 +433,20 @@ export default function DayView({ date, habits }: DayViewProps) {
                                   {habit.groupEmoji} {habit.groupName}
                                 </Link>
                               </span>
+                              {(habit.type === HabitType.NUMERIC || habit.type === HabitType.RATING) && (
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  Goal: {habit.config?.goal}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
                         <button
-                          onClick={() => toggleGroupHabit(habit.groupId, habit.id)}
+                          onClick={() => handleGroupHabitClick(habit.groupId, habit)}
                           className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md 
                                    transition-all duration-200 hover:opacity-80"
                         >
-                          {isCompleted ? (
-                            <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
-                          ) : (
-                            <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
-                          )}
+                          {getCompletionIcon(habit, completionValue, true)}
                         </button>
                       </div>
                     </div>
@@ -403,6 +457,32 @@ export default function DayView({ date, habits }: DayViewProps) {
           )}
         </div>
       )}
+
+      <HabitCompletionControl
+        isOpen={isGroupCompletionDialogOpen}
+        onClose={() => {
+          setIsGroupCompletionDialogOpen(false);
+          setSelectedGroupHabit(undefined);
+        }}
+        habit={selectedGroupHabit}
+        value={selectedGroupHabit ? (
+          selectedGroupHabit.completions.find(
+            c => c.userId === userState.profile?.id && c.date === date
+          )?.completed as number ?? 0
+        ) : 0}
+        onSubmit={handleGroupCompletionSubmit}
+      />
+
+      <HabitCompletionControl
+        isOpen={isCompletionDialogOpen}
+        onClose={() => {
+          setIsCompletionDialogOpen(false);
+          setSelectedHabit(undefined);
+        }}
+        habit={selectedHabit}
+        value={selectedHabit ? (selectedHabit.completions[date] ?? 0) : 0}
+        onSubmit={handleCompletionSubmit}
+      />
     </div>
   );
 }

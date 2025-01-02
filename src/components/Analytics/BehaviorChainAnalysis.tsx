@@ -10,6 +10,8 @@ import {
   CalendarIcon,
 } from '@heroicons/react/24/outline';
 import { SuccessFailurePattern, useAnalytics } from '../../contexts/AnalyticsContext';
+import { isHabitCompletedForDay } from '../../utils/helpers';
+import { Habit } from '../../types/habit';
 
 interface BehaviorChainAnalysisProps {
   habitId: string;
@@ -41,15 +43,24 @@ export default function BehaviorChainAnalysis({ habitId }: BehaviorChainAnalysis
     // Build behavior chains
     const chains: ChainLink[] = days.map(date => {
       const dateStr = format(date, 'yyyy-MM-dd');
-      const isCompleted = habit.completions[dateStr] || false;
+      const completionValue = habit.completions[dateStr];
+      const isCompleted = completionValue !== undefined && isHabitCompletedForDay(habit, completionValue);
 
       // Find habits completed before and after
       const precedingHabits = state.habits
-        .filter(h => h.id !== habitId && h.completions[dateStr])
+        .filter(h => {
+          if (h.id === habitId) return false;
+          const value = h.completions[dateStr];
+          return value !== undefined && isHabitCompletedForDay(h, value);
+        })
         .map(h => h.name);
 
       const followingHabits = state.habits
-        .filter(h => h.id !== habitId && h.completions[dateStr])
+        .filter(h => {
+          if (h.id === habitId) return false;
+          const value = h.completions[dateStr];
+          return value !== undefined && isHabitCompletedForDay(h, value);
+        })
         .map(h => h.name);
 
       return {
@@ -59,11 +70,10 @@ export default function BehaviorChainAnalysis({ habitId }: BehaviorChainAnalysis
         precedingHabits,
         followingHabits,
         dayOfWeek: format(date, 'EEEE'),
-        streak: calculateStreak(date, habit.completions),
+        streak: calculateStreak(date, habit),
       };
     });
 
-    
     const patterns = analyticsState.analytics.analytics.at(-1)?.successFailurePatterns[habit.name]?.patterns || [];
     const recommendations = analyticsState.analytics.analytics.at(-1)?.actionableRecommendations[habit.name]?.recommendations || [];
 
@@ -184,12 +194,18 @@ function getTimeOfDay(dateStr: string): string {
   return 'evening';
 }
 
-function calculateStreak(date: Date, completions: Record<string, boolean>): number {
-  // Implementation to calculate streak length
+function calculateStreak(date: Date, habit: Habit): number {
   let streak = 0;
   let currentDate = date;
   
-  while (completions[format(currentDate, 'yyyy-MM-dd')]) {
+  while (true) {
+    const dateStr = format(currentDate, 'yyyy-MM-dd');
+    const value = habit.completions[dateStr];
+    
+    if (value === undefined || !isHabitCompletedForDay(habit, value)) {
+      break;
+    }
+    
     streak++;
     currentDate = subDays(currentDate, 1);
   }

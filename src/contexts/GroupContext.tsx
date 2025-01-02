@@ -2,24 +2,27 @@ import { createContext, useContext, useReducer, useEffect, ReactNode } from 'rea
 import { API_BASE_URL, handleApiResponse } from '../api/config';
 import { useUser } from './UserContext';
 import { Habit } from '../types/habit';
+import { HabitType, HabitConfig, HabitCompletionValue } from '../types/habit';
 
 // Types
 export interface GroupHabitCompletion {
   userId: string;
   date: string;
-  completed: boolean;
+  completed: boolean | number;
 }
 
 export interface GroupHabit extends Omit<Habit, 'completions'> {
   completions: GroupHabitCompletion[];
+  type: HabitType;
+  config?: HabitConfig;
 }
 
 interface GroupMember {
-    id: string;
-    name: string;
-    profileImage?: string;
-    isAdmin: boolean;
-  }
+  id: string;
+  name: string;
+  profileImage?: string;
+  isAdmin: boolean;
+}
 
 export interface Group {
   id: string;
@@ -97,7 +100,27 @@ async function joinGroup(joinCode: string, userId: string): Promise<void> {
   return handleApiResponse(response);
 }
 
-async function createGroupHabit(groupId: string, habit: Omit<Habit, 'completions'>, userId: string): Promise<GroupHabit> {
+async function createGroupHabit(
+  groupId: string,
+  userId: string,
+  name: string,
+  emoji: string,
+  type: HabitType = HabitType.BOOLEAN,
+  config?: HabitConfig,
+  color?: string,
+  category?: string,
+): Promise<GroupHabit> {
+  const habit: Omit<GroupHabit, 'completions'> = {
+    id: crypto.randomUUID(),
+    name,
+    emoji,
+    type,
+    config,
+    color,
+    createdAt: new Date().toISOString(),
+    category,
+  };
+
   const response = await fetch(`${API_BASE_URL}/groups/${groupId}/habits?user_id=${userId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -110,26 +133,46 @@ async function toggleGroupHabitCompletion(
   groupId: string,
   habitId: string,
   date: string,
-  completed: boolean,
+  value: boolean | number,
   userId: string
 ): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/groups/${groupId}/habits/${habitId}/toggle?user_id=${userId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date, completed }),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/groups/${groupId}/habits/${habitId}/toggle?user_id=${userId}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        date, 
+        completed: value,
+      }),
+    }
+  );
   return handleApiResponse(response);
 }
 
-async function updateGroupHabit(groupId: string, habit: GroupHabit, userId: string): Promise<GroupHabit> {
-  const { completions, ...habitBase } = habit;
+async function updateGroupHabit(
+  groupId: string, 
+  habit: GroupHabit, 
+  userId: string
+): Promise<GroupHabit> {
+  // Create a new object with only the fields expected by HabitBase
+  const habitData = {
+    id: habit.id,
+    name: habit.name,
+    emoji: habit.emoji,
+    color: habit.color,
+    type: habit.type,
+    config: habit.config,
+    category: habit.category,
+    createdAt: habit.createdAt
+  };
   
   const response = await fetch(
-    `${API_BASE_URL}/groups/${groupId}/habits/${habit.id}?user_id=${userId}`,
+    `${API_BASE_URL}/groups/${groupId}/habits/${habitData.id}?user_id=${userId}`,
     {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(habitBase),
+      body: JSON.stringify(habitData),
     }
   );
   return handleApiResponse(response);

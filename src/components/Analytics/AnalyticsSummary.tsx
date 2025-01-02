@@ -23,12 +23,13 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
-import { Habit } from '../../types/habit';
+import { Habit, HabitType, NumericHabitConfig, RatingHabitConfig } from '../../types/habit';
 import { Link } from 'react-router-dom';
 import { KeyInsight, useAnalytics } from '../../contexts/AnalyticsContext';
 import TrendChart from './TrendChart';
 import { useUser } from '../../contexts/UserContext';
 import { useUserPremium } from '../../hooks/useUserPremium';
+import { isHabitCompletedForDay } from '../../utils/helpers';
 
 interface AnalyticsSummaryProps {
   habitId: string;
@@ -258,7 +259,7 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
 
       const streakAnalysis = analyzeStreakPatterns(completionDates);
       const timeAnalysis = analyzeTimePatterns(completionDates);
-      const adaptability = calculateAdaptabilityScore(habit.completions);
+      const adaptability = calculateAdaptabilityScore(habit);
 
       return {
         title: `Analytics for ${habit.name}`,
@@ -886,21 +887,76 @@ function analyzeTimePatterns(dates: Date[]) {
   };
 }
 
-function calculateAdaptabilityScore(completions: Record<string, boolean>) {
-  const entries = Object.entries(completions);
+function calculateAdaptabilityScore(habit: Habit) {
+  const entries = Object.entries(habit.completions);
   const recentCompletions = entries.slice(-30);
   const olderCompletions = entries.slice(-60, -30);
   
-  const recentRate = recentCompletions.filter(([_, completed]) => completed).length / recentCompletions.length;
-  const olderRate = olderCompletions.filter(([_, completed]) => completed).length / olderCompletions.length;
+  const recentRate = recentCompletions.filter(([_, value]) => 
+    isHabitCompletedForDay(habit, value)
+  ).length / recentCompletions.length;
+  
+  const olderRate = olderCompletions.filter(([_, value]) => 
+    isHabitCompletedForDay(habit, value)
+  ).length / olderCompletions.length;
   
   const adaptabilityScore = Math.round(((recentRate / Math.max(olderRate, 0.1)) * 100));
 
+  let insight = adaptabilityScore > 100 ? 'Improving over time' : 'Maintaining consistency';
+  
+  // Add more specific insights for numeric and rating habits
+  if (habit.type === HabitType.NUMERIC) {
+    const config = habit.config as NumericHabitConfig;
+    const recentAvg = recentCompletions
+      .filter(([_, value]) => typeof value === 'number')
+      .reduce((sum, [_, value]) => sum + (value as number), 0) / recentCompletions.length;
+    
+    if (recentAvg > config.goal) {
+      insight += ` (averaging ${recentAvg.toFixed(1)} ${config.unit})`;
+    }
+  } else if (habit.type === HabitType.RATING) {
+    const config = habit.config as RatingHabitConfig;
+    const recentAvg = recentCompletions
+      .filter(([_, value]) => typeof value === 'number')
+      .reduce((sum, [_, value]) => sum + (value as number), 0) / recentCompletions.length;
+    
+    if (recentAvg > (config.max + config.min) / 2) {
+      insight += ` (average rating: ${recentAvg.toFixed(1)})`;
+    }
+  }
+
   return {
     score: Math.min(100, adaptabilityScore),
-    insight: adaptabilityScore > 100 ? 'Improving over time' : 'Maintaining consistency',
-    recommendation: getAdaptabilityRecommendation(adaptabilityScore),
+    insight,
+    recommendation: getAdaptabilityRecommendation(adaptabilityScore, habit.type),
   };
+}
+
+function getAdaptabilityRecommendation(score: number, habitType: HabitType): string {
+  if (score > 100) {
+    if (habitType === HabitType.NUMERIC) {
+      return 'Keep increasing your targets as you improve';
+    } else if (habitType === HabitType.RATING) {
+      return 'Your consistency is improving - keep up the great work';
+    }
+    return 'Your habit is getting stronger over time';
+  }
+  
+  if (score > 80) {
+    if (habitType === HabitType.NUMERIC) {
+      return 'Maintaining good progress towards your goals';
+    } else if (habitType === HabitType.RATING) {
+      return 'Maintaining good quality in your practice';
+    }
+    return 'Maintaining good consistency';
+  }
+  
+  if (habitType === HabitType.NUMERIC) {
+    return 'Try breaking down your goals into smaller steps';
+  } else if (habitType === HabitType.RATING) {
+    return 'Focus on quality over quantity in your practice';
+  }
+  return 'Focus on building more consistent patterns';
 }
 
 function getStreakRecommendation(current: number, best: number, recovery: number): string {
@@ -912,12 +968,6 @@ function getStreakRecommendation(current: number, best: number, recovery: number
 function getTimeRecommendation(hour: number, successRate: number): string {
   if (successRate > 80) return `${hour}:00 is your power hour - stick with it!`;
   return 'Consider adjusting your habit timing for better consistency';
-}
-
-function getAdaptabilityRecommendation(score: number): string {
-  if (score > 100) return 'Your habit is getting stronger over time';
-  if (score > 80) return 'Maintaining good consistency';
-  return 'Focus on building more consistent patterns';
 }
 
 function calculateHabitDiversity(habits: Habit[]) {

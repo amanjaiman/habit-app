@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { Habit, HabitCompletion } from '../types/habit';
+import { Habit, HabitCompletion, HabitCompletionValue, HabitConfig, HabitType } from '../types/habit';
 import { API_BASE_URL, handleApiResponse } from '../api/config';
 import { useUser } from './UserContext';
 
@@ -61,11 +61,16 @@ async function deleteHabitApi(userId: string, habitId: string): Promise<void> {
   return handleApiResponse(response);
 }
 
-async function toggleHabitApi(userId: string, habitId: string, date: string, completed: boolean): Promise<void> {
+async function toggleHabitApi(
+  userId: string, 
+  habitId: string, 
+  date: string, 
+  value: HabitCompletionValue
+): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/users/${userId}/habits/${habitId}/toggle`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ date, completed }),
+    body: JSON.stringify({ date, completed: value }),
   });
   return handleApiResponse(response);
 }
@@ -171,15 +176,21 @@ export async function createHabit(
   userId: string,
   name: string,
   emoji: string,
-  color?: string
+  type: HabitType = HabitType.BOOLEAN,
+  config?: HabitConfig,
+  color?: string,
+  category?: string,
 ): Promise<Habit> {
   const habit: Habit = {
     id: crypto.randomUUID(),
     name,
     emoji,
+    type,
+    config,
     color,
     createdAt: new Date().toISOString(),
     completions: {},
+    category,
   };
   
   return await createHabitApi(userId, habit);

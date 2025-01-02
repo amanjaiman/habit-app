@@ -1,5 +1,5 @@
 import { format, startOfWeek, addDays, parseISO, isSameDay } from 'date-fns';
-import { DEFAULT_CATEGORIES, Habit } from '../../types/habit';
+import { DEFAULT_CATEGORIES, Habit, HabitType } from '../../types/habit';
 import { habitApi, useHabits } from '../../contexts/HabitContext';
 import { CheckCircleIcon } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
@@ -10,9 +10,12 @@ import React, { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useHabitDisplay } from '../../contexts/HabitDisplayContext';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { GroupHabitCompletion, useGroups } from '../../contexts/GroupContext';
+import { GroupHabit, GroupHabitCompletion, useGroups } from '../../contexts/GroupContext';
 import { groupApi } from '../../contexts/GroupContext';
 import { Link } from 'react-router-dom';
+import HabitCompletionControl from './HabitCompletionControl';
+import { getCompletionIcon } from '../../utils/habitUtils';
+import { isHabitCompletedForDay } from '../../utils/helpers';
 
 interface WeekViewProps {
   startDate: string; // ISO date string
@@ -31,6 +34,12 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const { state: groupState, dispatch: groupDispatch } = useGroups();
   const [groupHabitsCollapsed, setGroupHabitsCollapsed] = useState(false);
+  const [selectedHabit, setSelectedHabit] = useState<Habit | undefined>();
+  const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedGroupHabit, setSelectedGroupHabit] = useState<(GroupHabit & { groupId: string }) | undefined>();
+  const [isGroupCompletionDialogOpen, setIsGroupCompletionDialogOpen] = useState(false);
+  const [selectedGroupDate, setSelectedGroupDate] = useState<Date | null>(null);
 
   const toggleCategory = (categoryId: string) => {
     setCollapsedCategories(prev => {
@@ -49,20 +58,49 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
 
     const dateStr = format(date, 'yyyy-MM-dd');
     const habit = habits.find(h => h.id === habitId);
-    const isCompleted = habit?.completions[dateStr] ?? false;
+    if (!habit) return;
 
-    try {
-      await habitApi.toggle(userState.profile.id, habitId, dateStr, !isCompleted);
-      dispatch({
-        type: 'TOGGLE_COMPLETION',
-        payload: {
-          habitId,
-          date: dateStr,
-          completed: !isCompleted,
-        },
-      });
-    } catch (error) {
-      console.error('Failed to toggle habit:', error);
+    if (habit.type === HabitType.BOOLEAN) {
+      const isCompleted = habit.completions[dateStr] ?? false;
+      try {
+        await habitApi.toggle(userState.profile.id, habitId, dateStr, !isCompleted);
+        dispatch({
+          type: 'TOGGLE_COMPLETION',
+          payload: {
+            habitId,
+            date: dateStr,
+            completed: !isCompleted,
+          },
+        });
+      } catch (error) {
+        console.error('Failed to toggle habit:', error);
+      }
+    } else {
+      setSelectedHabit(habit);
+      setSelectedDate(date);
+      setIsCompletionDialogOpen(true);
+    }
+  };
+
+  const handleCompletionSubmit = async (value: number) => {
+    if (selectedHabit && selectedDate && userState.profile?.id) {
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      try {
+        await habitApi.toggle(userState.profile.id, selectedHabit.id, dateStr, value);
+        dispatch({
+          type: 'TOGGLE_COMPLETION',
+          payload: {
+            habitId: selectedHabit.id,
+            date: dateStr,
+            completed: value,
+          },
+        });
+      } catch (error) {
+        console.error('Failed to toggle habit:', error);
+      }
+      setIsCompletionDialogOpen(false);
+      setSelectedHabit(undefined);
+      setSelectedDate(null);
     }
   };
 
@@ -113,18 +151,12 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
     return streak;
   };
 
-  const toggleGroupHabit = async (groupId: string, habitId: string, date: Date) => {
+  const toggleGroupHabit = async (groupId: string, habitId: string, date: Date, value: boolean | number) => {
     if (!userState.profile?.id) return;
 
     const dateStr = format(date, 'yyyy-MM-dd');
-    const group = groupState.groups.find(g => g.id === groupId);
-    const habit = group?.habits.find(h => h.id === habitId);
-    const isCompleted = habit?.completions.some(
-      c => c.userId === userState.profile?.id && c.date === dateStr
-    ) ?? false;
-
     try {
-      await groupApi.toggleHabit(groupId, habitId, dateStr, !isCompleted, userState.profile.id);
+      await groupApi.toggleHabit(groupId, habitId, dateStr, value, userState.profile.id);
       groupDispatch({
         type: 'TOGGLE_HABIT_COMPLETION',
         payload: {
@@ -133,12 +165,35 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
           completion: {
             userId: userState.profile.id,
             date: dateStr,
-            completed: !isCompleted
+            completed: value
           }
         }
       });
     } catch (error) {
       console.error('Failed to toggle group habit:', error);
+    }
+  };
+
+  const handleGroupHabitClick = (groupId: string, habit: GroupHabit, date: Date) => {
+    if (habit.type === HabitType.BOOLEAN) {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const isCompleted = habit.completions.some(
+        c => c.userId === userState.profile?.id && c.date === dateStr
+      );
+      toggleGroupHabit(groupId, habit.id, date, !isCompleted);
+    } else if (habit.type === HabitType.NUMERIC || habit.type === HabitType.RATING) {
+      setSelectedGroupHabit({ ...habit, groupId });
+      setSelectedGroupDate(date);
+      setIsGroupCompletionDialogOpen(true);
+    }
+  };
+
+  const handleGroupCompletionSubmit = (value: number) => {
+    if (selectedGroupHabit && selectedGroupDate) {
+      toggleGroupHabit(selectedGroupHabit.groupId, selectedGroupHabit.id, selectedGroupDate, value);
+      setIsGroupCompletionDialogOpen(false);
+      setSelectedGroupHabit(undefined);
+      setSelectedGroupDate(null);
     }
   };
 
@@ -149,7 +204,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                         shadow-xl border border-white/20 dark:border-gray-800/30 overflow-hidden">
         <thead>
           <tr>
-            <th className="px-6 py-4 text-left">
+            <th className="px-6 py-4 text-left w-96 max-w-96">
               <span className="text-sm font-medium bg-gradient-to-r from-purple-600 
                               to-pink-600 dark:from-purple-400 dark:to-pink-400 
                               text-transparent bg-clip-text uppercase">
@@ -206,7 +261,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                   
                   {!collapsedCategories.has(categoryId) && categoryHabits.map((habit) => {
                     const completedWeek = isHabitCompletedForWeek(habit);
-                    const streak = calculateStreak(habit.completions);
+                    const streak = calculateStreak(habit);
                     
                     return (
                       <tr key={habit.id} 
@@ -215,16 +270,16 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                                        ? 'bg-gradient-to-r from-green-100/75 to-emerald-100/75 dark:from-green-900/30 dark:to-emerald-900/30' 
                                        : 'hover:bg-white/50 dark:hover:bg-gray-800/50'
                                      }`}>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap w-72 max-w-72">
                           <div className="flex items-center space-x-3">
-                            <span className="text-xl">{habit.emoji}</span>
-                            <div>
+                            <span className="flex-shrink-0 text-xl">{habit.emoji}</span>
+                            <div className="min-w-0 flex-1">
                               <div className="flex items-center space-x-2">
-                                <span className="font-medium text-gray-900 dark:text-white">
+                                <span className="font-medium text-gray-900 dark:text-white truncate">
                                   {habit.name}
                                 </span>
                                 {streak > 0 && (
-                                  <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-orange-100/50 dark:bg-orange-900/30">
+                                  <div className="flex-shrink-0 flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-orange-100/50 dark:bg-orange-900/30">
                                     <FireIcon className="w-3 h-3 text-orange-500" />
                                     <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
                                       {streak}d
@@ -237,7 +292,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                         </td>
                         {weekDays.map((day) => {
                           const dateStr = format(day, 'yyyy-MM-dd');
-                          const isCompleted = habit.completions[dateStr] ?? false;
+                          const value = habit.completions[dateStr];
                           const isToday = isSameDay(day, new Date());
 
                           return (
@@ -251,11 +306,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                                 onClick={() => toggleHabit(habit.id, day)}
                                 className="inline-flex items-center justify-center"
                               >
-                                {isCompleted ? (
-                                  <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
-                                ) : (
-                                  <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
-                                )}
+                                {getCompletionIcon(habit, value)}
                               </button>
                             </td>
                           );
@@ -269,19 +320,19 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
           ) : (
             habits.map((habit) => (
               <tr key={habit.id} className="hover:bg-white/50 dark:hover:bg-gray-800/50">
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap w-72 max-w-72">
                   <div className="flex items-center space-x-3">
-                    <span className="text-xl">{habit.emoji}</span>
-                    <div>
+                    <span className="flex-shrink-0 text-xl">{habit.emoji}</span>
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center space-x-2">
-                        <span className="font-medium text-gray-900 dark:text-white">
+                        <span className="font-medium text-gray-900 dark:text-white truncate">
                           {habit.name}
                         </span>
-                        {calculateStreak(habit.completions) > 0 && (
-                          <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-orange-100/50 dark:bg-orange-900/30">
+                        {calculateStreak(habit) > 0 && (
+                          <div className="flex-shrink-0 flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-orange-100/50 dark:bg-orange-900/30">
                             <FireIcon className="w-3 h-3 text-orange-500" />
                             <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
-                              {calculateStreak(habit.completions)}d
+                              {calculateStreak(habit)}d
                             </span>
                           </div>
                         )}
@@ -291,7 +342,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                 </td>
                 {weekDays.map((day) => {
                   const dateStr = format(day, 'yyyy-MM-dd');
-                  const isCompleted = habit.completions[dateStr] ?? false;
+                  const value = habit.completions[dateStr];
                   const isToday = isSameDay(day, new Date());
 
                   return (
@@ -305,11 +356,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                         onClick={() => toggleHabit(habit.id, day)}
                         className="inline-flex items-center justify-center"
                       >
-                        {isCompleted ? (
-                          <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
-                        ) : (
-                          <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
-                        )}
+                        {getCompletionIcon(habit, value)}
                       </button>
                     </td>
                   );
@@ -343,16 +390,16 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                 return (
                   <tr key={`${habit.groupId}-${habit.id}`}
                       className="hover:bg-white/50 dark:hover:bg-gray-800/50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap w-72 max-w-72">
                       <div className="flex items-center space-x-3">
-                        <span className="text-xl">{habit.emoji}</span>
-                        <div>
+                        <span className="flex-shrink-0 text-xl">{habit.emoji}</span>
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center space-x-2">
-                            <span className="font-medium text-gray-900 dark:text-white">
+                            <span className="font-medium text-gray-900 dark:text-white truncate">
                               {habit.name}
                             </span>
                             {streak > 0 && (
-                              <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-orange-100/50 dark:bg-orange-900/30">
+                              <div className="flex-shrink-0 flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-orange-100/50 dark:bg-orange-900/30">
                                 <FireIcon className="w-3 h-3 text-orange-500" />
                                 <span className="text-xs font-medium text-orange-700 dark:text-orange-400">
                                   {streak}d
@@ -372,9 +419,9 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                     </td>
                     {weekDays.map((day) => {
                       const dateStr = format(day, 'yyyy-MM-dd');
-                      const isCompleted = habit.completions.some(
+                      const completionValue = habit.completions.find(
                         c => c.userId === userState.profile?.id && c.date === dateStr
-                      );
+                      )?.completed;
                       const isToday = isSameDay(day, new Date());
 
                       return (
@@ -385,14 +432,10 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                           }`}
                         >
                           <button
-                            onClick={() => toggleGroupHabit(habit.groupId, habit.id, day)}
+                            onClick={() => handleGroupHabitClick(habit.groupId, habit, day)}
                             className="inline-flex items-center justify-center"
                           >
-                            {isCompleted ? (
-                              <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
-                            ) : (
-                              <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
-                            )}
+                            {getCompletionIcon(habit, completionValue)}
                           </button>
                         </td>
                       );
@@ -404,6 +447,34 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
           )}
         </tbody>
       </table>
+      
+      <HabitCompletionControl
+        isOpen={isCompletionDialogOpen}
+        onClose={() => {
+          setIsCompletionDialogOpen(false);
+          setSelectedHabit(undefined);
+          setSelectedDate(null);
+        }}
+        habit={selectedHabit}
+        value={selectedHabit && selectedDate ? (selectedHabit.completions[format(selectedDate, 'yyyy-MM-dd')] ?? 0) : 0}
+        onSubmit={handleCompletionSubmit}
+      />
+
+      <HabitCompletionControl
+        isOpen={isGroupCompletionDialogOpen}
+        onClose={() => {
+          setIsGroupCompletionDialogOpen(false);
+          setSelectedGroupHabit(undefined);
+          setSelectedGroupDate(null);
+        }}
+        habit={selectedGroupHabit}
+        value={selectedGroupHabit && selectedGroupDate ? (
+          selectedGroupHabit.completions.find(
+            c => c.userId === userState.profile?.id && c.date === format(selectedGroupDate, 'yyyy-MM-dd')
+          )?.completed as number ?? 0
+        ) : 0}
+        onSubmit={handleGroupCompletionSubmit}
+      />
     </div>
   );
 }

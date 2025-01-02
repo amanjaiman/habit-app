@@ -13,6 +13,10 @@ import { Habit } from '../../types/habit';
 import { useHabits } from '../../contexts/HabitContext';
 import { FireIcon } from '@heroicons/react/24/solid';
 import { useState } from 'react';
+import HabitCompletionControl from './HabitCompletionControl';
+import { HabitType } from '../../types/habit';
+import { getCompletionIcon } from '../../utils/habitUtils';
+import { isHabitCompletedForDay } from '../../utils/helpers';
 
 interface MonthViewProps {
   date: string; // ISO date string
@@ -21,9 +25,14 @@ interface MonthViewProps {
 
 // Add these utility functions
 const getMonthlyCompletionsForHabit = (habit: Habit, daysInMonth: Date[]) => {
-  return daysInMonth.filter(
-    day => habit.completions[format(day, 'yyyy-MM-dd')]
-  ).length;
+  return daysInMonth.filter(day => {
+    const dateStr = format(day, 'yyyy-MM-dd');
+    const completion = habit.completions[dateStr];
+    if (habit.type === HabitType.BOOLEAN) {
+      return completion === true;
+    }
+    return typeof completion === 'number' && habit.config && completion >= habit.config.goal;
+  }).length;
 };
 
 const getMonthlyStreakForHabit = (habit: Habit, daysInMonth: Date[]) => {
@@ -35,7 +44,12 @@ const getMonthlyStreakForHabit = (habit: Habit, daysInMonth: Date[]) => {
 
   sortedDays.forEach((day) => {
     const dateStr = format(day, 'yyyy-MM-dd');
-    if (habit.completions[dateStr]) {
+    const completion = habit.completions[dateStr];
+    const isCompleted = habit.type === HabitType.BOOLEAN 
+      ? completion === true
+      : typeof completion === 'number' && habit.config && completion >= habit.config.goal;
+
+    if (isCompleted) {
       currentStreak++;
       maxStreak = Math.max(maxStreak, currentStreak);
     } else {
@@ -44,6 +58,23 @@ const getMonthlyStreakForHabit = (habit: Habit, daysInMonth: Date[]) => {
   });
 
   return maxStreak;
+};
+
+// Add new utility function for calculating average
+const getMonthlyAverageForHabit = (habit: Habit, daysInMonth: Date[]) => {
+  if (habit.type === HabitType.BOOLEAN) return null;
+  
+  const values = daysInMonth
+    .map(day => {
+      const dateStr = format(day, 'yyyy-MM-dd');
+      const completion = habit.completions[dateStr];
+      // Only include numeric values
+      return typeof completion === 'number' ? completion : 0;
+    })
+    .filter(value => value > 0); // Only consider days with actual values
+
+  if (values.length === 0) return 0;
+  return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10;
 };
 
 export default function MonthView({ date, habits }: MonthViewProps) {
@@ -55,24 +86,56 @@ export default function MonthView({ date, habits }: MonthViewProps) {
 
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  const toggleHabit = (habitId: string, date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const habit = habits.find(h => h.id === habitId);
-    const isCompleted = habit?.completions[dateStr] ?? false;
+  const [selectedHabit, setSelectedHabit] = useState<Habit | undefined>();
+  const [isCompletionDialogOpen, setIsCompletionDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-    dispatch({
-      type: 'TOGGLE_COMPLETION',
-      payload: {
-        habitId,
-        date: dateStr,
-        completed: !isCompleted,
-      },
-    });
+  const toggleHabit = async (habitId: string, date: Date) => {
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit) return;
+
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    if (habit.type === HabitType.BOOLEAN) {
+      const isCompleted = habit.completions[dateStr] ?? false;
+      dispatch({
+        type: 'TOGGLE_COMPLETION',
+        payload: {
+          habitId,
+          date: dateStr,
+          completed: !isCompleted,
+        },
+      });
+    } else {
+      setSelectedHabit(habit);
+      setSelectedDate(date);
+      setIsCompletionDialogOpen(true);
+    }
+  };
+
+  const handleCompletionSubmit = (value: number) => {
+    if (selectedHabit && selectedDate) {
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      dispatch({
+        type: 'TOGGLE_COMPLETION',
+        payload: {
+          habitId: selectedHabit.id,
+          date: dateStr,
+          completed: value,
+        },
+      });
+      setIsCompletionDialogOpen(false);
+      setSelectedHabit(undefined);
+      setSelectedDate(null);
+    }
   };
 
   const getCompletionCount = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return habits.filter(habit => habit.completions[dateStr]).length;
+    return habits.filter(habit => {
+      const value = habit.completions[dateStr];
+      return isHabitCompletedForDay(habit, value);
+    }).length;
   };
 
   // Add new utility functions
@@ -241,17 +304,22 @@ export default function MonthView({ date, habits }: MonthViewProps) {
                             const bCompleted = b.completions[dateStr] ? 1 : 0;
                             return bCompleted - aCompleted;
                           })
-                          .map((habit) => (
-                            <span
-                              key={habit.id}
-                              className={`text-sm transition-transform hover:scale-110 ${
-                                habit.completions[dateStr] ? 'opacity-100' : 'opacity-20'
-                              }`}
-                              onClick={() => toggleHabit(habit.id, day)}
-                            >
-                              {habit.emoji}
-                            </span>
-                          ))}
+                          .map((habit) => {
+                            const dateStr = format(day, 'yyyy-MM-dd');
+                            const value = habit.completions[dateStr];
+                            
+                            return (
+                              <span
+                                key={habit.id}
+                                className={`text-sm transition-transform hover:scale-110 ${
+                                  isHabitCompletedForDay(habit, value) ? 'opacity-100' : 'opacity-20'
+                                }`}
+                                onClick={() => toggleHabit(habit.id, day)}
+                              >
+                                {habit.emoji}
+                              </span>
+                            );
+                          })}
                       </div>
                     </div>
                   )}
@@ -272,6 +340,7 @@ export default function MonthView({ date, habits }: MonthViewProps) {
                 {habits.map(habit => {
                   const monthlyCompletions = getMonthlyCompletionsForHabit(habit, daysInMonth);
                   const bestStreak = getMonthlyStreakForHabit(habit, daysInMonth);
+                  const average = getMonthlyAverageForHabit(habit, daysInMonth);
 
                   return (
                     <div 
@@ -293,6 +362,13 @@ export default function MonthView({ date, habits }: MonthViewProps) {
                           </span>
                         </div>
                       )}
+                      {average !== null && (
+                        <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-full bg-blue-100/50 dark:bg-blue-900/30">
+                          <span className="text-xs font-medium text-blue-700 dark:text-blue-400">
+                            Avg: {average}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -301,6 +377,18 @@ export default function MonthView({ date, habits }: MonthViewProps) {
           </div>
         )}
       </div>
+      
+      <HabitCompletionControl
+        isOpen={isCompletionDialogOpen}
+        onClose={() => {
+          setIsCompletionDialogOpen(false);
+          setSelectedHabit(undefined);
+          setSelectedDate(null);
+        }}
+        habit={selectedHabit}
+        value={selectedHabit && selectedDate ? (selectedHabit.completions[format(selectedDate, 'yyyy-MM-dd')] ?? 0) : 0}
+        onSubmit={handleCompletionSubmit}
+      />
     </div>
   );
 }
