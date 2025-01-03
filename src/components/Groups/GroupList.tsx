@@ -1,6 +1,8 @@
 import { Group } from "../../contexts/GroupContext";
 import { useUser } from "../../contexts/UserContext";
 import { Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
+import { Square2StackIcon } from "@heroicons/react/24/outline";
 
 interface GroupListProps {
   groups: Group[];
@@ -61,12 +63,18 @@ export default function GroupList({ groups }: GroupListProps) {
               onClick={(e) => {
                 e.preventDefault();
                 navigator.clipboard.writeText(group.joinCode);
-                // You might want to add a toast notification here
+                toast.success("Join code copied to clipboard");
               }}
-              className="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 
-                       dark:hover:text-purple-300 font-medium"
+              className="flex items-center gap-1"
             >
-              Share Code: {group.joinCode}
+              <span
+                className="font-mono font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                             dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent 
+                             hover:opacity-80 transition-opacity"
+              >
+                {group.joinCode}
+              </span>
+              <Square2StackIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </button>
           </div>
         </Link>

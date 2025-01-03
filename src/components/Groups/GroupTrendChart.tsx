@@ -14,7 +14,13 @@ import {
   ChartData,
 } from "chart.js";
 import { Group } from "../../contexts/GroupContext";
-import { HabitType } from "../../types/habit";
+import {
+  HabitType,
+  NumericHabitConfig,
+  RatingHabitConfig,
+} from "../../types/habit";
+import { Listbox } from "@headlessui/react";
+import { ChevronUpDownIcon } from "@heroicons/react/20/solid";
 
 ChartJS.register(
   CategoryScale,
@@ -32,7 +38,9 @@ interface GroupTrendChartProps {
 }
 
 export default function GroupTrendChart({ group }: GroupTrendChartProps) {
-  const [selectedHabit, setSelectedHabit] = useState<string | null>(null);
+  const [selectedHabit, setSelectedHabit] = useState<string | null>(() =>
+    group.habits.length > 0 ? group.habits[0].id : null
+  );
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
   const [showGroupAverage, setShowGroupAverage] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -71,6 +79,27 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
       end: yesterday,
     });
 
+    // Helper function to get value based on habit type
+    const getDailyValue = (completion: any) => {
+      if (!completion) return 0;
+
+      switch (habit.type) {
+        case HabitType.BOOLEAN:
+          return completion.completed ? 100 : 0;
+        case HabitType.NUMERIC:
+        case HabitType.RATING:
+          const value =
+            typeof completion.completed === "boolean"
+              ? completion.completed
+                ? 100
+                : 0
+              : Number(completion.completed);
+          return isNaN(value) ? 0 : value;
+        default:
+          return 0;
+      }
+    };
+
     // Calculate individual member data
     const memberData = group.memberDetails
       .filter((member) => !selectedMember || member.id === selectedMember)
@@ -85,23 +114,20 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
 
           return {
             date: format(date, "MMM d"),
-            value: completion?.completed || 0,
-            completed: completion?.completed || false,
+            value: getDailyValue(completion),
+            hasData: completion !== undefined,
           };
         });
 
-        // Calculate rolling average based on habit type
+        // Calculate rolling average
         const rollingAverage = dailyValues.map((_, index, arr) => {
           const start = Math.max(0, index - 6);
-          const subset = arr.slice(start, index + 1);
+          const subset = arr.slice(start, index + 1).filter((v) => v.hasData);
 
-          if (habit.type === HabitType.BOOLEAN) {
-            const completedCount = subset.filter((v) => v.completed).length;
-            return (completedCount / subset.length) * 100;
-          } else {
-            const sum = subset.reduce((acc, val) => acc + Number(val.value), 0);
-            return sum / subset.length;
-          }
+          if (subset.length === 0) return 0;
+
+          const sum = subset.reduce((acc, val) => acc + val.value, 0);
+          return sum / subset.length;
         });
 
         // Generate color and return dataset
@@ -140,11 +166,31 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
         ]
       : memberData;
 
+    // Calculate yAxisMax based on habit type
+    const yAxisMax = (() => {
+      switch (habit.type) {
+        case HabitType.BOOLEAN:
+          return 100;
+        case HabitType.NUMERIC:
+          const maxValue = Math.max(
+            ...memberData.flatMap((m) => m.data),
+            habit.config?.goal || 0
+          );
+          return Math.ceil(maxValue * 1.1); // Add 10% padding
+        case HabitType.RATING:
+          const config = habit.config as RatingHabitConfig;
+          return config.max || 5;
+        default:
+          return 100;
+      }
+    })();
+
     return {
       labels: dateRange.map((date) => format(date, "MMM d")),
       datasets,
       habitType: habit.type,
       habitConfig: habit.config,
+      yAxisMax,
     };
   }, [
     selectedHabit,
@@ -187,13 +233,29 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
         cornerRadius: 8,
         callbacks: {
           label: (context: any) => {
-            const value = Math.round(context.raw);
-            const isTrendLine = context.dataset.label.includes("(Trend)");
-            const name = context.dataset.label.replace(" (Trend)", "");
+            const value = Math.round(context.raw * 100) / 100;
+            const name = context.dataset.label;
 
-            return isTrendLine
-              ? `${name} Trend: ${value}%`
-              : `${name}: ${value}%`;
+            if (!chartData?.habitType || !chartData?.habitConfig) {
+              return `${name}: ${value}%`;
+            }
+
+            const formatValue = (val: number) => {
+              switch (chartData.habitType) {
+                case HabitType.BOOLEAN:
+                  return `${val}%`;
+                case HabitType.NUMERIC:
+                  const numericConfig =
+                    chartData.habitConfig as NumericHabitConfig;
+                  return `${val} ${numericConfig.unit || ""}`;
+                case HabitType.RATING:
+                  return `${val}`;
+                default:
+                  return `${val}%`;
+              }
+            };
+
+            return `${name}: ${formatValue(value)}`;
           },
         },
       },
@@ -201,13 +263,29 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
     scales: {
       y: {
         beginAtZero: true,
-        max: 100,
+        max: chartData?.yAxisMax ?? 100,
         grid: {
           color: "rgba(107, 114, 128, 0.08)",
           drawBorder: false,
         },
         ticks: {
-          callback: (value: number) => `${value}%`,
+          callback: (value: number) => {
+            if (!chartData?.habitType || !chartData?.habitConfig)
+              return `${value}%`;
+
+            switch (chartData.habitType) {
+              case HabitType.BOOLEAN:
+                return `${value}%`;
+              case HabitType.NUMERIC:
+                const numericConfig =
+                  chartData.habitConfig as NumericHabitConfig;
+                return `${value} ${numericConfig.unit || ""}`;
+              case HabitType.RATING:
+                return value;
+              default:
+                return value;
+            }
+          },
           color: "#6B7280",
           font: {
             size: 12,
@@ -250,18 +328,46 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4">
-        <select
-          value={selectedHabit || ""}
-          onChange={(e) => setSelectedHabit(e.target.value)}
-          className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2"
-        >
-          <option value="">Select a habit</option>
-          {group.habits.map((habit) => (
-            <option key={habit.id} value={habit.id}>
-              {habit.name}
-            </option>
-          ))}
-        </select>
+        <Listbox value={selectedHabit} onChange={setSelectedHabit}>
+          <div className="relative w-72">
+            <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white dark:bg-gray-800 py-2 pl-3 pr-10 text-left border border-gray-200 dark:border-gray-700">
+              <span className="block truncate">
+                {group.habits.find((h) => h.id === selectedHabit)?.name}
+              </span>
+              <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                <ChevronUpDownIcon
+                  className="h-5 w-5 text-gray-400"
+                  aria-hidden="true"
+                />
+              </span>
+            </Listbox.Button>
+            <Listbox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg border border-gray-200 dark:border-gray-700">
+              {group.habits.map((habit) => (
+                <Listbox.Option
+                  key={habit.id}
+                  value={habit.id}
+                  className={({ active }) =>
+                    `relative cursor-default select-none py-2 pl-3 pr-9 ${
+                      active
+                        ? "bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-100"
+                        : "text-gray-900 dark:text-gray-100"
+                    }`
+                  }
+                >
+                  {({ selected }) => (
+                    <span
+                      className={`block truncate ${
+                        selected ? "font-medium" : "font-normal"
+                      }`}
+                    >
+                      {habit.name}
+                    </span>
+                  )}
+                </Listbox.Option>
+              ))}
+            </Listbox.Options>
+          </div>
+        </Listbox>
 
         <div className="flex gap-2">
           <button

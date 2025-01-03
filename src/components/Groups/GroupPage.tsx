@@ -10,6 +10,7 @@ import GroupTrendChart from "./GroupTrendChart";
 import GroupLeaderboard from "./GroupLeaderboard";
 import GroupStats from "./GroupStats";
 import GroupHabitList from "./GroupHabitList";
+import { ChevronLeftIcon, Square2StackIcon } from "@heroicons/react/24/outline";
 
 export default function GroupPage() {
   const { groupId } = useParams();
@@ -107,9 +108,10 @@ export default function GroupPage() {
         <button
           onClick={handleCopyCode}
           className="font-mono font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 
-                    bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer"
+                    bg-clip-text text-transparent hover:opacity-80 transition-opacity cursor-pointer flex items-center gap-1"
         >
           {group?.joinCode}
+          <Square2StackIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
         </button>
       </div>
     );
@@ -155,22 +157,9 @@ export default function GroupPage() {
             <div className="flex items-center gap-4 flex-1">
               <button
                 onClick={() => navigate("/groups")}
-                className="p-2 hover:bg-white/10 dark:hover:bg-gray-800/30 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/70 dark:hover:bg-gray-600/30 rounded-lg transition-colors"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
+                <ChevronLeftIcon className="h-6 w-6 text-gray-600 dark:text-gray-300" />
               </button>
               <div>
                 <h1 className="sm:text-start text-4xl leading-[3rem] font-black flex items-center gap-2">
