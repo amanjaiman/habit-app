@@ -92,21 +92,21 @@ export default function GroupStats({ group }: GroupStatsProps) {
   ];
 
   return (
-    <div className="flex gap-1.5">
+    <div className="grid grid-cols-2 lg:flex gap-1.5">
       {statCards.map((stat, index) => (
         <div
           key={index}
-          className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-lg p-4 
+          className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-lg p-3 sm:p-4 
                     border border-white/20 dark:border-gray-800/30 shadow-lg
                     transform transition-transform duration-200"
         >
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-xl">{stat.icon}</span>
-            <h3 className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
+            <span className="text-lg sm:text-xl">{stat.icon}</span>
+            <h3 className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
               {stat.label}
             </h3>
           </div>
-          <p className="text-xl font-bold mt-1 text-gray-900 dark:text-white">
+          <p className="text-base sm:text-xl font-bold mt-1 text-gray-900 dark:text-white">
             {stat.value}
           </p>
         </div>

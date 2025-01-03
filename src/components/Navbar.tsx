@@ -120,17 +120,13 @@ export default function Navbar() {
               <div className="hidden sm:flex relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className={`${
-                    premium
-                      ? "bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"
-                      : ""
-                  } flex items-center space-x-2 p-1 rounded-full hover:bg-white/30 dark:hover:bg-gray-800/30`}
+                  className="flex items-center space-x-2 p-1 rounded-full hover:bg-white/30 dark:hover:bg-gray-800/30"
                 >
                   {userState.profile?.profileImage ? (
                     <div
                       className={`${
                         premium
-                          ? "bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"
+                          ? "p-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"
                           : ""
                       }`}
                     >
@@ -145,9 +141,6 @@ export default function Navbar() {
                       {userState.name ? userState.name[0].toUpperCase() : "?"}
                     </div>
                   )}
-                  <span className="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {userState.name || "User"}
-                  </span>
                 </button>
 
                 {isDropdownOpen && (

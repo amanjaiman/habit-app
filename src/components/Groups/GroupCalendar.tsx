@@ -33,19 +33,19 @@ export default function GroupCalendar({ group }: GroupCalendarProps) {
 
   return (
     <div className="space-y-4">
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <h3
-          className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                       dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+          className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                     dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
         >
           Weekly Progress
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1">
           Track your group's daily completions
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {group.habits.map((habit) => (
           <HabitWeekCard
             key={habit.id}
@@ -77,18 +77,18 @@ function HabitWeekCard({
 
   return (
     <div
-      className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-xl p-6 
+      className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-xl p-4 sm:p-6 
                     border border-white/20 dark:border-gray-800/30 shadow-lg 
-                    transition-all duration-200 hover:shadow-xl space-y-4"
+                    transition-all duration-200 hover:shadow-xl space-y-3 sm:space-y-4"
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <span className="text-3xl">{habit.emoji}</span>
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <span className="text-2xl sm:text-3xl">{habit.emoji}</span>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
               {habit.name}
             </h3>
-            <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               <span>
                 {completedToday} of {members.length} today
               </span>
@@ -97,9 +97,9 @@ function HabitWeekCard({
                   className="flex items-center space-x-1 px-2 py-0.5 
                               bg-orange-100 dark:bg-orange-900/30 rounded-full"
                 >
-                  <FireIcon className="w-4 h-4 text-orange-500" />
+                  <FireIcon className="w-3 h-3 sm:w-4 sm:h-4 text-orange-500" />
                   <span className="text-orange-700 dark:text-orange-400">
-                    {streak}d group streak
+                    {streak}d streak
                   </span>
                 </div>
               )}
@@ -109,28 +109,23 @@ function HabitWeekCard({
       </div>
 
       {/* Week Progress */}
-      <div className="grid grid-cols-7 gap-2">
-        {weekDays.map((date) => {
-          const dateStr = format(date, "yyyy-MM-dd");
-          const dayCompletions = habit.completions.filter(
-            (c) => c.date === dateStr
-          );
-
-          return (
-            <DayCard
-              key={dateStr}
-              date={date}
-              habit={habit}
-              completions={dayCompletions}
-              members={members}
-            />
-          );
-        })}
+      <div className="grid grid-cols-7 gap-1 sm:gap-2">
+        {weekDays.map((date) => (
+          <DayCard
+            key={format(date, "yyyy-MM-dd")}
+            date={date}
+            habit={habit}
+            completions={habit.completions.filter(
+              (c) => c.date === format(date, "yyyy-MM-dd")
+            )}
+            members={members}
+          />
+        ))}
       </div>
 
       {/* Members Progress */}
-      <div className="pt-4 border-t border-gray-200 dark:border-gray-700/30">
-        <div className="flex flex-wrap gap-2">
+      <div className="pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700/30">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {members.map((member) => {
             const completion = todayCompletions.find(
               (c) => c.userId === member.id
@@ -209,7 +204,7 @@ function DayCard({
 
     if (values.length > 0) {
       const avg = values.reduce((a, b) => a + b, 0) / values.length;
-      displayValue = `${avg.toFixed(1)} avg`;
+      displayValue = avg % 1 === 0 ? avg.toString() : avg.toFixed(1);
     }
   }
 
@@ -217,23 +212,23 @@ function DayCard({
 
   return (
     <div
-      className={`relative p-3 rounded-lg transition-all duration-200 
+      className={`relative p-2 sm:p-3 rounded-lg transition-all duration-200 min-w-[40px] overflow-hidden
       ${
         isToday
-          ? "bg-purple-100 dark:bg-purple-900/30 ring-2 ring-purple-500/50"
+          ? "bg-purple-100 dark:bg-purple-900/30 ring-1 ring-inset ring-purple-500/50"
           : "bg-white/50 dark:bg-gray-800/50 hover:bg-white/70 dark:hover:bg-gray-700/50"
       }`}
     >
-      <div className="text-center mb-2">
-        <div className="text-xs font-medium text-gray-900 dark:text-white">
+      <div className="text-center mb-1.5 sm:mb-2">
+        <div className="text-[10px] sm:text-xs font-medium text-gray-900 dark:text-white">
           {format(date, "EEE")}
         </div>
-        <div className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
           {format(date, "d")}
         </div>
       </div>
 
-      <div className="h-2 rounded-full bg-gray-200 dark:bg-gray-700/50">
+      <div className="h-1.5 sm:h-2 rounded-full bg-gray-200 dark:bg-gray-700/50">
         <div
           className="h-full rounded-full bg-gradient-to-r from-purple-500 to-pink-500
                      transition-all duration-300 ease-out"
@@ -241,7 +236,7 @@ function DayCard({
         />
       </div>
 
-      <div className="mt-2 text-xs font-medium text-center text-gray-700 dark:text-gray-300">
+      <div className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs font-medium text-center text-gray-700 dark:text-gray-300 truncate">
         {displayValue}
       </div>
     </div>

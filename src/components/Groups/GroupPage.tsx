@@ -151,21 +151,21 @@ export default function GroupPage() {
         {/* Header Section */}
         <div
           className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 
-                      rounded-2xl p-8 border border-white/20 dark:border-gray-800/30 shadow-xl"
+                      rounded-2xl p-4 sm:p-8 border border-white/20 dark:border-gray-800/30 shadow-xl"
         >
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-4 flex-1">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6">
+            <div className="flex items-start lg:items-center gap-4 flex-1 w-full">
               <button
                 onClick={() => navigate("/groups")}
                 className="p-2 hover:bg-white/70 dark:hover:bg-gray-600/30 rounded-lg transition-colors"
               >
                 <ChevronLeftIcon className="h-6 w-6 text-gray-600 dark:text-gray-300" />
               </button>
-              <div>
-                <h1 className="sm:text-start text-4xl leading-[3rem] font-black flex items-center gap-2">
+              <div className="flex-1">
+                <h1 className="text-3xl sm:text-4xl leading-[2.5rem] sm:leading-[3rem] font-black flex items-center gap-2 flex-wrap">
                   <span
                     className="bg-gradient-to-r from-purple-600 to-pink-600 
-                            dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+                                dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
                   >
                     {group.name}
                   </span>
@@ -180,13 +180,11 @@ export default function GroupPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-4">
-              {group.habits.length > 0 && (
-                <div className="lg:min-w-[300px]">
-                  <GroupStats group={group} />
-                </div>
-              )}
-            </div>
+            {group.habits.length > 0 && (
+              <div className="w-full lg:w-auto">
+                <GroupStats group={group} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -220,7 +218,7 @@ export default function GroupPage() {
           <>
             {/* Group Progress Section */}
             <div
-              className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+              className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-4 sm:p-8 
                           border border-white/20 dark:border-gray-800/30 shadow-xl"
             >
               <GroupCalendar group={group} />
@@ -228,7 +226,7 @@ export default function GroupPage() {
 
             {/* Trends Section */}
             <div
-              className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+              className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-4 sm:p-8 
                           border border-white/20 dark:border-gray-800/30 shadow-xl"
             >
               <h2
@@ -242,7 +240,7 @@ export default function GroupPage() {
 
             {/* Achievements Section */}
             <div
-              className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+              className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-4 sm:p-8 
                           border border-white/20 dark:border-gray-800/30 shadow-xl"
             >
               <h2
@@ -256,7 +254,7 @@ export default function GroupPage() {
 
             {/* Leaderboard Section */}
             <div
-              className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+              className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-4 sm:p-8 
                           border border-white/20 dark:border-gray-800/30 shadow-xl"
             >
               <h2
@@ -271,7 +269,7 @@ export default function GroupPage() {
             {/* Admin Habit Management Section */}
             {isAdmin && (
               <div
-                className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-4 sm:p-8 
                             border border-white/20 dark:border-gray-800/30 shadow-xl"
               >
                 <GroupHabitList
@@ -286,7 +284,7 @@ export default function GroupPage() {
 
         {isAdmin && (
           <div
-            className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+            className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-4 sm:p-8 
                         border border-white/20 dark:border-gray-800/30 shadow-xl"
           >
             <div>
