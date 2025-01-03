@@ -39,6 +39,9 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
     if (!targetHabit) return [];
 
     const latestAnalytics = analyticsState.analytics.analytics.at(-1);
+
+    if (!latestAnalytics || !latestAnalytics.correlationInsights[targetHabit.name]) return [];
+
     const habitCorrelations = latestAnalytics?.correlationInsights[targetHabit.name].correlations || [];
 
     const days = eachDayOfInterval({ start: startDate, end: today });

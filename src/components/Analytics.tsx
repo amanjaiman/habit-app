@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useHabits } from '../contexts/HabitContext';
 import TrendChart from './Analytics/TrendChart';
 import HabitCorrelation from './Analytics/HabitCorrelation';
@@ -18,6 +18,7 @@ import { useUser } from '../contexts/UserContext';
 import { LockClosedIcon } from '@heroicons/react/24/solid';
 import { useAnalytics } from '../contexts/AnalyticsContext';
 import { useUserPremium } from '../hooks/useUserPremium';
+import { useGroups } from '../contexts/GroupContext';
 
 export default function Analytics() {
   const { state: analyticsState } = useAnalytics();
@@ -25,12 +26,27 @@ export default function Analytics() {
   const { premium } = useUserPremium();
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const { state } = useHabits();
+  const { state: groupState } = useGroups();
 
   useEffect(() => {
     if (premium && selectedHabitId) {
       setSelectedHabitId(null);
     }
   }, [premium]);
+
+  // Combine personal and group habits
+  const allHabits = useMemo(() => {
+    const personalHabits = state.habits;
+    const groupHabits = groupState.groups.flatMap(group => 
+      group.habits.map(habit => ({
+        ...habit,
+        isGroupHabit: true,
+        groupName: group.name,
+        groupId: group.id
+      }))
+    );
+    return [...personalHabits, ...groupHabits];
+  }, [state.habits, groupState.groups]);
 
   if (analyticsState.loading) {
     return (
@@ -59,7 +75,7 @@ export default function Analytics() {
           </p>
         </div>
 
-        {state.habits.length === 0 && (
+        {allHabits.length === 0 && (
           <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
                           border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg">
             No habits found. Add a habit on the dashboard to get started.
@@ -67,7 +83,7 @@ export default function Analytics() {
         )}
 
         {/* Habit Selector */}
-        {state.habits.length > 0 && (
+        {allHabits.length > 0 && (
           <div className="relative z-[200] backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-xl p-6 
                       border border-white/20 dark:border-gray-800/30 shadow-lg">
             <Listbox value={selectedHabitId || ''} onChange={setSelectedHabitId}>
@@ -78,7 +94,7 @@ export default function Analytics() {
                   focus:ring-purple-500 transition-all text-left">
                   <span className="block truncate">
                     {selectedHabitId 
-                      ? `${state.habits.find(h => h.id === selectedHabitId)?.emoji} ${state.habits.find(h => h.id === selectedHabitId)?.name}`
+                      ? `${allHabits.find(h => h.id === selectedHabitId)?.emoji} ${allHabits.find(h => h.id === selectedHabitId)?.name}`
                       : 'All Habits'}
                   </span>
                   <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
@@ -101,7 +117,7 @@ export default function Analytics() {
                       </span>
                     )}
                   </Listbox.Option>
-                  {state.habits.map((habit) => (
+                  {allHabits.map((habit) => (
                     <Listbox.Option
                       key={habit.id}
                       value={habit.id}
@@ -114,6 +130,11 @@ export default function Analytics() {
                       {({ selected }) => (
                         <span className={`flex items-center gap-3 ${selected ? 'font-semibold' : ''}`}>
                           {habit.emoji} {habit.name}
+                          {'isGroupHabit' in habit && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              ({habit.groupName})
+                            </span>
+                          )}
                         </span>
                       )}
                     </Listbox.Option>
@@ -125,7 +146,7 @@ export default function Analytics() {
         )}
 
         {/* Content */}
-        {state.habits.length > 0 && (
+        {allHabits.length > 0 && (
           <div className="relative z-0">
             {!selectedHabitId ? (
               // Show overview analytics when no specific habit is selected

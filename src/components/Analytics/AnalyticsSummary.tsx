@@ -23,13 +23,15 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
-import { Habit, HabitType, NumericHabitConfig, RatingHabitConfig } from '../../types/habit';
+import { Habit, HabitCompletionValue, HabitType, NumericHabitConfig, RatingHabitConfig } from '../../types/habit';
 import { Link } from 'react-router-dom';
 import { KeyInsight, useAnalytics } from '../../contexts/AnalyticsContext';
 import TrendChart from './TrendChart';
 import { useUser } from '../../contexts/UserContext';
 import { useUserPremium } from '../../hooks/useUserPremium';
 import { isHabitCompletedForDay } from '../../utils/helpers';
+import { GroupHabit, GroupHabitCompletion } from '../../contexts/GroupContext';
+import { useGroups } from '../../contexts/GroupContext';
 
 interface AnalyticsSummaryProps {
   habitId: string;
@@ -74,12 +76,46 @@ interface AnalyticsStats {
   insights: KeyInsight[];
 }
 
+// Add type guard to check if a habit is a group habit
+function isGroupHabit(habit: Habit | GroupHabit): habit is GroupHabit {
+  return 'completions' in habit && Array.isArray(habit.completions);
+}
+
+// Helper to get completion value for a habit (either group or individual)
+function getHabitCompletionForDay(habit: Habit | GroupHabit, dateStr: string, userId?: string): HabitCompletionValue | undefined {
+  if (isGroupHabit(habit)) {
+    const completion = habit.completions.find(c => c.date === dateStr && c.userId === userId);
+    return completion?.completed;
+  }
+  return habit.completions[dateStr];
+}
+
+// Add type union at the top
+type CombinedHabit = Habit | (GroupHabit & { isGroupHabit: true; groupName: string; groupId: string });
+
 export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
+  const { state: userState } = useUser();
+  const userId = userState.profile?.id;
   const { state: analyticsState } = useAnalytics();
   const { premium } = useUserPremium();
   const latestAnalytics = analyticsState.analytics.analytics.at(-1);
   const { state } = useHabits();
+  const { state: groupState } = useGroups();
   const today = new Date();
+
+  // Add this to combine personal and group habits
+  const allHabits = useMemo<CombinedHabit[]>(() => {
+    const personalHabits = state.habits;
+    const groupHabits = groupState.groups.flatMap(group => 
+      group.habits.map(habit => ({
+        ...habit,
+        isGroupHabit: true,
+        groupName: group.name,
+        groupId: group.id
+      } as CombinedHabit))
+    );
+    return [...personalHabits, ...groupHabits];
+  }, [state.habits, groupState.groups]);
 
   const [selectedPeriods, setSelectedPeriods] = useState<Record<string, CompletionPeriod>>({});
   const [currentInsightPage, setCurrentInsightPage] = useState(0);
@@ -98,14 +134,17 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
       start: subDays(today, 90),
       end: today,
     });
+    
     const dailyCompletionRates = last90Days.map(date => {
       const dateStr = format(date, 'yyyy-MM-dd');
-      const completedCount = state.habits.filter(
-        habit => habit.completions[dateStr]
-      ).length;
+      const completedCount = allHabits.filter(habit => {
+        const completion = getHabitCompletionForDay(habit, dateStr, userId);
+        return completion;
+      }).length;
+      
       return {
         date,
-        rate: (completedCount / state.habits.length) * 100,
+        rate: (completedCount / allHabits.length) * 100,
         completedCount,
       };
     });
@@ -120,20 +159,20 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
       const weeklyMomentum = ((thisWeekAvg - lastWeekAvg) / lastWeekAvg) * 100;
 
       // Replace peak performance with habit diversity score
-      const habitDiversity = calculateHabitDiversity(state.habits);
+      const habitDiversity = calculateHabitDiversity(allHabits);
 
       // Calculate advanced metrics
       const volatility = calculateVolatility(dailyCompletionRates.map(d => d.rate), true);
       const consistency = calculateConsistencyScore(dailyCompletionRates);
       const optimalDay = findOptimalDay(dailyCompletionRates);
-      const habitSynergy = calculateHabitSynergy(state.habits);
+      const habitSynergy = calculateHabitSynergy(allHabits, userId);
       
       // Peak Performance Analysis
       const peakPerformance = analyzePeakPerformance(dailyCompletionRates);
       const burnoutRisk = calculateBurnoutRisk(dailyCompletionRates);
       
       // Habit Stack Analysis
-      const stackEffectiveness = analyzeHabitStacks(state.habits);
+      const stackEffectiveness = analyzeHabitStacks(allHabits);
 
       return {
         title: 'Advanced Analytics Overview',
@@ -187,24 +226,71 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
         insights: getKeyInsights('all'),
       };
     } else {
-      // Single habit analysis
-      const habit = state.habits.find(h => h.id === habitId);
+      const habit = allHabits.find(h => h.id === habitId);
       if (!habit) return null;
 
-      const completionDates = Object.entries(habit.completions)
-        .filter(([_, completed]) => completed)
-        .map(([date]) => parseISO(date));
+      // For numeric and rating habits, calculate average and best values
+      let performanceStats: PrimaryStat | null = null;
+      if (habit.type === HabitType.NUMERIC || habit.type === HabitType.RATING) {
+        let values: number[] = [];
+        
+        if (isGroupHabit(habit)) {
+          values = habit.completions
+            .filter(c => c.userId === userId && typeof c.completed === 'number')
+            .map(c => c.completed as number);
+        } else {
+          values = Object.values(habit.completions).filter(v => typeof v === 'number') as number[];
+        }
 
-      // Calculate WoW momentum for single habit
+        if (values.length > 0) {
+          const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
+          const best = habit.type === HabitType.NUMERIC
+            ? (habit.config as NumericHabitConfig).higherIsBetter
+              ? Math.max(...values)
+              : Math.min(...values)
+            : Math.max(...values);
+          const unit = habit.type === HabitType.NUMERIC 
+            ? (habit.config as NumericHabitConfig).unit 
+            : '';
+
+          const details = habit.type === HabitType.NUMERIC
+                ? `Best: ${best} ${unit}`
+                : avg >= (habit.config as RatingHabitConfig).max * 0.8
+                  ? `You're crushing it!`
+                  : `Keep at it!`;
+
+          performanceStats = {
+            name: 'Performance',
+            value: `${avg.toFixed(1)} ${unit}`,
+            icon: ChartBarIcon,
+            description: `Average ${habit.type === HabitType.RATING ? 'rating' : 'value'}`,
+            trend: avg >= (habit.type === HabitType.NUMERIC ? (habit.config as NumericHabitConfig).goal : (habit.config as RatingHabitConfig).max * 0.8) ? 'up' : 'down',
+            details: details,
+          };
+        }
+      }
+
+      // Get completion dates for the habit
+      const completionDates = isGroupHabit(habit)
+        ? habit.completions
+            .filter(c => c.userId === userId && c.completed)
+            .map(c => parseISO(c.date))
+        : Object.entries(habit.completions)
+            .filter(([_, completed]) => completed)
+            .map(([date]) => parseISO(date));
+
+      // Calculate daily completion rates for the habit
       const last90Days = eachDayOfInterval({
         start: subDays(today, 90),
         end: today,
       });
+
       const dailyCompletionRates = last90Days.map(date => {
         const dateStr = format(date, 'yyyy-MM-dd');
+        const completed = getHabitCompletionForDay(habit, dateStr, userId);
         return {
           date,
-          rate: habit.completions[dateStr] ? 100 : 0, // Convert boolean to 0 or 100
+          rate: completed ? 100 : 0,
         };
       });
 
@@ -259,7 +345,7 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
 
       const streakAnalysis = analyzeStreakPatterns(completionDates);
       const timeAnalysis = analyzeTimePatterns(completionDates);
-      const adaptability = calculateAdaptabilityScore(habit);
+      const adaptability = calculateAdaptabilityScore(habit, userId);
 
       return {
         title: `Analytics for ${habit.name}`,
@@ -272,7 +358,8 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
             trend: streakAnalysis.currentStreak > 0 ? 'up' : 'down',
             details: streakAnalysis.streakQuality,
           },
-          {
+          // Replace momentum with performance stats for numeric/rating habits
+          performanceStats || {
             name: 'Current Momentum',
             value: `${weeklyMomentum.toFixed(1)}%`,
             icon: ArrowTrendingUpIcon,
@@ -314,7 +401,7 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
         insights: getKeyInsights(habit.name),
       };
     }
-  }, [state.habits, habitId]);
+  }, [state.habits, habitId, allHabits, userId]);
 
   if (!stats) return null;
 
@@ -705,7 +792,7 @@ function findOptimalDay(data: { rate: number; date: Date }[]) {
   };
 }
 
-function calculateHabitSynergy(habits: Habit[]) {
+function calculateHabitSynergy(habits: CombinedHabit[], userId?: string) {
   let complementaryCount = 0;
   let totalSynergy = 0;
   const maxPossiblePairs = (habits.length * (habits.length - 1)) / 2;
@@ -713,7 +800,7 @@ function calculateHabitSynergy(habits: Habit[]) {
   // Compare each habit pair
   for (let i = 0; i < habits.length; i++) {
     for (let j = i + 1; j < habits.length; j++) {
-      const synergy = calculatePairSynergy(habits[i], habits[j]);
+      const synergy = calculatePairSynergy(habits[i], habits[j], userId);
       if (synergy > 0.7) {
         complementaryCount++;
         totalSynergy += synergy;
@@ -723,19 +810,37 @@ function calculateHabitSynergy(habits: Habit[]) {
 
   return {
     score: Math.min(100, (totalSynergy / Math.max(complementaryCount, 1)) * 100),
-    // Ensure we don't report more pairs than mathematically possible
     complementaryHabits: Math.min(complementaryCount, maxPossiblePairs),
   };
 }
 
-function calculatePairSynergy(habit1: Habit, habit2: Habit) {
+function calculatePairSynergy(habit1: CombinedHabit, habit2: CombinedHabit, userId?: string) {
   let commonCompletions = 0;
   let totalDays = 0;
 
-  Object.keys(habit1.completions).forEach(date => {
-    if (habit2.completions[date] !== undefined) {
+  // Get all dates from both habits
+  const dates = new Set<string>();
+  
+  if (isGroupHabit(habit1)) {
+    habit1.completions.forEach(c => dates.add(c.date));
+  } else {
+    Object.keys(habit1.completions).forEach(date => dates.add(date));
+  }
+  
+  if (isGroupHabit(habit2)) {
+    habit2.completions.forEach(c => dates.add(c.date));
+  } else {
+    Object.keys(habit2.completions).forEach(date => dates.add(date));
+  }
+
+  // Check each date for completions
+  dates.forEach(date => {
+    const completion1 = getHabitCompletionForDay(habit1, date, userId);
+    const completion2 = getHabitCompletionForDay(habit2, date, userId);
+    
+    if (completion1 !== undefined && completion2 !== undefined) {
       totalDays++;
-      if (habit1.completions[date] && habit2.completions[date]) {
+      if (completion1 && completion2) {
         commonCompletions++;
       }
     }
@@ -798,7 +903,7 @@ function calculateBurnoutRisk(data: { rate: number; date: Date }[]) {
   };
 }
 
-function analyzeHabitStacks(habits: Habit[]) {
+function analyzeHabitStacks(habits: CombinedHabit[]) {
   const stackPatterns = findStackPatterns(habits);
   const effectiveness = calculateStackEffectiveness(stackPatterns);
 
@@ -809,7 +914,7 @@ function analyzeHabitStacks(habits: Habit[]) {
   };
 }
 
-function findStackPatterns(habits: Habit[]) {
+function findStackPatterns(habits: CombinedHabit[]) {
   // Implementation to identify habits commonly completed together
   return [];
 }
@@ -887,41 +992,58 @@ function analyzeTimePatterns(dates: Date[]) {
   };
 }
 
-function calculateAdaptabilityScore(habit: Habit) {
-  const entries = Object.entries(habit.completions);
+function calculateAdaptabilityScore(habit: CombinedHabit, userId?: string) {
+  type CompletionEntry = GroupHabitCompletion | [string, HabitCompletionValue];
+  
+  // Get entries based on habit type
+  const entries: CompletionEntry[] = isGroupHabit(habit) 
+    ? habit.completions.filter(c => c.userId === userId)
+    : Object.entries(habit.completions);
+    
   const recentCompletions = entries.slice(-30);
   const olderCompletions = entries.slice(-60, -30);
   
-  const recentRate = recentCompletions.filter(([_, value]) => 
-    isHabitCompletedForDay(habit, value)
-  ).length / recentCompletions.length;
+  // Calculate completion rates with proper type guards
+  const recentRate = recentCompletions.length > 0
+    ? recentCompletions.filter((entry): entry is GroupHabitCompletion | [string, true] => {
+        if (isGroupHabit(habit)) {
+          return Boolean((entry as GroupHabitCompletion).completed);
+        }
+        return Boolean((entry as [string, HabitCompletionValue])[1]);
+      }).length / recentCompletions.length
+    : 0;
   
-  const olderRate = olderCompletions.filter(([_, value]) => 
-    isHabitCompletedForDay(habit, value)
-  ).length / olderCompletions.length;
+  const olderRate = olderCompletions.length > 0
+    ? olderCompletions.filter((entry): entry is GroupHabitCompletion | [string, true] => {
+        if (isGroupHabit(habit)) {
+          return Boolean((entry as GroupHabitCompletion).completed);
+        }
+        return Boolean((entry as [string, HabitCompletionValue])[1]);
+      }).length / olderCompletions.length
+    : 0;
   
   const adaptabilityScore = Math.round(((recentRate / Math.max(olderRate, 0.1)) * 100));
 
   let insight = adaptabilityScore > 100 ? 'Improving over time' : 'Maintaining consistency';
   
-  // Add more specific insights for numeric and rating habits
   if (habit.type === HabitType.NUMERIC) {
     const config = habit.config as NumericHabitConfig;
-    const recentAvg = recentCompletions
-      .filter(([_, value]) => typeof value === 'number')
-      .reduce((sum, [_, value]) => sum + (value as number), 0) / recentCompletions.length;
+    const recentValues = recentCompletions
+      .map(entry => {
+        if (isGroupHabit(habit)) {
+          const groupEntry = entry as GroupHabitCompletion;
+          return typeof groupEntry.completed === 'number' ? groupEntry.completed : null;
+        }
+        const [_, value] = entry as [string, HabitCompletionValue];
+        return typeof value === 'number' ? value : null;
+      })
+      .filter((value): value is number => value !== null);
     
-    if (recentAvg > config.goal) {
-      insight += ` (averaging ${recentAvg.toFixed(1)} ${config.unit})`;
-    }
-  } else if (habit.type === HabitType.RATING) {
-    const config = habit.config as RatingHabitConfig;
-    const recentAvg = recentCompletions
-      .filter(([_, value]) => typeof value === 'number')
-      .reduce((sum, [_, value]) => sum + (value as number), 0) / recentCompletions.length;
-    
-    if (recentAvg > (config.max + config.min) / 2) {
-      insight += ` (average rating: ${recentAvg.toFixed(1)})`;
+    if (recentValues.length > 0) {
+      const recentAvg = recentValues.reduce((sum, v) => sum + v, 0) / recentValues.length;
+      if (recentAvg > config.goal) {
+        insight += ` (averaging ${recentAvg.toFixed(1)} ${config.unit})`;
+      }
     }
   }
 
@@ -970,12 +1092,10 @@ function getTimeRecommendation(hour: number, successRate: number): string {
   return 'Consider adjusting your habit timing for better consistency';
 }
 
-function calculateHabitDiversity(habits: Habit[]) {
-  // Count unique categories and their distribution
+function calculateHabitDiversity(habits: CombinedHabit[]) {
   const categories = new Set(habits.map(h => h.category));
   const categoryCount = categories.size;
   
-  // Calculate distribution score (0-100)
   const distributionScore = Math.min(100, categoryCount * 20);
   
   let recommendation = '';

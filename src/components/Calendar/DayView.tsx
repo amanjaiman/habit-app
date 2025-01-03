@@ -158,6 +158,7 @@ export default function DayView({ date, habits }: DayViewProps) {
     today.setHours(0, 0, 0, 0);
     let streak = 0;
     let currentDate = new Date(today);
+    const todayStr = format(today, 'yyyy-MM-dd');
 
     while (true) {
       const dateStr = format(currentDate, 'yyyy-MM-dd');
@@ -165,9 +166,13 @@ export default function DayView({ date, habits }: DayViewProps) {
         c => c.userId === userId && c.date === dateStr
       );
       
-      if (!completion || !isFullyCompleted(habit, completion.completed)) break;
+      // Skip today when calculating streak if there's no completion
+      if (dateStr !== todayStr && (!completion || !isFullyCompleted(habit, completion.completed))) break;
       
-      streak++;
+      if (completion && isFullyCompleted(habit, completion.completed)) {
+        streak++;
+      }
+      
       currentDate.setDate(currentDate.getDate() - 1);
     }
 
@@ -332,7 +337,7 @@ export default function DayView({ date, habits }: DayViewProps) {
                   className={`rounded-xl transition-all duration-200 overflow-hidden
                             border border-white/20 dark:border-gray-800/30
                             ${isCompleted 
-                              ? 'bg-green-100/50 dark:bg-green-900/20' 
+                              ? 'bg-green-300/25 dark:bg-green-900/30' 
                               : 'bg-white/30 dark:bg-gray-900/30'}`}
                 >
                   <div className="p-3">
@@ -406,7 +411,7 @@ export default function DayView({ date, habits }: DayViewProps) {
                     className={`rounded-xl transition-all duration-200 overflow-hidden
                               border border-white/20 dark:border-gray-800/30
                               ${isCompleted 
-                                ? 'bg-green-100/50 dark:bg-green-900/20' 
+                                ? 'bg-green-300/25 dark:bg-green-900/30' 
                                 : 'bg-white/30 dark:bg-gray-900/30'}`}
                   >
                     <div className="p-3">

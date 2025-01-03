@@ -11,7 +11,7 @@ export function useUserPremium(): PremiumStatus {
   const { subscription } = state;
 
   return {
-    premium: true, //subscription?.status === 'active',
+    premium: subscription?.status === 'active',
     nextBillingDate: subscription?.nextBillingDate 
       ? new Date(subscription.nextBillingDate) 
       : null,

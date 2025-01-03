@@ -11,8 +11,10 @@ import {
   Tooltip,
   Legend,
   Filler,
+  ChartData,
 } from 'chart.js';
 import { Group } from '../../contexts/GroupContext';
+import { HabitType } from '../../types/habit';
 
 ChartJS.register(
   CategoryScale,
@@ -29,25 +31,10 @@ interface GroupTrendChartProps {
   group: Group;
 }
 
-function calculateLinearRegression(points: { x: number, y: number }[]): { slope: number, intercept: number } {
-  const n = points.length;
-  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-  
-  points.forEach(point => {
-    sumX += point.x;
-    sumY += point.y;
-    sumXY += point.x * point.y;
-    sumXX += point.x * point.x;
-  });
-
-  const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-  const intercept = (sumY - slope * sumX) / n;
-  
-  return { slope, intercept };
-}
-
 export default function GroupTrendChart({ group }: GroupTrendChartProps) {
+  const [selectedHabit, setSelectedHabit] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const [showGroupAverage, setShowGroupAverage] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const today = new Date();
   const yesterday = subDays(today, 1);
@@ -60,18 +47,15 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
   }, []);
 
   const chartData = useMemo(() => {
-    // Get the earliest completion date
-    const earliestDate = Math.min(...group.habits.flatMap(habit =>
-      habit.completions?.map(completion => new Date(completion.date).getTime()) || []
-    ));
-
-    if (!isFinite(earliestDate) || 
-        (yesterday.getTime() - earliestDate) / (1000 * 60 * 60 * 24) < 7) {
-      return null;
-    }
+    if (!selectedHabit) return null;
+    
+    const habit = group.habits.find(h => h.id === selectedHabit);
+    if (!habit) return null;
 
     const startDate = new Date(Math.max(
-      earliestDate,
+      Math.min(...group.habits.flatMap(habit =>
+        habit.completions?.map(completion => new Date(completion.date).getTime()) || []
+      )),
       subDays(yesterday, isMobile ? 13 : 29).getTime()
     ));
 
@@ -80,69 +64,79 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
       end: yesterday,
     });
 
+    // Calculate individual member data
     const memberData = group.memberDetails
       .filter(member => !selectedMember || member.id === selectedMember)
       .map(member => {
-        const dailyRates = dateRange.map(date => {
+        const dailyValues = dateRange.map(date => {
           const dateStr = format(date, 'yyyy-MM-dd');
-          const completedCount = group.habits.filter(habit =>
-            habit.completions?.some(completion =>
-              completion.userId === member.id &&
-              format(new Date(completion.date), 'yyyy-MM-dd') === dateStr
-            )
-          ).length;
+          const completion = habit.completions?.find(c => 
+            c.userId === member.id && 
+            format(new Date(c.date), 'yyyy-MM-dd') === dateStr
+          );
+
           return {
             date: format(date, 'MMM d'),
-            rate: (completedCount / group.habits.length) * 100,
+            value: completion?.completed || 0,
+            completed: completion?.completed || false
           };
         });
 
-        // Calculate 7-day rolling average
-        const rollingAverage = dailyRates.map((_, index, arr) => {
+        // Calculate rolling average based on habit type
+        const rollingAverage = dailyValues.map((_, index, arr) => {
           const start = Math.max(0, index - 6);
           const subset = arr.slice(start, index + 1);
-          const sum = subset.reduce((acc, val) => acc + val.rate, 0);
-          return sum / subset.length;
+          
+          if (habit.type === HabitType.BOOLEAN) {
+            const completedCount = subset.filter(v => v.completed).length;
+            return (completedCount / subset.length) * 100;
+          } else {
+            const sum = subset.reduce((acc, val) => acc + Number(val.value), 0);
+            return sum / subset.length;
+          }
         });
 
-        // Calculate trend line
-        const points = rollingAverage.map((avg, i) => ({ x: i, y: avg }));
-        const { slope, intercept } = calculateLinearRegression(points);
-        const trendLineData = points.map(p => slope * p.x + intercept);
-
-        // Generate a consistent color based on member ID
+        // Generate color and return dataset
         const hue = parseInt(member.id, 16) % 360;
         const color = `hsl(${hue}, 70%, 50%)`;
 
-        return [
-          {
-            label: member.name,
-            data: rollingAverage,
-            borderColor: color,
-            backgroundColor: `${color}1A`,
-            tension: 0.4,
-            fill: true,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-          },
-          {
-            label: `${member.name} (Trend)`,
-            data: trendLineData,
-            borderColor: `${color}80`,
-            borderDash: [5, 5],
-            borderWidth: 2,
-            pointRadius: 0,
-            fill: false,
-            tension: 0,
-          }
-        ];
-      }).flat();
+        return {
+          label: member.name,
+          data: rollingAverage,
+          borderColor: color,
+          backgroundColor: `hsla(${hue}, 70%, 50%, 0.1)`,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        };
+      });
+
+    // Calculate group average if enabled
+    const datasets = showGroupAverage ? [
+      {
+        label: 'Group Average',
+        data: dateRange.map((date, i) => {
+          const allValues = memberData.map(m => m.data[i]);
+          return allValues.reduce((a, b) => a + b, 0) / allValues.length;
+        }),
+        borderColor: 'rgb(99, 102, 241)',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      },
+      ...memberData
+    ] : memberData;
 
     return {
       labels: dateRange.map(date => format(date, 'MMM d')),
-      datasets: memberData,
+      datasets,
+      habitType: habit.type,
+      habitConfig: habit.config
     };
-  }, [group, selectedMember, isMobile]);
+  }, [group, selectedHabit, selectedMember, showGroupAverage, isMobile]);
 
   const options = {
     responsive: true,
@@ -235,47 +229,69 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
     },
   };
 
-  if (!chartData) return (
-    <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                    border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 
-                    dark:text-gray-300 text-lg">
-      Track habits for at least 7 days to see your group trends!
-    </div>
-  );
-
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {group.memberDetails.map(member => (
+      <div className="flex flex-wrap gap-4">
+        <select 
+          value={selectedHabit || ''} 
+          onChange={(e) => setSelectedHabit(e.target.value)}
+          className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2"
+        >
+          <option value="">Select a habit</option>
+          {group.habits.map(habit => (
+            <option key={habit.id} value={habit.id}>{habit.name}</option>
+          ))}
+        </select>
+
+        <div className="flex gap-2">
           <button
-            key={member.id}
-            onClick={() => setSelectedMember(selectedMember === member.id ? null : member.id)}
-            className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 ${
-              selectedMember === member.id
-                ? 'bg-purple-600 text-white dark:bg-purple-500'
-                : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+            onClick={() => setShowGroupAverage(!showGroupAverage)}
+            className={`px-3 py-1 rounded-full text-sm ${
+              showGroupAverage 
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-100 hover:bg-gray-200'
             }`}
           >
-            {member.name}
+            Group Average
           </button>
-        ))}
-      </div>
-      <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                      border border-white/20 dark:border-gray-800/30 shadow-xl">
-        <div className="mb-6">
-          <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                         dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
-            Group Progress Trends
-          </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-            Showing 7-day rolling average
-          </p>
-        </div>
-        <div className="h-[400px] w-full bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 
-                        transition-all duration-200 hover:shadow-lg">
-          <Line data={chartData} options={options as any} />
+          {group.memberDetails.map(member => (
+            <button
+              key={member.id}
+              onClick={() => setSelectedMember(selectedMember === member.id ? null : member.id)}
+              className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 ${
+                selectedMember === member.id
+                  ? 'bg-purple-600 text-white dark:bg-purple-500'
+                  : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+              }`}
+            >
+              {member.name}
+            </button>
+          ))}
         </div>
       </div>
+
+      {selectedHabit ? (
+        <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                        border border-white/20 dark:border-gray-800/30 shadow-xl">
+          <div className="mb-6">
+            <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                           dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+              Group Progress Trends
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              Showing 7-day rolling average
+            </p>
+          </div>
+          <div className="h-[400px] w-full bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 
+                          transition-all duration-200 hover:shadow-lg">
+            {chartData && <Line data={chartData as ChartData<'line'>} options={options as any} />}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center p-8 text-gray-600">
+          Select a habit to view trends
+        </div>
+      )}
     </div>
   );
 } 

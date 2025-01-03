@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useHabits } from '../../contexts/HabitContext';
+import { useGroups, GroupHabitCompletion } from '../../contexts/GroupContext';
 import { format, eachDayOfInterval, subDays } from 'date-fns';
 import { Line } from 'react-chartjs-2';
 import {
@@ -13,6 +14,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
+import { HabitType, NumericHabitConfig, RatingHabitConfig, Habit, HabitCompletionValue } from '../../types/habit';
 
 ChartJS.register(
   CategoryScale,
@@ -48,8 +50,9 @@ function calculateLinearRegression(points: { x: number, y: number }[]): { slope:
 
 export default function TrendChart({ habitId }: TrendChartProps) {
   const { state } = useHabits();
-  const today = new Date();
-  const yesterday = subDays(today, 1);
+  const { state: groupState } = useGroups();
+  const today = new Date(new Date().setHours(0, 0, 0, 0));
+  const endDate = today;
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -60,37 +63,41 @@ export default function TrendChart({ habitId }: TrendChartProps) {
   }, []);
 
   const chartData = useMemo(() => {
-    const earliestDate = habitId === 'all'
-      ? Math.min(...state.habits.flatMap(h => 
-          Object.keys(h.completions).map(date => new Date(date).getTime())
-        ))
-      : Math.min(...Object.keys(state.habits.find(h => h.id === habitId)?.completions || [])
-          .map(date => new Date(date).getTime()));
-
-    if (!isFinite(earliestDate) || 
-        (yesterday.getTime() - earliestDate) / (1000 * 60 * 60 * 24) < 7) {
-      return null;
-    }
-
-    const startDate = new Date(Math.max(
-      earliestDate,
-      subDays(yesterday, isMobile ? 13 : 29).getTime()
-    ));
-
-    const dateRange = eachDayOfInterval({
-      start: startDate,
-      end: yesterday,
-    });
+    const personalHabit = state.habits.find(h => h.id === habitId);
+    const groupHabit = groupState.groups
+      .flatMap(group => group.habits)
+      .find(h => h.id === habitId);
+    
+    const habit = personalHabit || groupHabit;
 
     if (habitId === 'all') {
+      const earliestDate = Math.min(...state.habits.flatMap(h => 
+        Object.keys(h.completions).map(date => new Date(date).getTime())
+      ));
+
+      if (earliestDate === null || !isFinite(earliestDate)) {
+        return null;
+      }
+
+      const startDate = new Date(Math.max(
+        earliestDate,
+        subDays(endDate, isMobile ? 13 : 29).getTime()
+      ));
+
+      const dateRange = eachDayOfInterval({
+        start: startDate,
+        end: endDate,
+      });
+
       const dailyRates = dateRange.map(date => {
         const dateStr = format(date, 'yyyy-MM-dd');
         const completedCount = state.habits.filter(h => h.completions[dateStr]).length;
         return {
-          date: format(date, 'MMM d'),
+          date: format(date, 'MMM dd'),
           rate: (completedCount / state.habits.length) * 100,
+          hasData: completedCount > 0
         };
-      });
+      }).filter(d => d.hasData);
 
       const points = dailyRates.map((d, i) => ({ x: i, y: d.rate }));
       const { slope, intercept } = calculateLinearRegression(points);
@@ -122,32 +129,127 @@ export default function TrendChart({ habitId }: TrendChartProps) {
           }
         ],
       };
-    } else {
-      const habit = state.habits.find(h => h.id === habitId);
-      if (!habit) return null;
+    } else if (habit) {
+      const getCompletionValue = (dateStr: string) => {
+        if (!habit) return undefined;
+        
+        if ('completions' in habit && 
+            !Array.isArray(habit.completions) && 
+            typeof habit.completions === 'object') {
+          return (habit.completions as Record<string, HabitCompletionValue>)[dateStr];
+        } 
+        
+        if ('completions' in habit && 
+            Array.isArray(habit.completions)) {
+          const completion = (habit.completions as GroupHabitCompletion[]).find(c => {
+            const completionDate = new Date(c.date);
+            return format(completionDate, 'yyyy-MM-dd') === dateStr;
+          });
+          return completion?.completed;
+        }
+        
+        return undefined;
+      };
 
-      const dailyCompletions = dateRange.map(date => ({
-        date: format(date, 'MMM d'),
-        completed: habit.completions[format(date, 'yyyy-MM-dd')] ? 100 : 0,
-      }));
+      const getDailyValue = (dateStr: string) => {
+        const completion = getCompletionValue(dateStr);
+        if (completion === undefined) return 0;
+
+        if (!habit) return 0;
+
+        switch (habit.type) {
+          case HabitType.BOOLEAN:
+            return completion === true ? 100 : 0;
+          case HabitType.NUMERIC:
+          case HabitType.RATING:
+            if (Array.isArray(habit.completions)) {
+              const value = typeof completion === 'boolean' 
+                ? (completion ? 100 : 0)
+                : Number(completion);
+              return isNaN(value) ? 0 : value;
+            } else {
+              const value = typeof completion === 'string' 
+                ? parseFloat(completion) 
+                : Number(completion);
+              return isNaN(value) ? 0 : value;
+            }
+          default:
+            return 0;
+        }
+      };
+
+      const earliestDate = Math.min(
+        ...Object.entries(habit.completions)
+          .filter(([_, value]) => value)
+          .map(([date]) => new Date(date).getTime())
+      );
+
+      if (!isFinite(earliestDate)) {
+        return null;
+      }
+
+      const startDate = new Date(Math.max(
+        earliestDate,
+        subDays(endDate, isMobile ? 13 : 29).getTime()
+      ));
+
+      const dateRange = eachDayOfInterval({
+        start: startDate,
+        end: endDate,
+      });
+
+      const dailyCompletions = dateRange.map(date => {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        const value = getDailyValue(dateStr);
+        
+        return {
+          date: format(date, 'MMM dd'),
+          value,
+          rawValue: value,
+          hasData: habit.type === HabitType.BOOLEAN 
+            ? getCompletionValue(dateStr) !== undefined
+            : (value > 0 || getCompletionValue(dateStr) !== undefined)
+        };
+      }).filter(d => d.hasData);
 
       const rollingAverage = dailyCompletions.map((_, index, arr) => {
         const start = Math.max(0, index - 6);
         const subset = arr.slice(start, index + 1);
-        const sum = subset.reduce((acc, val) => acc + val.completed, 0);
+        const sum = subset.reduce((acc, val) => acc + val.value, 0);
         return sum / subset.length;
       });
 
-      const points = rollingAverage.map((avg, i) => ({ x: i, y: avg }));
+      const points = dailyCompletions.map((d, i) => ({ x: i, y: d.value }));
       const { slope, intercept } = calculateLinearRegression(points);
       const trendLineData = points.map(p => slope * p.x + intercept);
+
+      const yAxisMax = (() => {
+        switch (habit.type) {
+          case HabitType.BOOLEAN:
+            return 100;
+          case HabitType.NUMERIC:
+            const numericConfig = habit.config as NumericHabitConfig;
+            const maxValue = Math.max(
+              ...dailyCompletions.map(d => d.rawValue as number),
+              numericConfig.goal
+            );
+            return Math.ceil(maxValue * 1.1); // Add 10% padding
+          case HabitType.RATING:
+            const ratingConfig = habit.config as RatingHabitConfig;
+            return ratingConfig.max;
+          default:
+            return 100;
+        }
+      })();
 
       return {
         labels: dailyCompletions.map(d => d.date),
         datasets: [
           {
             label: habit.name,
-            data: rollingAverage,
+            data: habit.type === HabitType.BOOLEAN 
+              ? rollingAverage 
+              : dailyCompletions.map(d => d.value),
             borderColor: habit.color || 'rgb(99, 102, 241)',
             backgroundColor: habit.color ? `${habit.color}1A` : 'rgba(99, 102, 241, 0.1)',
             tension: 0.4,
@@ -166,9 +268,14 @@ export default function TrendChart({ habitId }: TrendChartProps) {
             tension: 0,
           }
         ],
+        habitType: habit.type,
+        habitConfig: habit.config,
+        yAxisMax,
       };
     }
-  }, [state.habits, habitId, isMobile]);
+
+    return null;
+  }, [state.habits, groupState.groups, habitId, isMobile]);
 
   const options = {
     responsive: true,
@@ -201,7 +308,7 @@ export default function TrendChart({ habitId }: TrendChartProps) {
         cornerRadius: 8,
         callbacks: {
           label: (context: any) => {
-            const value = Math.round(context.raw);
+            const value = Math.round(context.raw * 100) / 100;
             const isTrendLine = context.dataset.label === 'Trend';
             
             if (habitId === 'all') {
@@ -209,9 +316,33 @@ export default function TrendChart({ habitId }: TrendChartProps) {
                 ? `Trend: ${value}%`
                 : `Completion Rate: ${value}%`;
             } else {
+              const personalHabit = state.habits.find(h => h.id === habitId);
+              const groupHabit = groupState.groups
+                .flatMap(group => group.habits)
+                .find(h => h.id === habitId);
+              
+              const habit = personalHabit || groupHabit;
+              if (!habit) return '';
+
+              const formatValue = (val: number) => {
+                switch (habit.type) {
+                  case HabitType.BOOLEAN:
+                    return `${val}%`;
+                  case HabitType.NUMERIC:
+                    const numericConfig = habit.config as NumericHabitConfig;
+                    return `${val} ${numericConfig.unit}`;
+                  case HabitType.RATING:
+                    return `${val}`;
+                  default:
+                    return `${val}%`;
+                }
+              };
+
               return isTrendLine
-                ? `Trend: ${value}%`
-                : `7-day Average: ${value}%`;
+                ? `Trend: ${formatValue(value)}`
+                : habit.type === HabitType.BOOLEAN
+                  ? `7-day Average: ${formatValue(value)}`
+                  : `Value: ${formatValue(value)}`;
             }
           },
         },
@@ -220,13 +351,30 @@ export default function TrendChart({ habitId }: TrendChartProps) {
     scales: {
       y: {
         beginAtZero: true,
-        max: 100,
+        max: chartData?.yAxisMax ?? 100,
         grid: {
           color: 'rgba(107, 114, 128, 0.08)',
           drawBorder: false,
         },
         ticks: {
-          callback: (value: number) => `${value}%`,
+          callback: (value: number) => {
+            if (habitId === 'all') return `${value}%`;
+            
+            const habit = state.habits.find(h => h.id === habitId);
+            if (!habit) return value;
+
+            switch (habit.type) {
+              case HabitType.BOOLEAN:
+                return `${value}%`;
+              case HabitType.NUMERIC:
+                const numericConfig = habit.config as NumericHabitConfig;
+                return `${value}${numericConfig.unit}`;
+              case HabitType.RATING:
+                return value;
+              default:
+                return value;
+            }
+          },
           color: '#6B7280',
           font: {
             size: 12,
@@ -266,12 +414,17 @@ export default function TrendChart({ habitId }: TrendChartProps) {
     },
   };
 
-  if (!chartData) return (
-    <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg">
-      Track habits for at least 7 days to see your trends chart!
-    </div>
-  );
+  if (!chartData) {
+    return (
+      <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                    border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 
+                    dark:text-gray-300 text-lg">
+        {habitId === 'all' 
+          ? "Start tracking your habits to see your trends!"
+          : "No completion data found for this habit yet."}
+      </div>
+    );
+  }
 
   return (
     <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 

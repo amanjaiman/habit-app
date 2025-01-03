@@ -136,15 +136,21 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
     today.setHours(0, 0, 0, 0);
     let streak = 0;
     let currentDate = new Date(today);
+    const todayStr = format(today, 'yyyy-MM-dd');
 
     while (true) {
       const dateStr = format(currentDate, 'yyyy-MM-dd');
-      const isCompleted = completions.some(
-        c => c.userId === userId && c.date === dateStr && c.completed
+      const completion = completions.find(
+        c => c.userId === userId && c.date === dateStr
       );
-
-      if (!isCompleted) break;
-      streak++;
+      
+      // Skip today when calculating streak if there's no completion
+      if (dateStr !== todayStr && (!completion || !completion.completed)) break;
+      
+      if (completion && completion.completed) {
+        streak++;
+      }
+      
       currentDate.setDate(currentDate.getDate() - 1);
     }
 
