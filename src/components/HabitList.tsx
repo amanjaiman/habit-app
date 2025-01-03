@@ -36,7 +36,7 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
   };
 
   const habitCardClasses =
-    "flex items-center p-4 rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/20 dark:border-gray-800/30 hover:shadow-xl hover:border-purple-200/30 dark:hover:border-purple-800/30";
+    "rounded-xl transition-all duration-200 overflow-hidden border border-white/20 dark:border-gray-800/30 bg-white/30 dark:bg-gray-900/30";
   const habitNameClasses = "font-medium text-gray-900 dark:text-white";
   const groupInfoClasses =
     "text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-2";
@@ -64,28 +64,32 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {habits.map((habit) => (
             <div key={habit.id} className={habitCardClasses}>
-              <div className="flex-1 flex items-center space-x-3">
-                <span className="text-xl">{habit.emoji}</span>
-                <span className={habitNameClasses}>{habit.name}</span>
-              </div>
+              <div className="p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">{habit.emoji}</span>
+                    <span className={habitNameClasses}>{habit.name}</span>
+                  </div>
 
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setEditingHabit(habit)}
-                  className="p-2 text-gray-600 hover:text-purple-600 dark:text-gray-300 
-                           dark:hover:text-purple-400 rounded-lg hover:bg-purple-100/50 
-                           dark:hover:bg-purple-900/30 transition-all duration-200"
-                >
-                  <PencilIcon className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(habit.id)}
-                  className="p-2 text-gray-600 hover:text-pink-600 dark:text-gray-300 
-                           dark:hover:text-pink-400 rounded-lg hover:bg-pink-100/50 
-                           dark:hover:bg-pink-900/30 transition-all duration-200"
-                >
-                  <TrashIcon className="w-5 h-5" />
-                </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setEditingHabit(habit)}
+                      className="p-2 text-gray-600 hover:text-purple-600 dark:text-gray-300 
+                               dark:hover:text-purple-400 rounded-lg hover:bg-purple-100/50 
+                               dark:hover:bg-purple-900/30 transition-all duration-200"
+                    >
+                      <PencilIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(habit.id)}
+                      className="p-2 text-gray-600 hover:text-pink-600 dark:text-gray-300 
+                               dark:hover:text-pink-400 rounded-lg hover:bg-pink-100/50 
+                               dark:hover:bg-pink-900/30 transition-all duration-200"
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
@@ -108,21 +112,25 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
                 key={`${habit.id}-${habit.groupName}`}
                 className={habitCardClasses}
               >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <span className="text-xl">{habit.emoji}</span>
-                    <span className={habitNameClasses}>{habit.name}</span>
+                <div className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <span className="text-2xl">{habit.emoji}</span>
+                        <span className={habitNameClasses}>{habit.name}</span>
+                      </div>
+                      <Link
+                        to={`/groups/${habit.groupId}`}
+                        className={
+                          groupInfoClasses +
+                          " hover:text-purple-600 dark:hover:text-purple-400"
+                        }
+                      >
+                        <span>{habit.groupEmoji}</span>
+                        <span>{habit.groupName}</span>
+                      </Link>
+                    </div>
                   </div>
-                  <Link
-                    to={`/groups/${habit.groupId}`}
-                    className={
-                      groupInfoClasses +
-                      " hover:text-purple-600 dark:hover:text-purple-400"
-                    }
-                  >
-                    <span>{habit.groupEmoji}</span>
-                    <span>{habit.groupName}</span>
-                  </Link>
                 </div>
               </div>
             ))}

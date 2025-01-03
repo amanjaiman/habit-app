@@ -18,33 +18,33 @@ export default function Landing() {
 
   const weekViewScreenshot =
     theme === "light"
-      ? "https://habitsense.ai/static/media/app_hero.2a80d9f25a76a9cee376.png"
-      : "https://habitsense.ai/static/media/app_hero.b4dd264653d1ed13a972.png";
+      ? "https://habitsense.blob.core.windows.net/images/app_hero.2a80d9f25a76a9cee376.png"
+      : "https://habitsense.blob.core.windows.net/images/app_hero.2a80d9f25a76a9cee376.png";
 
   const advancedAggAnalyticsScreenshot =
     theme === "light"
-      ? "https://habitsense.ai/static/media/ind_analytics.9fd5fae1bb3230924ad8.png"
-      : "https://habitsense.ai/static/media/ind_analytics.7a556b4cdab39b0fb733.png";
+      ? "https://habitsense.blob.core.windows.net/images/ind_analytics.9fd5fae1bb3230924ad8.png"
+      : "https://habitsense.blob.core.windows.net/images/ind_analytics.7a556b4cdab39b0fb733.png";
   const keyInsightsIndivdualScreenshot =
     theme === "light"
-      ? "https://habitsense.ai/static/media/analytics_bottom.d3ec70c1d9bea21a25fe.png"
-      : "https://habitsense.ai/static/media/analytics_bottom.c3b08330235ba69e7643.png";
+      ? "https://habitsense.blob.core.windows.net/images/analytics_bottom.d3ec70c1d9bea21a25fe.png"
+      : "https://habitsense.blob.core.windows.net/images/analytics_bottom.c3b08330235ba69e7643.png";
   const keyInsightsScreenshot =
     theme === "light"
-      ? "https://habitsense.ai/static/media/insights.423978c22f2abf15de83.png"
-      : "https://habitsense.ai/static/media/insights.0313328d53df8eba402f.png";
+      ? "https://habitsense.blob.core.windows.net/images/insights.423978c22f2abf15de83.png"
+      : "https://habitsense.blob.core.windows.net/images/insights.0313328d53df8eba402f.png";
   const actionableRecommendedScreenshot =
     theme === "light"
-      ? "https://habitsense.ai/static/media/recommendations.0780680b338099844077.png"
-      : "https://habitsense.ai/static/media/recommendations.f7b2a3afbaff557040dd.png";
+      ? "https://habitsense.blob.core.windows.net/images/recommendations.0780680b338099844077.png"
+      : "https://habitsense.blob.core.windows.net/images/recommendations.f7b2a3afbaff557040dd.png";
   const habitCorrelationsScreenshot =
     theme === "light"
-      ? "https://habitsense.ai/static/media/ind_correlations.2e2efa8fd93f856cca26.png"
-      : "https://habitsense.ai/static/media/ind_correlations.c28b8a72d25e423a2f35.png";
+      ? "https://habitsense.blob.core.windows.net/images/ind_correlations.2e2efa8fd93f856cca26.png"
+      : "https://habitsense.blob.core.windows.net/images/ind_correlations.c28b8a72d25e423a2f35.png";
   const habitPatternsScreenshot =
     theme === "light"
-      ? "https://habitsense.ai/static/media/behavior_analysis.ed65d1286283854fa4bb.png"
-      : "https://habitsense.ai/static/media/behavior_analysis.113dddca5524a94c79a3.png";
+      ? "https://habitsense.blob.core.windows.net/images/behavior_analysis.ed65d1286283854fa4bb.png"
+      : "https://habitsense.blob.core.windows.net/images/behavior_analysis.113dddca5524a94c79a3.png";
 
   const features = [
     {

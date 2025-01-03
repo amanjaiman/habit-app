@@ -31,6 +31,35 @@ const calculateAchievements = (group: Group): Achievement[] => {
     0
   );
 
+  // Progressive completion targets
+  let completionProgress = totalCompletions;
+  let completionTarget = 100;
+  let completionTitle = "Century Club";
+  let completionDescription = "Group reached 100 total habit completions";
+
+  if (totalCompletions >= 1000) {
+    completionTarget = 1000;
+    completionTitle = "Millennium Milestone";
+    completionDescription = "Group reached 1000 total habit completions";
+  } else if (totalCompletions >= 500) {
+    completionTarget = 500;
+    completionTitle = "High Five Hundred";
+    completionDescription = "Group reached 500 total habit completions";
+  }
+
+  // Progressive streak targets
+  let streakTarget = 7;
+  let streakTitle = "Perfect Week";
+  let streakDescription =
+    "All members completed their habits for 7 days straight";
+
+  if (currentStreak >= 30) {
+    streakTarget = 30;
+    streakTitle = "Perfect Month";
+    streakDescription =
+      "All members completed their habits for 30 days straight";
+  }
+
   // Check if all members completed habits today
   const todayStr = today.toISOString().split("T")[0];
   const allCompletedToday = group.habits.every((habit) =>
@@ -46,22 +75,22 @@ const calculateAchievements = (group: Group): Achievement[] => {
   return [
     {
       id: 1,
-      title: "Perfect Week",
-      description: "All members completed their habits for 7 days straight",
+      title: streakTitle,
+      description: streakDescription,
       icon: "🌟",
       progress: currentStreak,
-      target: 7,
-      unlocked: currentStreak >= 7,
+      target: streakTarget,
+      unlocked: currentStreak >= streakTarget,
       category: "streak",
     },
     {
       id: 2,
-      title: "Century Club",
-      description: "Group reached 100 total habit completions",
+      title: completionTitle,
+      description: completionDescription,
       icon: "💯",
-      progress: Math.min(totalCompletions, 100),
-      target: 100,
-      unlocked: totalCompletions >= 100,
+      progress: completionProgress,
+      target: completionTarget,
+      unlocked: totalCompletions >= completionTarget,
       category: "completion",
     },
     {
