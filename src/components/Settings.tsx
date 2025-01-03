@@ -225,7 +225,7 @@ export default function Settings() {
                 subscription
               },
             });
-            toast.success('Welcome to HabitsAI Premium!');
+            toast.success('Welcome to HabitSense Premium!');
           }
         })
         .catch(error => {

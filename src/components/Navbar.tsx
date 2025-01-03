@@ -62,7 +62,7 @@ export default function Navbar() {
           <div className="flex items-center gap-8">
             <Link to="/landing" className="flex-shrink-0 flex items-center">
               <span className="text-3xl font-black bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
-                🎯 HabitsAI
+                HabitSense
               </span>
             </Link>
 

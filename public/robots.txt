@@ -1,3 +1,8 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /login
+Disallow: /signup
+Disallow: /dashboard
+Disallow: /settings
+Sitemap: https://habitsense.ai/sitemap.xml

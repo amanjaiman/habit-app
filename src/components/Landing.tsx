@@ -11,23 +11,20 @@ import {
   LightBulbIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
-
-// Import all screenshots
-import actionableRecommendedScreenshot from '../images/homepage/actionable_recommendations.png';
-import advancedAggAnalyticsScreenshot from '../images/homepage/advanced_agg_analytics.png';
-import habitCorrelationsScreenshot from '../images/homepage/habit_correlations.png';
-import habitPatternsScreenshot from '../images/homepage/habit_patterns.png';
-import keyInsightsIndivdualScreenshot from '../images/homepage/key_insights_individual.png';
-import keyInsightsScreenshot from '../images/homepage/key_insights.png';
-import monthViewScreenshot from '../images/homepage/month_view.png';
-import weekViewScreenshot from '../images/homepage/week_view.png';
-
-import appScreenshot from '../images/week_dashboard.png';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function Landing() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [showDemo, setShowDemo] = useState(false);
   const [currentSlides, setCurrentSlides] = useState([0, 0, 0]);
+  const { theme } = useTheme();
+
+  const weekViewScreenshot = theme === 'light' ? 'https://habitsense.ai/static/media/app_hero.2a80d9f25a76a9cee376.png' : 'https://habitsense.ai/static/media/app_hero.b4dd264653d1ed13a972.png';
+
+  const advancedAggAnalyticsScreenshot = theme === 'light' ? 'https://habitsense.ai/static/media/ind_analytics.9fd5fae1bb3230924ad8.png' : 'https://habitsense.ai/static/media/ind_analytics.7a556b4cdab39b0fb733.png';
+  const keyInsightsIndivdualScreenshot = theme === 'light' ? 'https://habitsense.ai/static/media/analytics_bottom.d3ec70c1d9bea21a25fe.png' : 'https://habitsense.ai/static/media/analytics_bottom.c3b08330235ba69e7643.png';
+  const keyInsightsScreenshot = theme === 'light' ? 'https://habitsense.ai/static/media/insights.423978c22f2abf15de83.png' : 'https://habitsense.ai/static/media/insights.0313328d53df8eba402f.png';
+  const actionableRecommendedScreenshot = theme === 'light' ? 'https://habitsense.ai/static/media/recommendations.0780680b338099844077.png' : 'https://habitsense.ai/static/media/recommendations.f7b2a3afbaff557040dd.png';
+  const habitCorrelationsScreenshot = theme === 'light' ? 'https://habitsense.ai/static/media/ind_correlations.2e2efa8fd93f856cca26.png' : 'https://habitsense.ai/static/media/ind_correlations.c28b8a72d25e423a2f35.png';
+  const habitPatternsScreenshot = theme === 'light' ? 'https://habitsense.ai/static/media/behavior_analysis.ed65d1286283854fa4bb.png' : 'https://habitsense.ai/static/media/behavior_analysis.113dddca5524a94c79a3.png';
 
   const features = [
     {
@@ -49,6 +46,7 @@ export default function Landing() {
 
   const comparisonFeatures = [
     { name: "Daily habit tracking", free: true, premium: false },
+    { name: "Group habits", free: true, premium: false },
     { name: "Basic analytics", free: true, premium: false },
     { name: "Everything in Free", free: false, premium: true },
     { name: "Weekly and monthly tracking", free: false, premium: true },
@@ -69,8 +67,8 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             {/* Left Column - Text Content */}
             <div className="text-left">
-              <h1 className="text-5xl md:text-7xl font-black bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text mb-6 leading-tight">
-                Build Better Habits,<br />One Day at a Time
+              <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight text-purple-900 dark:text-white">
+                Build Your <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">Habit Sense</span>,<br />One Day at a Time
               </h1>
               <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
                 Track, analyze, and improve your daily habits with AI-powered insights and beautiful visualizations.
@@ -109,7 +107,7 @@ export default function Landing() {
       {/* Plan Comparison */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 dark:text-white">Choose Your Plan</h2>
+          <h2 className="text-4xl font-bold mb-4 text-purple-900 dark:text-white">Choose Your Plan</h2>
           <p className="text-xl text-gray-600 dark:text-gray-300">
             Start with our free plan or unlock premium features
           </p>
@@ -194,8 +192,8 @@ export default function Landing() {
               <div className="text-4xl font-bold mb-2">
                 <UserGroupIcon className="w-12 h-12 mx-auto mb-4" />
               </div>
-              <h3 className="font-medium mb-2">Simple & Intuitive</h3>
-              <div className="text-purple-100">One click to track your habits</div>
+              <h3 className="font-medium mb-2">Individual and Group Habits</h3>
+              <div className="text-purple-100">Track your habits with family and friends</div>
             </div>
             <div>
               <div className="text-4xl font-bold mb-2">
@@ -218,7 +216,7 @@ export default function Landing() {
       {/* Premium Features */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
+          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">
             Premium Features
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300">
@@ -304,7 +302,7 @@ export default function Landing() {
           <div className="flex justify-center gap-4">
             <Link
               to="/signup"
-              className="inline-flex items-center px-8 py-4 bg-white text-purple-600 rounded-xl 
+              className="inline-flex items-center px-8 py-4 bg-white/80 dark:bg-gray-800/80 text-purple-600 dark:text-purple-400 rounded-xl 
                        shadow-lg hover:shadow-xl transition-all duration-200 font-medium transform hover:scale-105"
             >
               Get Started Free <ArrowRightIcon className="w-5 h-5 ml-2" />
