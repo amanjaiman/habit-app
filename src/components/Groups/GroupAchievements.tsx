@@ -1,6 +1,7 @@
 import { Group } from "../../contexts/GroupContext";
 import { motion } from "framer-motion";
 import { calculateGroupStreak } from "../../utils/streakCalculations";
+import { NumericHabitConfig } from "../../types/habit";
 
 interface GroupAchievementsProps {
   group: Group;
@@ -23,13 +24,34 @@ const calculateAchievements = (group: Group): Achievement[] => {
   sevenDaysAgo.setDate(today.getDate() - 7);
 
   // Calculate current streak
-  const currentStreak = calculateGroupStreak(group); // Reuse from GroupStats
+  const currentStreak = calculateGroupStreak(group);
 
-  // Calculate total completions
-  const totalCompletions = group.habits.reduce(
-    (acc, habit) => acc + (habit.completions?.length || 0),
-    0
-  );
+  // Calculate total completions, only counting valid ones
+  const totalCompletions = group.habits.reduce((acc, habit) => {
+    const validCompletions =
+      habit.completions?.filter((completion) => {
+        if (habit.type === "boolean") return completion.completed;
+        if (habit.type === "numeric") {
+          const config = habit.config as NumericHabitConfig;
+          const higherIsBetter = config.higherIsBetter;
+          return (
+            typeof completion.completed === "number" &&
+            (higherIsBetter
+              ? completion.completed >= config.goal
+              : completion.completed <= config.goal)
+          );
+        }
+        if (habit.type === "rating") {
+          return (
+            typeof completion.completed === "number" &&
+            completion.completed >= (habit.config?.goal || 0)
+          );
+        }
+        return false;
+      }).length || 0;
+
+    return acc + validCompletions;
+  }, 0);
 
   // Progressive completion targets
   let completionProgress = totalCompletions;
