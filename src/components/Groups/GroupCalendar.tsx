@@ -68,6 +68,9 @@ function HabitWeekCard({
   weekDays: Date[];
   members: GroupMember[];
 }) {
+  const [selectedDate, setSelectedDate] = useState(
+    format(new Date(), "yyyy-MM-dd")
+  );
   const streak = calculateStreak(habit, members.length);
   const today = format(new Date(), "yyyy-MM-dd");
   const todayCompletions = habit.completions.filter((c) => c.date === today);
@@ -119,6 +122,8 @@ function HabitWeekCard({
               (c) => c.date === format(date, "yyyy-MM-dd")
             )}
             members={members}
+            isSelected={format(date, "yyyy-MM-dd") === selectedDate}
+            onSelect={() => setSelectedDate(format(date, "yyyy-MM-dd"))}
           />
         ))}
       </div>
@@ -127,8 +132,8 @@ function HabitWeekCard({
       <div className="pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700/30">
         <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {members.map((member) => {
-            const completion = todayCompletions.find(
-              (c) => c.userId === member.id
+            const completion = habit.completions.find(
+              (c) => c.userId === member.id && c.date === selectedDate
             );
             const value = completion?.completed;
             const isCompleted = isHabitCompleted(habit, value || false);
@@ -149,7 +154,7 @@ function HabitWeekCard({
                     ${
                       habit.type === HabitType.BOOLEAN
                         ? "text-green-500"
-                        : "text-xs font-medium px-1 rounded-full shadow-lg"
+                        : "text-xs font-medium px-1 rounded-full shadow-lg text-gray-900 dark:text-white"
                     } ${
                         isCompleted
                           ? habit.type === HabitType.BOOLEAN
@@ -181,11 +186,15 @@ function DayCard({
   habit,
   completions,
   members,
+  isSelected,
+  onSelect,
 }: {
   date: Date;
   habit: GroupHabit;
   completions: GroupHabitCompletion[];
   members: GroupMember[];
+  isSelected: boolean;
+  onSelect: () => void;
 }) {
   const isToday =
     format(new Date(), "yyyy-MM-dd") === format(date, "yyyy-MM-dd");
@@ -212,12 +221,16 @@ function DayCard({
 
   return (
     <div
+      onClick={onSelect}
       className={`relative p-2 sm:p-3 rounded-lg transition-all duration-200 min-w-[40px] overflow-hidden
-      ${
-        isToday
-          ? "bg-purple-100 dark:bg-purple-900/30 ring-1 ring-inset ring-purple-500/50"
-          : "bg-white/50 dark:bg-gray-800/50 hover:bg-white/70 dark:hover:bg-gray-700/50"
-      }`}
+        cursor-pointer
+        ${
+          isToday
+            ? "bg-purple-100 dark:bg-purple-900/30 ring-1 ring-inset ring-purple-500/50"
+            : isSelected
+            ? "bg-purple-50 dark:bg-purple-900/20 ring-1 ring-inset ring-purple-400/30"
+            : "bg-white/50 dark:bg-gray-800/50 hover:bg-white/70 dark:hover:bg-gray-700/50"
+        }`}
     >
       <div className="text-center mb-1.5 sm:mb-2">
         <div className="text-[10px] sm:text-xs font-medium text-gray-900 dark:text-white">

@@ -41,7 +41,7 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
   const [selectedHabit, setSelectedHabit] = useState<string | null>(() =>
     group.habits.length > 0 ? group.habits[0].id : null
   );
-  const [selectedMember, setSelectedMember] = useState<string | null>(null);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [showGroupAverage, setShowGroupAverage] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const today = new Date();
@@ -102,7 +102,7 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
 
     // Calculate individual member data
     const memberData = group.memberDetails
-      .filter((member) => !selectedMember || member.id === selectedMember)
+      .filter((member) => selectedMembers.includes(member.id))
       .map((member) => {
         const dailyValues = dateRange.map((date) => {
           const dateStr = format(date, "yyyy-MM-dd");
@@ -146,25 +146,42 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
         };
       });
 
-    // Calculate group average if enabled
-    const datasets = showGroupAverage
-      ? [
-          {
-            label: "Group Average",
-            data: dateRange.map((date, i) => {
-              const allValues = memberData.map((m) => m.data[i]);
-              return allValues.reduce((a, b) => a + b, 0) / allValues.length;
-            }),
-            borderColor: "rgb(99, 102, 241)",
-            backgroundColor: "rgba(99, 102, 241, 0.1)",
-            tension: 0.4,
-            fill: true,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-          },
-          ...memberData,
-        ]
-      : memberData;
+    // Only include datasets for selected members and group average if enabled
+    const datasets = [
+      ...(showGroupAverage
+        ? [
+            {
+              label: "Group Average",
+              data: dateRange.map((date, i) => {
+                const dateStr = format(date, "yyyy-MM-dd");
+                const validValues = group.memberDetails
+                  .map((member) => {
+                    const completion = habit.completions?.find(
+                      (c) =>
+                        c.userId === member.id &&
+                        format(new Date(c.date), "yyyy-MM-dd") === dateStr
+                    );
+                    return completion ? getDailyValue(completion) : null;
+                  })
+                  .filter((value): value is number => value !== null); // Type guard to filter out null values
+
+                return validValues.length > 0
+                  ? validValues.reduce((a, b) => a + b, 0) / validValues.length
+                  : 0;
+              }),
+              borderColor: "rgb(99, 102, 241)",
+              backgroundColor: "rgba(99, 102, 241, 0.1)",
+              tension: 0.4,
+              fill: true,
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              borderWidth: 3,
+              borderDash: [5, 5],
+            },
+          ]
+        : []),
+      ...memberData,
+    ];
 
     // Calculate yAxisMax based on habit type
     const yAxisMax = (() => {
@@ -173,7 +190,7 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
           return 100;
         case HabitType.NUMERIC:
           const maxValue = Math.max(
-            ...memberData.flatMap((m) => m.data),
+            ...datasets.flatMap((dataset) => dataset.data),
             habit.config?.goal || 0
           );
           return Math.ceil(maxValue * 1.1); // Add 10% padding
@@ -199,7 +216,7 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
     yesterday,
     isMobile,
     showGroupAverage,
-    selectedMember,
+    selectedMembers,
   ]);
 
   const options = {
@@ -330,7 +347,7 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
       <div className="flex flex-wrap gap-4">
         <Listbox value={selectedHabit} onChange={setSelectedHabit}>
           <div className="relative w-72">
-            <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white dark:bg-gray-800 py-2 pl-3 pr-10 text-left border border-gray-200 dark:border-gray-700">
+            <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white py-2 pl-3 pr-10 text-left border border-gray-200 dark:border-gray-700">
               <span className="block truncate">
                 {group.habits.find((h) => h.id === selectedHabit)?.name}
               </span>
@@ -372,10 +389,10 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
         <div className="flex gap-2">
           <button
             onClick={() => setShowGroupAverage(!showGroupAverage)}
-            className={`px-3 py-1 rounded-full text-sm ${
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 ${
               showGroupAverage
-                ? "bg-purple-600 text-white"
-                : "bg-gray-100 hover:bg-gray-200"
+                ? "bg-purple-600 text-white shadow-md shadow-purple-200 dark:shadow-purple-900/20"
+                : "bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300"
             }`}
           >
             Group Average
@@ -383,15 +400,17 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
           {group.memberDetails.map((member) => (
             <button
               key={member.id}
-              onClick={() =>
-                setSelectedMember(
-                  selectedMember === member.id ? null : member.id
-                )
-              }
-              className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 ${
-                selectedMember === member.id
-                  ? "bg-purple-600 text-white dark:bg-purple-500"
-                  : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              onClick={() => {
+                setSelectedMembers((prev) =>
+                  prev.includes(member.id)
+                    ? prev.filter((id) => id !== member.id)
+                    : [...prev, member.id]
+                );
+              }}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 ${
+                selectedMembers.includes(member.id)
+                  ? "bg-purple-600 text-white shadow-md shadow-purple-200 dark:shadow-purple-900/20"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300"
               }`}
             >
               {member.name}
