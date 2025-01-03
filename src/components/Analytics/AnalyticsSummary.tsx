@@ -1,15 +1,14 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useHabits } from '../../contexts/HabitContext';
+import { useCallback, useMemo, useState } from "react";
+import { useHabits } from "../../contexts/HabitContext";
 import {
   format,
   eachDayOfInterval,
   subDays,
-  startOfMonth,
   getDay,
   parseISO,
   differenceInDays,
   startOfYear,
-} from 'date-fns';
+} from "date-fns";
 import {
   ChartBarIcon,
   SparklesIcon,
@@ -22,22 +21,27 @@ import {
   LightBulbIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-} from '@heroicons/react/24/outline';
-import { Habit, HabitCompletionValue, HabitType, NumericHabitConfig, RatingHabitConfig } from '../../types/habit';
-import { Link } from 'react-router-dom';
-import { KeyInsight, useAnalytics } from '../../contexts/AnalyticsContext';
-import TrendChart from './TrendChart';
-import { useUser } from '../../contexts/UserContext';
-import { useUserPremium } from '../../hooks/useUserPremium';
-import { isHabitCompletedForDay } from '../../utils/helpers';
-import { GroupHabit, GroupHabitCompletion } from '../../contexts/GroupContext';
-import { useGroups } from '../../contexts/GroupContext';
+} from "@heroicons/react/24/outline";
+import {
+  Habit,
+  HabitCompletionValue,
+  HabitType,
+  NumericHabitConfig,
+  RatingHabitConfig,
+} from "../../types/habit";
+import { Link } from "react-router-dom";
+import { KeyInsight, useAnalytics } from "../../contexts/AnalyticsContext";
+import TrendChart from "./TrendChart";
+import { useUser } from "../../contexts/UserContext";
+import { useUserPremium } from "../../hooks/useUserPremium";
+import { GroupHabit, GroupHabitCompletion } from "../../contexts/GroupContext";
+import { useGroups } from "../../contexts/GroupContext";
 
 interface AnalyticsSummaryProps {
   habitId: string;
 }
 
-type CompletionPeriod = 'lifetime' | 'year' | 'twoWeeks';
+type CompletionPeriod = "lifetime" | "year" | "twoWeeks";
 
 // Add these interfaces near the top of the file, after the imports
 interface CompletionRatePeriod {
@@ -56,7 +60,7 @@ interface BaseStat {
   value: string;
   icon: any; // Or use the proper HeroIcon type if available
   description: string;
-  trend?: 'up' | 'down';
+  trend?: "up" | "down";
   details?: string;
 }
 
@@ -78,20 +82,28 @@ interface AnalyticsStats {
 
 // Add type guard to check if a habit is a group habit
 function isGroupHabit(habit: Habit | GroupHabit): habit is GroupHabit {
-  return 'completions' in habit && Array.isArray(habit.completions);
+  return "completions" in habit && Array.isArray(habit.completions);
 }
 
 // Helper to get completion value for a habit (either group or individual)
-function getHabitCompletionForDay(habit: Habit | GroupHabit, dateStr: string, userId?: string): HabitCompletionValue | undefined {
+function getHabitCompletionForDay(
+  habit: Habit | GroupHabit,
+  dateStr: string,
+  userId?: string
+): HabitCompletionValue | undefined {
   if (isGroupHabit(habit)) {
-    const completion = habit.completions.find(c => c.date === dateStr && c.userId === userId);
+    const completion = habit.completions.find(
+      (c) => c.date === dateStr && c.userId === userId
+    );
     return completion?.completed;
   }
   return habit.completions[dateStr];
 }
 
 // Add type union at the top
-type CombinedHabit = Habit | (GroupHabit & { isGroupHabit: true; groupName: string; groupId: string });
+type CombinedHabit =
+  | Habit
+  | (GroupHabit & { isGroupHabit: true; groupName: string; groupId: string });
 
 export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
   const { state: userState } = useUser();
@@ -106,165 +118,200 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
   // Add this to combine personal and group habits
   const allHabits = useMemo<CombinedHabit[]>(() => {
     const personalHabits = state.habits;
-    const groupHabits = groupState.groups.flatMap(group => 
-      group.habits.map(habit => ({
-        ...habit,
-        isGroupHabit: true,
-        groupName: group.name,
-        groupId: group.id
-      } as CombinedHabit))
+    const groupHabits = groupState.groups.flatMap((group) =>
+      group.habits.map(
+        (habit) =>
+          ({
+            ...habit,
+            isGroupHabit: true,
+            groupName: group.name,
+            groupId: group.id,
+          } as CombinedHabit)
+      )
     );
     return [...personalHabits, ...groupHabits];
   }, [state.habits, groupState.groups]);
 
-  const [selectedPeriods, setSelectedPeriods] = useState<Record<string, CompletionPeriod>>({});
+  const [selectedPeriods, setSelectedPeriods] = useState<
+    Record<string, CompletionPeriod>
+  >({});
   const [currentInsightPage, setCurrentInsightPage] = useState(0);
 
-  const getKeyInsights = useCallback((habitName: string | 'all') => {
-    if (!latestAnalytics) return [];
+  const getKeyInsights = useCallback(
+    (habitName: string | "all") => {
+      if (!latestAnalytics) return [];
 
-    if (habitName === 'all') {
-      return latestAnalytics?.keyInsights.insights.sort((a, b) => b.score - a.score) || [];
-    }
-    return latestAnalytics?.individualHabitKeyInsights[habitName]?.insights.sort((a, b) => b.score - a.score) || [];
-  }, [latestAnalytics]);
+      if (habitName === "all") {
+        return (
+          latestAnalytics?.keyInsights.insights.sort(
+            (a, b) => b.score - a.score
+          ) || []
+        );
+      }
+      return (
+        latestAnalytics?.individualHabitKeyInsights[habitName]?.insights.sort(
+          (a, b) => b.score - a.score
+        ) || []
+      );
+    },
+    [latestAnalytics]
+  );
 
   const stats = useMemo((): AnalyticsStats | null => {
     const last90Days = eachDayOfInterval({
       start: subDays(today, 90),
       end: today,
     });
-    
-    const dailyCompletionRates = last90Days.map(date => {
-      const dateStr = format(date, 'yyyy-MM-dd');
-      const completedCount = allHabits.filter(habit => {
+
+    const dailyCompletionRates = last90Days.map((date) => {
+      const dateStr = format(date, "yyyy-MM-dd");
+      const completedCount = allHabits.filter((habit) => {
         const completion = getHabitCompletionForDay(habit, dateStr, userId);
         return completion;
       }).length;
-      
+
       return {
         date,
         rate: (completedCount / allHabits.length) * 100,
         completedCount,
       };
     });
-    const momentum = calculateMomentum(dailyCompletionRates);
 
-    if (habitId === 'all') {
+    if (habitId === "all") {
       // Calculate WoW momentum instead of 30-day
       const thisWeek = dailyCompletionRates.slice(-7);
       const lastWeek = dailyCompletionRates.slice(-14, -7);
-      const thisWeekAvg = thisWeek.reduce((sum, d) => sum + d.rate, 0) / thisWeek.length;
-      const lastWeekAvg = lastWeek.reduce((sum, d) => sum + d.rate, 0) / lastWeek.length;
+      const thisWeekAvg =
+        thisWeek.reduce((sum, d) => sum + d.rate, 0) / thisWeek.length;
+      const lastWeekAvg =
+        lastWeek.reduce((sum, d) => sum + d.rate, 0) / lastWeek.length;
       const weeklyMomentum = ((thisWeekAvg - lastWeekAvg) / lastWeekAvg) * 100;
 
       // Replace peak performance with habit diversity score
       const habitDiversity = calculateHabitDiversity(allHabits);
 
       // Calculate advanced metrics
-      const volatility = calculateVolatility(dailyCompletionRates.map(d => d.rate), true);
+      const volatility = calculateVolatility(
+        dailyCompletionRates.map((d) => d.rate),
+        true
+      );
       const consistency = calculateConsistencyScore(dailyCompletionRates);
-      const optimalDay = findOptimalDay(dailyCompletionRates);
       const habitSynergy = calculateHabitSynergy(allHabits, userId);
-      
+
       // Peak Performance Analysis
-      const peakPerformance = analyzePeakPerformance(dailyCompletionRates);
       const burnoutRisk = calculateBurnoutRisk(dailyCompletionRates);
-      
-      // Habit Stack Analysis
-      const stackEffectiveness = analyzeHabitStacks(allHabits);
 
       return {
-        title: 'Advanced Analytics Overview',
+        title: "Advanced Analytics Overview",
         primaryStats: [
           {
-            name: 'Habit Consistency Score',
+            name: "Habit Consistency Score",
             value: `${consistency.toFixed(1)}`,
             icon: SparklesIcon,
-            description: 'Based on pattern recognition and variance analysis',
-            trend: consistency > 75 ? 'up' : 'down',
-            details: `${consistency > 75 ? 'Strong' : 'Developing'} habit patterns detected`,
+            description: "Based on pattern recognition and variance analysis",
+            trend: consistency > 75 ? "up" : "down",
+            details: `${
+              consistency > 75 ? "Strong" : "Developing"
+            } habit patterns detected`,
           },
           {
-            name: 'Current Momentum',
+            name: "Current Momentum",
             value: `${weeklyMomentum.toFixed(1)}%`,
             icon: ArrowTrendingUpIcon,
-            description: 'Change from previous week',
-            trend: weeklyMomentum > 0 ? 'up' : 'down',
-            details: weeklyMomentum > 0 ? 'Positive trajectory' : 'Room for improvement',
+            description: "Change from previous week",
+            trend: weeklyMomentum > 0 ? "up" : "down",
+            details:
+              weeklyMomentum > 0
+                ? "Positive trajectory"
+                : "Room for improvement",
           },
           {
-            name: 'Habit Diversity',
+            name: "Habit Diversity",
             value: `${habitDiversity.score.toFixed(1)}`,
             icon: SparklesIcon,
             description: `${habitDiversity.categories} life areas covered`,
-            trend: habitDiversity.score > 70 ? 'up' : 'down',
+            trend: habitDiversity.score > 70 ? "up" : "down",
             details: habitDiversity.recommendation,
           },
         ],
         secondaryStats: [
           {
-            name: 'Stability',
+            name: "Stability",
             value: `${(100 - volatility).toFixed(1)}%`,
             icon: BoltIcon,
-            description: 'How consistent your completion rate is day-to-day',
+            description: "How consistent your completion rate is day-to-day",
           },
           {
-            name: 'Habit Synergy',
+            name: "Habit Synergy",
             value: `${habitSynergy.score.toFixed(1)}%`,
             icon: FireIcon,
             description: `${habitSynergy.complementaryHabits} complementary habit pairs identified`,
           },
           {
-            name: 'Burnout Risk',
+            name: "Burnout Risk",
             value: burnoutRisk.level,
             icon: ChartBarIcon,
             description: burnoutRisk.recommendation,
-            alert: burnoutRisk.level === 'High',
+            alert: burnoutRisk.level === "High",
           },
         ],
-        insights: getKeyInsights('all'),
+        insights: getKeyInsights("all"),
       };
     } else {
-      const habit = allHabits.find(h => h.id === habitId);
+      const habit = allHabits.find((h) => h.id === habitId);
       if (!habit) return null;
 
       // For numeric and rating habits, calculate average and best values
       let performanceStats: PrimaryStat | null = null;
       if (habit.type === HabitType.NUMERIC || habit.type === HabitType.RATING) {
         let values: number[] = [];
-        
+
         if (isGroupHabit(habit)) {
           values = habit.completions
-            .filter(c => c.userId === userId && typeof c.completed === 'number')
-            .map(c => c.completed as number);
+            .filter(
+              (c) => c.userId === userId && typeof c.completed === "number"
+            )
+            .map((c) => c.completed as number);
         } else {
-          values = Object.values(habit.completions).filter(v => typeof v === 'number') as number[];
+          values = Object.values(habit.completions).filter(
+            (v) => typeof v === "number"
+          ) as number[];
         }
 
         if (values.length > 0) {
           const avg = values.reduce((sum, v) => sum + v, 0) / values.length;
-          const best = habit.type === HabitType.NUMERIC
-            ? (habit.config as NumericHabitConfig).higherIsBetter
-              ? Math.max(...values)
-              : Math.min(...values)
-            : Math.max(...values);
-          const unit = habit.type === HabitType.NUMERIC 
-            ? (habit.config as NumericHabitConfig).unit 
-            : '';
+          const best =
+            habit.type === HabitType.NUMERIC
+              ? (habit.config as NumericHabitConfig).higherIsBetter
+                ? Math.max(...values)
+                : Math.min(...values)
+              : Math.max(...values);
+          const unit =
+            habit.type === HabitType.NUMERIC
+              ? (habit.config as NumericHabitConfig).unit
+              : "";
 
-          const details = habit.type === HabitType.NUMERIC
-                ? `Best: ${best} ${unit}`
-                : avg >= (habit.config as RatingHabitConfig).max * 0.8
-                  ? `You're crushing it!`
-                  : `Keep at it!`;
+          const details =
+            habit.type === HabitType.NUMERIC
+              ? `Best: ${best} ${unit}`
+              : avg >= (habit.config as RatingHabitConfig).max * 0.8
+              ? `You're crushing it!`
+              : `Keep at it!`;
 
           performanceStats = {
-            name: 'Performance',
+            name: "Performance",
             value: `${avg.toFixed(1)} ${unit}`,
             icon: ChartBarIcon,
-            description: `Average ${habit.type === HabitType.RATING ? 'rating' : 'value'}`,
-            trend: avg >= (habit.type === HabitType.NUMERIC ? (habit.config as NumericHabitConfig).goal : (habit.config as RatingHabitConfig).max * 0.8) ? 'up' : 'down',
+            description: `Average ${
+              habit.type === HabitType.RATING ? "rating" : "value"
+            }`,
+            trend:
+              avg >=
+              (habit.type === HabitType.NUMERIC
+                ? (habit.config as NumericHabitConfig).goal
+                : (habit.config as RatingHabitConfig).max * 0.8)
+                ? "up"
+                : "down",
             details: details,
           };
         }
@@ -273,8 +320,8 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
       // Get completion dates for the habit
       const completionDates = isGroupHabit(habit)
         ? habit.completions
-            .filter(c => c.userId === userId && c.completed)
-            .map(c => parseISO(c.date))
+            .filter((c) => c.userId === userId && c.completed)
+            .map((c) => parseISO(c.date))
         : Object.entries(habit.completions)
             .filter(([_, completed]) => completed)
             .map(([date]) => parseISO(date));
@@ -285,8 +332,8 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
         end: today,
       });
 
-      const dailyCompletionRates = last90Days.map(date => {
-        const dateStr = format(date, 'yyyy-MM-dd');
+      const dailyCompletionRates = last90Days.map((date) => {
+        const dateStr = format(date, "yyyy-MM-dd");
         const completed = getHabitCompletionForDay(habit, dateStr, userId);
         return {
           date,
@@ -297,38 +344,41 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
       // Calculate week-over-week momentum
       const thisWeek = dailyCompletionRates.slice(-7);
       const lastWeek = dailyCompletionRates.slice(-14, -7);
-      const thisWeekAvg = thisWeek.reduce((sum, d) => sum + d.rate, 0) / thisWeek.length;
-      const lastWeekAvg = lastWeek.reduce((sum, d) => sum + d.rate, 0) / lastWeek.length;
+      const thisWeekAvg =
+        thisWeek.reduce((sum, d) => sum + d.rate, 0) / thisWeek.length;
+      const lastWeekAvg =
+        lastWeek.reduce((sum, d) => sum + d.rate, 0) / lastWeek.length;
       const weeklyMomentum = ((thisWeekAvg - lastWeekAvg) / lastWeekAvg) * 100;
 
       // Calculate completion rates for different periods
-      const firstCompletionDate = completionDates.length > 0 
-        ? completionDates.reduce((a, b) => a < b ? a : b)
-        : new Date();
+      const firstCompletionDate =
+        completionDates.length > 0
+          ? completionDates.reduce((a, b) => (a < b ? a : b))
+          : new Date();
 
       const getCompletionRate = (period: CompletionPeriod) => {
         let startDate = new Date();
         let endDate = new Date();
-        let label = '';
+        let label = "";
 
         switch (period) {
-          case 'lifetime':
+          case "lifetime":
             startDate = firstCompletionDate;
             label = `Since tracking on HabitAI`;
             break;
-          case 'year':
+          case "year":
             startDate = startOfYear(new Date());
             label = `This year`;
             break;
-          case 'twoWeeks':
+          case "twoWeeks":
             startDate = subDays(new Date(), 14);
-            label = 'Last two weeks';
+            label = "Last two weeks";
             break;
         }
 
         const daysInPeriod = differenceInDays(endDate, startDate) + 1;
         const completionsInPeriod = completionDates.filter(
-          date => date >= startDate && date <= endDate
+          (date) => date >= startDate && date <= endDate
         ).length;
 
         return {
@@ -338,70 +388,77 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
       };
 
       const completionRates = {
-        lifetime: getCompletionRate('lifetime'),
-        year: getCompletionRate('year'),
-        twoWeeks: getCompletionRate('twoWeeks'),
+        lifetime: getCompletionRate("lifetime"),
+        year: getCompletionRate("year"),
+        twoWeeks: getCompletionRate("twoWeeks"),
       };
 
       const streakAnalysis = analyzeStreakPatterns(completionDates);
       const timeAnalysis = analyzeTimePatterns(completionDates);
-      const adaptability = calculateAdaptabilityScore(habit, userId);
 
       return {
         title: `Analytics for ${habit.name}`,
         primaryStats: [
           {
-            name: 'Current Streak',
+            name: "Current Streak",
             value: `${streakAnalysis.currentStreak} days`,
             icon: FireIcon,
             description: `Best streak: ${streakAnalysis.bestStreak} days`,
-            trend: streakAnalysis.currentStreak > 0 ? 'up' : 'down',
+            trend: streakAnalysis.currentStreak > 0 ? "up" : "down",
             details: streakAnalysis.streakQuality,
           },
           // Replace momentum with performance stats for numeric/rating habits
           performanceStats || {
-            name: 'Current Momentum',
+            name: "Current Momentum",
             value: `${weeklyMomentum.toFixed(1)}%`,
             icon: ArrowTrendingUpIcon,
-            description: 'Change from previous week',
-            trend: weeklyMomentum > 0 ? 'up' : 'down',
-            details: weeklyMomentum > 0 ? 'Positive trajectory' : 'Room for improvement',
+            description: "Change from previous week",
+            trend: weeklyMomentum > 0 ? "up" : "down",
+            details:
+              weeklyMomentum > 0
+                ? "Positive trajectory"
+                : "Room for improvement",
           },
           {
-            name: 'Completion Rate',
+            name: "Completion Rate",
             value: `${completionRates.lifetime.rate.toFixed(1)}%`,
             icon: ChartBarIcon,
             description: completionRates.lifetime.label,
-            trend: completionRates.lifetime.rate > 70 ? 'up' : 'down',
-            details: completionRates.lifetime.rate > 70 ? 'Strong completion rate' : 'Room for improvement',
+            trend: completionRates.lifetime.rate > 70 ? "up" : "down",
+            details:
+              completionRates.lifetime.rate > 70
+                ? "Strong completion rate"
+                : "Room for improvement",
             periods: completionRates,
             isPeriodToggleable: true,
           },
         ],
         secondaryStats: [
           {
-            name: 'Stability',
-            value: `${(calculateVolatility(dailyCompletionRates.map(d => d.rate)))}%`,
+            name: "Stability",
+            value: `${calculateVolatility(
+              dailyCompletionRates.map((d) => d.rate)
+            )}%`,
             icon: BoltIcon,
-            description: 'How consistently you complete this habit in a week',
+            description: "How consistently you complete this habit in a week",
           },
           {
-            name: 'Best Day',
+            name: "Best Day",
             value: timeAnalysis.optimalDay,
             icon: CalendarIcon,
             description: `${timeAnalysis.daySuccessRate}% success rate on this day`,
           },
           {
-            name: 'Recovery Rate',
+            name: "Recovery Rate",
             value: `${streakAnalysis.recoveryRate}%`,
             icon: BoltIcon,
-            description: 'How quickly you restart after missing a day',
+            description: "How quickly you restart after missing a day",
           },
         ],
         insights: getKeyInsights(habit.name),
       };
     }
-  }, [state.habits, habitId, allHabits, userId]);
+  }, [today, habitId, allHabits, userId, getKeyInsights]);
 
   if (!stats) return null;
 
@@ -410,8 +467,11 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
       {/* Primary Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.primaryStats.map((stat, index) => (
-          <div key={index} className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-6 
-                   border border-white/20 dark:border-gray-800/30 shadow-xl">
+          <div
+            key={index}
+            className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-6 
+                   border border-white/20 dark:border-gray-800/30 shadow-xl"
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <stat.icon className="w-8 h-8 text-purple-600 dark:text-purple-400" />
@@ -421,33 +481,48 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                 {stat.isPeriodToggleable && (
                   <div className="flex gap-1 ml-3">
                     <button
-                      onClick={() => setSelectedPeriods(prev => ({ ...prev, [index]: 'twoWeeks' }))}
+                      onClick={() =>
+                        setSelectedPeriods((prev) => ({
+                          ...prev,
+                          [index]: "twoWeeks",
+                        }))
+                      }
                       className={`p-1.5 rounded-lg transition-all ${
-                        (selectedPeriods[index] || 'lifetime') === 'twoWeeks'
-                          ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400'
-                          : 'hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300'
+                        (selectedPeriods[index] || "lifetime") === "twoWeeks"
+                          ? "bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400"
+                          : "hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300"
                       }`}
                       title="Last two weeks"
                     >
                       <ClockIcon className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => setSelectedPeriods(prev => ({ ...prev, [index]: 'year' }))}
+                      onClick={() =>
+                        setSelectedPeriods((prev) => ({
+                          ...prev,
+                          [index]: "year",
+                        }))
+                      }
                       className={`p-1.5 rounded-lg transition-all ${
-                        (selectedPeriods[index] || 'lifetime') === 'year'
-                          ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400'
-                          : 'hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300'
+                        (selectedPeriods[index] || "lifetime") === "year"
+                          ? "bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400"
+                          : "hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300"
                       }`}
                       title="This year"
                     >
                       <CalendarIcon className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => setSelectedPeriods(prev => ({ ...prev, [index]: 'lifetime' }))}
+                      onClick={() =>
+                        setSelectedPeriods((prev) => ({
+                          ...prev,
+                          [index]: "lifetime",
+                        }))
+                      }
                       className={`p-1.5 rounded-lg transition-all ${
-                        (selectedPeriods[index] || 'lifetime') === 'lifetime'
-                          ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400'
-                          : 'hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300'
+                        (selectedPeriods[index] || "lifetime") === "lifetime"
+                          ? "bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400"
+                          : "hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300"
                       }`}
                       title="Lifetime"
                     >
@@ -457,29 +532,40 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                 )}
               </div>
               {stat.trend && (
-                <span className={`text-sm font-medium px-2 py-1 rounded-full ${
-                  stat.trend === 'up' 
-                    ? 'bg-green-100/50 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
-                    : 'bg-rose-100/50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'
-                }`}>
-                  {stat.trend === 'up' ? '↑' : '↓'}
+                <span
+                  className={`text-sm font-medium px-2 py-1 rounded-full ${
+                    stat.trend === "up"
+                      ? "bg-green-100/50 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                      : "bg-rose-100/50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400"
+                  }`}
+                >
+                  {stat.trend === "up" ? "↑" : "↓"}
                 </span>
               )}
             </div>
             <div className="mt-4">
               {stat.isPeriodToggleable ? (
-                <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                              dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
-                  {stat.periods?.[selectedPeriods[index] || 'lifetime'].rate.toFixed(1)}%
+                <p
+                  className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                              dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+                >
+                  {stat.periods?.[
+                    selectedPeriods[index] || "lifetime"
+                  ].rate.toFixed(1)}
+                  %
                 </p>
               ) : (
-                <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                           dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+                <p
+                  className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                           dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+                >
                   {stat.value}
                 </p>
               )}
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                {stat.isPeriodToggleable ? stat.periods?.[selectedPeriods[index] || 'lifetime'].label : stat.description}
+                {stat.isPeriodToggleable
+                  ? stat.periods?.[selectedPeriods[index] || "lifetime"].label
+                  : stat.description}
               </p>
               {stat.details && (
                 <p className="mt-2 text-sm text-purple-600 dark:text-purple-400 font-medium">
@@ -494,14 +580,22 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
       <div className="relative space-y-8">
         {/* Secondary Stats - add premium gate */}
         <div className="relative">
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${!premium && 'blur-sm pointer-events-none'}`}>
+          <div
+            className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${
+              !premium && "blur-sm pointer-events-none"
+            }`}
+          >
             {stats.secondaryStats.map((stat, index) => (
               <div
                 key={index}
                 className={`backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-xl p-6 
                         border border-white/20 dark:border-gray-800/30 shadow-lg 
                         hover:shadow-xl transition-all duration-200
-                        ${stat.alert ? 'border-l-4 border-rose-500 dark:border-rose-400' : ''}`}
+                        ${
+                          stat.alert
+                            ? "border-l-4 border-rose-500 dark:border-rose-400"
+                            : ""
+                        }`}
               >
                 <div className="flex items-center">
                   <stat.icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -509,8 +603,10 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                     {stat.name}
                   </span>
                 </div>
-                <p className="mt-2 text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 
-                          dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+                <p
+                  className="mt-2 text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 
+                          dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+                >
                   {stat.value}
                 </p>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
@@ -524,17 +620,23 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
         {/* Insights - add premium gate */}
         {stats.insights.length > 0 && (
           <div className="relative">
-            <div className={`backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+            <div
+              className={`backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
                             border border-white/20 dark:border-gray-800/30 shadow-xl
-                            ${!premium && 'blur-sm pointer-events-none'}`}>
+                            ${!premium && "blur-sm pointer-events-none"}`}
+            >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                              dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+                <h3
+                  className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                              dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+                >
                   Personalized Insights
                 </h3>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setCurrentInsightPage(prev => Math.max(0, prev - 1))}
+                    onClick={() =>
+                      setCurrentInsightPage((prev) => Math.max(0, prev - 1))
+                    }
                     disabled={currentInsightPage === 0}
                     className="p-1 rounded-lg transition-all hover:bg-white/50 dark:hover:bg-gray-800/50
                               disabled:opacity-50 disabled:cursor-not-allowed"
@@ -542,11 +644,22 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                     <ChevronLeftIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                   </button>
                   <div className="flex w-max text-sm text-gray-600 dark:text-gray-300">
-                    {currentInsightPage + 1} / {Math.ceil(stats.insights.length / 3)}
+                    {currentInsightPage + 1} /{" "}
+                    {Math.ceil(stats.insights.length / 3)}
                   </div>
                   <button
-                    onClick={() => setCurrentInsightPage(prev => Math.min(Math.ceil(stats.insights.length / 3) - 1, prev + 1))}
-                    disabled={currentInsightPage >= Math.ceil(stats.insights.length / 3) - 1}
+                    onClick={() =>
+                      setCurrentInsightPage((prev) =>
+                        Math.min(
+                          Math.ceil(stats.insights.length / 3) - 1,
+                          prev + 1
+                        )
+                      )
+                    }
+                    disabled={
+                      currentInsightPage >=
+                      Math.ceil(stats.insights.length / 3) - 1
+                    }
                     className="p-1 rounded-lg transition-all hover:bg-white/50 dark:hover:bg-gray-800/50
                               disabled:opacity-50 disabled:cursor-not-allowed"
                   >
@@ -558,22 +671,35 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                 {stats.insights
                   .slice(currentInsightPage * 3, (currentInsightPage + 1) * 3)
                   .map((insight, index) => (
-                    <div key={index} 
-                        className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-5 
+                    <div
+                      key={index}
+                      className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-5 
                                   border border-white/20 dark:border-gray-800/30 shadow-lg 
-                                  hover:shadow-xl transition-all">
+                                  hover:shadow-xl transition-all"
+                    >
                       <div className="flex flex-col md:flex-row md:items-start md:space-x-4">
                         <div className="flex-shrink-0">
                           <div
                             className="w-8 md:w-10 h-8 md:h-10 rounded-xl flex items-center justify-center 
                                       backdrop-blur-sm bg-gradient-to-br shadow-inner"
                             style={{
-                              backgroundColor: `rgba(${insight.score}, ${Math.min(insight.score * 2, 200)}, ${Math.min(insight.score * 3, 255)}, 0.1)`,
+                              backgroundColor: `rgba(${
+                                insight.score
+                              }, ${Math.min(
+                                insight.score * 2,
+                                200
+                              )}, ${Math.min(insight.score * 3, 255)}, 0.1)`,
                             }}
                           >
-                            <span className="text-sm md:text-md font-bold" style={{
-                              color: `rgb(${insight.score}, ${Math.min(insight.score * 2, 200)}, ${Math.min(insight.score * 3, 255)})`,
-                            }}>
+                            <span
+                              className="text-sm md:text-md font-bold"
+                              style={{
+                                color: `rgb(${insight.score}, ${Math.min(
+                                  insight.score * 2,
+                                  200
+                                )}, ${Math.min(insight.score * 3, 255)})`,
+                              }}
+                            >
                               {insight.score}
                             </span>
                           </div>
@@ -583,13 +709,21 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                             <h4 className="text-base font-medium text-gray-900 dark:text-white">
                               {insight.title}
                             </h4>
-                            <span className={`text-sm font-medium px-2.5 py-1 rounded-full ${
-                              insight.polarity === 'positive' 
-                                ? 'bg-green-100/50 dark:bg-green-900/30 text-green-600 dark:text-green-400' 
-                                : 'bg-rose-100/50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'
-                            }`}>
-                              <div className="sm:hidden">{insight.polarity === 'positive' ? '↑' : '↓'}</div>
-                              <div className="hidden sm:flex">{insight.polarity === 'positive' ? '↑ Positive' : '↓ Needs Focus'}</div>
+                            <span
+                              className={`text-sm font-medium px-2.5 py-1 rounded-full ${
+                                insight.polarity === "positive"
+                                  ? "bg-green-100/50 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+                                  : "bg-rose-100/50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400"
+                              }`}
+                            >
+                              <div className="sm:hidden">
+                                {insight.polarity === "positive" ? "↑" : "↓"}
+                              </div>
+                              <div className="hidden sm:flex">
+                                {insight.polarity === "positive"
+                                  ? "↑ Positive"
+                                  : "↓ Needs Focus"}
+                              </div>
                             </span>
                           </div>
                           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
@@ -622,9 +756,14 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
           </div>
         )}
         {stats.insights.length === 0 && (
-          <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-          border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg">
-            <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium">AI is analyzing your habits. Insights will be published every Monday!</span>
+          <div
+            className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+          border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg"
+          >
+            <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium">
+              AI is analyzing your habits. Insights will be published every
+              Monday!
+            </span>
           </div>
         )}
 
@@ -639,7 +778,8 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                 Premium Analytics
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                Upgrade to unlock detailed analytics, insights, and personalized recommendations
+                Upgrade to unlock detailed analytics, insights, and personalized
+                recommendations
               </p>
               <Link
                 className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -656,19 +796,24 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
 }
 
 // Helper functions for advanced analytics
-function calculateVolatility(rates: number[], isAllHabits: boolean = false): number {
+function calculateVolatility(
+  rates: number[],
+  isAllHabits: boolean = false
+): number {
   if (rates.length < 5) return 0;
-  
+
   if (isAllHabits) {
     // For all habits: Calculate std dev of daily completion rates
     const mean = rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
-    const squaredDiffs = rates.map(rate => Math.pow(rate - mean, 2));
-    const stdDev = Math.sqrt(squaredDiffs.reduce((sum, diff) => sum + diff, 0) / rates.length);
-    
+    const squaredDiffs = rates.map((rate) => Math.pow(rate - mean, 2));
+    const stdDev = Math.sqrt(
+      squaredDiffs.reduce((sum, diff) => sum + diff, 0) / rates.length
+    );
+
     // Convert to stability score (0-100)
     // A std dev of 0 = perfect stability (100%)
     // A std dev of 30 or more = low stability (0%)
-    const stabilityScore = Math.max(0, Math.min(100, 100 - (stdDev * 3.33)));
+    const stabilityScore = Math.max(0, Math.min(100, 100 - stdDev * 3.33));
     return Math.round(stabilityScore);
   } else {
     // For individual habits: Look at completion count in rolling 7-day windows
@@ -676,24 +821,31 @@ function calculateVolatility(rates: number[], isAllHabits: boolean = false): num
     const windows = [];
     for (let i = 0; i <= last4Weeks.length - 7; i++) {
       const windowRates = last4Weeks.slice(i, i + 7);
-      const completionsInWindow = windowRates.filter(rate => rate === 100).length;
+      const completionsInWindow = windowRates.filter(
+        (rate) => rate === 100
+      ).length;
       windows.push(completionsInWindow);
     }
-    
-    const mean = windows.reduce((sum, count) => sum + count, 0) / windows.length;
-    const squaredDiffs = windows.map(count => Math.pow(count - mean, 2));
-    const stdDev = Math.sqrt(squaredDiffs.reduce((sum, diff) => sum + diff, 0) / windows.length);
-    
+
+    const mean =
+      windows.reduce((sum, count) => sum + count, 0) / windows.length;
+    const squaredDiffs = windows.map((count) => Math.pow(count - mean, 2));
+    const stdDev = Math.sqrt(
+      squaredDiffs.reduce((sum, diff) => sum + diff, 0) / windows.length
+    );
+
     // Convert to stability score (0-100)
     // A std dev of 0 = perfect stability (100%)
     // A std dev of 3.5 or more = low stability (0%)
     // Adjusted multiplier since we're using 7-day windows
-    const stabilityScore = Math.max(0, Math.min(100, 100 - (stdDev * 28.57)));
+    const stabilityScore = Math.max(0, Math.min(100, 100 - stdDev * 28.57));
     return Math.round(stabilityScore);
   }
 }
 
-function calculateConsistencyScore(data: { rate: number; date: Date }[]): number {
+function calculateConsistencyScore(
+  data: { rate: number; date: Date }[]
+): number {
   if (data.length < 7) return 0;
 
   // Calculate rolling 7-day averages
@@ -705,7 +857,7 @@ function calculateConsistencyScore(data: { rate: number; date: Date }[]): number
   }
 
   // Calculate components of consistency score
-  
+
   // 1. Pattern Stability (40% of score)
   const stabilityScore = calculateVolatility(weeklyAverages, true);
 
@@ -717,11 +869,8 @@ function calculateConsistencyScore(data: { rate: number; date: Date }[]): number
   const trendScore = calculateTrendConsistency(weeklyAverages);
 
   // Weighted average of components
-  const finalScore = (
-    (stabilityScore * 0.4) +
-    (completionScore * 0.3) +
-    (trendScore * 0.3)
-  );
+  const finalScore =
+    stabilityScore * 0.4 + completionScore * 0.3 + trendScore * 0.3;
 
   return Math.round(finalScore);
 }
@@ -739,39 +888,42 @@ function calculateTrendConsistency(averages: number[]): number {
 
   // Lower average change indicates more consistent trend
   const avgChange = changes.reduce((sum, c) => sum + c, 0) / changes.length;
-  
+
   // Convert to 0-100 score (20% change or more = 0, 0% change = 100)
-  return Math.max(0, 100 - (avgChange * 5));
+  return Math.max(0, 100 - avgChange * 5);
 }
 
 function calculateMomentum(data: { rate: number; date: Date }[]): number {
   // Calculate trend strength and direction
   const recentRates = data.slice(-14);
   const oldRates = data.slice(-28, -14);
-  const recentAvg = recentRates.reduce((sum, d) => sum + d.rate, 0) / recentRates.length;
+  const recentAvg =
+    recentRates.reduce((sum, d) => sum + d.rate, 0) / recentRates.length;
   const oldAvg = oldRates.reduce((sum, d) => sum + d.rate, 0) / oldRates.length;
   return ((recentAvg - oldAvg) / oldAvg) * 100;
 }
 
 function findOptimalDay(data: { rate: number; date: Date }[]) {
   const dayScores = data.reduce((acc, { date, rate }) => {
-    const day = format(date, 'EEEE');
+    const day = format(date, "EEEE");
     const hour = date.getHours();
-    const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
-    
+    const timeOfDay =
+      hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
+
     if (!acc[day]) acc[day] = { total: 0, count: 0, times: {} };
-    if (!acc[day].times[timeOfDay]) acc[day].times[timeOfDay] = { total: 0, count: 0 };
-    
+    if (!acc[day].times[timeOfDay])
+      acc[day].times[timeOfDay] = { total: 0, count: 0 };
+
     acc[day].total += rate;
     acc[day].count++;
     acc[day].times[timeOfDay].total += rate;
     acc[day].times[timeOfDay].count++;
-    
+
     return acc;
   }, {} as Record<string, { total: number; count: number; times: Record<string, { total: number; count: number }> }>);
 
-  let bestDay = '';
-  let bestTime = '';
+  let bestDay = "";
+  let bestTime = "";
   let highestScore = 0;
 
   Object.entries(dayScores).forEach(([day, data]) => {
@@ -809,35 +961,42 @@ function calculateHabitSynergy(habits: CombinedHabit[], userId?: string) {
   }
 
   return {
-    score: Math.min(100, (totalSynergy / Math.max(complementaryCount, 1)) * 100),
+    score: Math.min(
+      100,
+      (totalSynergy / Math.max(complementaryCount, 1)) * 100
+    ),
     complementaryHabits: Math.min(complementaryCount, maxPossiblePairs),
   };
 }
 
-function calculatePairSynergy(habit1: CombinedHabit, habit2: CombinedHabit, userId?: string) {
+function calculatePairSynergy(
+  habit1: CombinedHabit,
+  habit2: CombinedHabit,
+  userId?: string
+) {
   let commonCompletions = 0;
   let totalDays = 0;
 
   // Get all dates from both habits
   const dates = new Set<string>();
-  
+
   if (isGroupHabit(habit1)) {
-    habit1.completions.forEach(c => dates.add(c.date));
+    habit1.completions.forEach((c) => dates.add(c.date));
   } else {
-    Object.keys(habit1.completions).forEach(date => dates.add(date));
+    Object.keys(habit1.completions).forEach((date) => dates.add(date));
   }
-  
+
   if (isGroupHabit(habit2)) {
-    habit2.completions.forEach(c => dates.add(c.date));
+    habit2.completions.forEach((c) => dates.add(c.date));
   } else {
-    Object.keys(habit2.completions).forEach(date => dates.add(date));
+    Object.keys(habit2.completions).forEach((date) => dates.add(date));
   }
 
   // Check each date for completions
-  dates.forEach(date => {
+  dates.forEach((date) => {
     const completion1 = getHabitCompletionForDay(habit1, date, userId);
     const completion2 = getHabitCompletionForDay(habit2, date, userId);
-    
+
     if (completion1 !== undefined && completion2 !== undefined) {
       totalDays++;
       if (completion1 && completion2) {
@@ -852,16 +1011,17 @@ function calculatePairSynergy(habit1: CombinedHabit, habit2: CombinedHabit, user
 function analyzePeakPerformance(data: { rate: number; date: Date }[]) {
   const timeBlocks = data.reduce((acc, { date, rate }) => {
     const hour = date.getHours();
-    const timeOfDay = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
-    
+    const timeOfDay =
+      hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
+
     if (!acc[timeOfDay]) acc[timeOfDay] = { total: 0, count: 0 };
     acc[timeOfDay].total += rate;
     acc[timeOfDay].count++;
-    
+
     return acc;
   }, {} as Record<string, { total: number; count: number }>);
 
-  let bestTime = '';
+  let bestTime = "";
   let highestRate = 0;
 
   Object.entries(timeBlocks).forEach(([time, data]) => {
@@ -880,26 +1040,29 @@ function analyzePeakPerformance(data: { rate: number; date: Date }[]) {
 
 function calculateBurnoutRisk(data: { rate: number; date: Date }[]) {
   const recentData = data.slice(-14); // Last 2 weeks
-  const stability = calculateVolatility(recentData.map(d => d.rate), true);
+  const stability = calculateVolatility(
+    recentData.map((d) => d.rate),
+    true
+  );
   const trend = calculateMomentum(recentData);
 
-  let riskLevel = 'Low';
-  let recommendation = 'Maintain current pace';
+  let riskLevel = "Low";
+  let recommendation = "Maintain current pace";
 
   // Now using stability score (higher is better)
   if (stability < 70 && trend < -10) {
-    riskLevel = 'High';
-    recommendation = 'Consider reducing habit complexity temporarily';
+    riskLevel = "High";
+    recommendation = "Consider reducing habit complexity temporarily";
   } else if (stability < 80 || trend < -5) {
-    riskLevel = 'Medium';
-    recommendation = 'Monitor energy levels and adjust as needed';
+    riskLevel = "Medium";
+    recommendation = "Monitor energy levels and adjust as needed";
   }
 
   return {
     level: riskLevel,
     recommendation,
     // Burnout risk score is inverse of stability plus trend impact
-    score: Math.min(100, Math.round((100 - stability) + Math.abs(trend) / 2)),
+    score: Math.min(100, Math.round(100 - stability + Math.abs(trend) / 2)),
   };
 }
 
@@ -908,7 +1071,11 @@ function analyzeHabitStacks(habits: CombinedHabit[]) {
   const effectiveness = calculateStackEffectiveness(stackPatterns);
 
   return {
-    description: `${stackPatterns.length} potential habit stacks identified with ${effectiveness.toFixed(0)}% effectiveness`,
+    description: `${
+      stackPatterns.length
+    } potential habit stacks identified with ${effectiveness.toFixed(
+      0
+    )}% effectiveness`,
     score: effectiveness,
     patterns: stackPatterns,
   };
@@ -933,7 +1100,8 @@ function analyzeStreakPatterns(dates: Date[]) {
 
   // Calculate streaks and recovery patterns
   for (let i = 0; i < sortedDates.length; i++) {
-    const diff = i > 0 ? differenceInDays(sortedDates[i], sortedDates[i - 1]) : 1;
+    const diff =
+      i > 0 ? differenceInDays(sortedDates[i], sortedDates[i - 1]) : 1;
     if (diff === 1) {
       currentStreak++;
       bestStreak = Math.max(bestStreak, currentStreak);
@@ -944,49 +1112,64 @@ function analyzeStreakPatterns(dates: Date[]) {
     }
   }
 
-  const recoveryRate = breakCount > 0 ? (recoveryCount / breakCount) * 100 : 100;
-  const score = Math.min(100, (bestStreak * 5) + (recoveryRate / 2));
+  const recoveryRate =
+    breakCount > 0 ? (recoveryCount / breakCount) * 100 : 100;
+  const score = Math.min(100, bestStreak * 5 + recoveryRate / 2);
 
   return {
     currentStreak,
     bestStreak,
     recoveryRate: Math.round(recoveryRate),
     score: Math.round(score),
-    streakQuality: bestStreak > 30 ? 'Excellent consistency' : 'Building momentum',
-    recommendation: getStreakRecommendation(currentStreak, bestStreak, recoveryRate),
+    streakQuality:
+      bestStreak > 30 ? "Excellent consistency" : "Building momentum",
+    recommendation: getStreakRecommendation(
+      currentStreak,
+      bestStreak,
+      recoveryRate
+    ),
   };
 }
 
 function analyzeTimePatterns(dates: Date[]) {
-  if (dates.length === 0) return {
-    optimalTime: 'Unknown',
-    optimalDay: 'Unknown',
-    successRate: 0,
-    daySuccessRate: 0,
-  };
+  if (dates.length === 0)
+    return {
+      optimalTime: "Unknown",
+      optimalDay: "Unknown",
+      successRate: 0,
+      daySuccessRate: 0,
+    };
 
   const timeMap = new Map<number, number>();
   const dayMap = new Map<number, number>();
-  
-  dates.forEach(date => {
+
+  dates.forEach((date) => {
     const hour = date.getHours();
     const day = getDay(date);
     timeMap.set(hour, (timeMap.get(hour) || 0) + 1);
     dayMap.set(day, (dayMap.get(day) || 0) + 1);
   });
 
-  const optimalHour = Array.from(timeMap.entries()).reduce((a, b) => b[1] > a[1] ? b : a)[0];
-  const optimalDay = Array.from(dayMap.entries()).reduce((a, b) => b[1] > a[1] ? b : a)[0];
-  const successRate = Math.round((timeMap.get(optimalHour) || 0) / dates.length * 100);
-  const daySuccessRate = Math.round((dayMap.get(optimalDay) || 0) / dates.length * 100);
+  const optimalHour = Array.from(timeMap.entries()).reduce((a, b) =>
+    b[1] > a[1] ? b : a
+  )[0];
+  const optimalDay = Array.from(dayMap.entries()).reduce((a, b) =>
+    b[1] > a[1] ? b : a
+  )[0];
+  const successRate = Math.round(
+    ((timeMap.get(optimalHour) || 0) / dates.length) * 100
+  );
+  const daySuccessRate = Math.round(
+    ((dayMap.get(optimalDay) || 0) / dates.length) * 100
+  );
 
   return {
     optimalTime: `${optimalHour}:00`,
-    optimalDay: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][optimalDay],
+    optimalDay: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][optimalDay],
     successRate,
     daySuccessRate,
     completionRate: Math.round((dates.length / 90) * 100),
-    consistency: successRate > 80 ? 'Very consistent' : 'Moderately consistent',
+    consistency: successRate > 80 ? "Very consistent" : "Moderately consistent",
     score: Math.round((successRate + daySuccessRate) / 2),
     recommendation: getTimeRecommendation(optimalHour, successRate),
   };
@@ -994,53 +1177,65 @@ function analyzeTimePatterns(dates: Date[]) {
 
 function calculateAdaptabilityScore(habit: CombinedHabit, userId?: string) {
   type CompletionEntry = GroupHabitCompletion | [string, HabitCompletionValue];
-  
+
   // Get entries based on habit type
-  const entries: CompletionEntry[] = isGroupHabit(habit) 
-    ? habit.completions.filter(c => c.userId === userId)
+  const entries: CompletionEntry[] = isGroupHabit(habit)
+    ? habit.completions.filter((c) => c.userId === userId)
     : Object.entries(habit.completions);
-    
+
   const recentCompletions = entries.slice(-30);
   const olderCompletions = entries.slice(-60, -30);
-  
-  // Calculate completion rates with proper type guards
-  const recentRate = recentCompletions.length > 0
-    ? recentCompletions.filter((entry): entry is GroupHabitCompletion | [string, true] => {
-        if (isGroupHabit(habit)) {
-          return Boolean((entry as GroupHabitCompletion).completed);
-        }
-        return Boolean((entry as [string, HabitCompletionValue])[1]);
-      }).length / recentCompletions.length
-    : 0;
-  
-  const olderRate = olderCompletions.length > 0
-    ? olderCompletions.filter((entry): entry is GroupHabitCompletion | [string, true] => {
-        if (isGroupHabit(habit)) {
-          return Boolean((entry as GroupHabitCompletion).completed);
-        }
-        return Boolean((entry as [string, HabitCompletionValue])[1]);
-      }).length / olderCompletions.length
-    : 0;
-  
-  const adaptabilityScore = Math.round(((recentRate / Math.max(olderRate, 0.1)) * 100));
 
-  let insight = adaptabilityScore > 100 ? 'Improving over time' : 'Maintaining consistency';
-  
+  // Calculate completion rates with proper type guards
+  const recentRate =
+    recentCompletions.length > 0
+      ? recentCompletions.filter(
+          (entry): entry is GroupHabitCompletion | [string, true] => {
+            if (isGroupHabit(habit)) {
+              return Boolean((entry as GroupHabitCompletion).completed);
+            }
+            return Boolean((entry as [string, HabitCompletionValue])[1]);
+          }
+        ).length / recentCompletions.length
+      : 0;
+
+  const olderRate =
+    olderCompletions.length > 0
+      ? olderCompletions.filter(
+          (entry): entry is GroupHabitCompletion | [string, true] => {
+            if (isGroupHabit(habit)) {
+              return Boolean((entry as GroupHabitCompletion).completed);
+            }
+            return Boolean((entry as [string, HabitCompletionValue])[1]);
+          }
+        ).length / olderCompletions.length
+      : 0;
+
+  const adaptabilityScore = Math.round(
+    (recentRate / Math.max(olderRate, 0.1)) * 100
+  );
+
+  let insight =
+    adaptabilityScore > 100 ? "Improving over time" : "Maintaining consistency";
+
   if (habit.type === HabitType.NUMERIC) {
     const config = habit.config as NumericHabitConfig;
     const recentValues = recentCompletions
-      .map(entry => {
+      .map((entry) => {
         if (isGroupHabit(habit)) {
           const groupEntry = entry as GroupHabitCompletion;
-          return typeof groupEntry.completed === 'number' ? groupEntry.completed : null;
+          return typeof groupEntry.completed === "number"
+            ? groupEntry.completed
+            : null;
         }
         const [_, value] = entry as [string, HabitCompletionValue];
-        return typeof value === 'number' ? value : null;
+        return typeof value === "number" ? value : null;
       })
       .filter((value): value is number => value !== null);
-    
+
     if (recentValues.length > 0) {
-      const recentAvg = recentValues.reduce((sum, v) => sum + v, 0) / recentValues.length;
+      const recentAvg =
+        recentValues.reduce((sum, v) => sum + v, 0) / recentValues.length;
       if (recentAvg > config.goal) {
         insight += ` (averaging ${recentAvg.toFixed(1)} ${config.unit})`;
       }
@@ -1050,61 +1245,72 @@ function calculateAdaptabilityScore(habit: CombinedHabit, userId?: string) {
   return {
     score: Math.min(100, adaptabilityScore),
     insight,
-    recommendation: getAdaptabilityRecommendation(adaptabilityScore, habit.type),
+    recommendation: getAdaptabilityRecommendation(
+      adaptabilityScore,
+      habit.type
+    ),
   };
 }
 
-function getAdaptabilityRecommendation(score: number, habitType: HabitType): string {
+function getAdaptabilityRecommendation(
+  score: number,
+  habitType: HabitType
+): string {
   if (score > 100) {
     if (habitType === HabitType.NUMERIC) {
-      return 'Keep increasing your targets as you improve';
+      return "Keep increasing your targets as you improve";
     } else if (habitType === HabitType.RATING) {
-      return 'Your consistency is improving - keep up the great work';
+      return "Your consistency is improving - keep up the great work";
     }
-    return 'Your habit is getting stronger over time';
+    return "Your habit is getting stronger over time";
   }
-  
+
   if (score > 80) {
     if (habitType === HabitType.NUMERIC) {
-      return 'Maintaining good progress towards your goals';
+      return "Maintaining good progress towards your goals";
     } else if (habitType === HabitType.RATING) {
-      return 'Maintaining good quality in your practice';
+      return "Maintaining good quality in your practice";
     }
-    return 'Maintaining good consistency';
+    return "Maintaining good consistency";
   }
-  
+
   if (habitType === HabitType.NUMERIC) {
-    return 'Try breaking down your goals into smaller steps';
+    return "Try breaking down your goals into smaller steps";
   } else if (habitType === HabitType.RATING) {
-    return 'Focus on quality over quantity in your practice';
+    return "Focus on quality over quantity in your practice";
   }
-  return 'Focus on building more consistent patterns';
+  return "Focus on building more consistent patterns";
 }
 
-function getStreakRecommendation(current: number, best: number, recovery: number): string {
-  if (current >= best && best > 7) return "You're at your best! Keep the momentum going";
-  if (recovery > 80) return 'Great at getting back on track after breaks';
-  return 'Focus on small wins to build longer streaks';
+function getStreakRecommendation(
+  current: number,
+  best: number,
+  recovery: number
+): string {
+  if (current >= best && best > 7)
+    return "You're at your best! Keep the momentum going";
+  if (recovery > 80) return "Great at getting back on track after breaks";
+  return "Focus on small wins to build longer streaks";
 }
 
 function getTimeRecommendation(hour: number, successRate: number): string {
   if (successRate > 80) return `${hour}:00 is your power hour - stick with it!`;
-  return 'Consider adjusting your habit timing for better consistency';
+  return "Consider adjusting your habit timing for better consistency";
 }
 
 function calculateHabitDiversity(habits: CombinedHabit[]) {
-  const categories = new Set(habits.map(h => h.category));
+  const categories = new Set(habits.map((h) => h.category));
   const categoryCount = categories.size;
-  
+
   const distributionScore = Math.min(100, categoryCount * 20);
-  
-  let recommendation = '';
+
+  let recommendation = "";
   if (categoryCount < 3) {
-    recommendation = 'Consider adding habits from other life areas';
+    recommendation = "Consider adding habits from other life areas";
   } else if (categoryCount < 5) {
-    recommendation = 'Good variety, room to expand';
+    recommendation = "Good variety, room to expand";
   } else {
-    recommendation = 'Excellent habit distribution';
+    recommendation = "Excellent habit distribution";
   }
 
   return {

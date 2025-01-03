@@ -1,14 +1,16 @@
-import { useMemo } from 'react';
-import { useHabits } from '../../contexts/HabitContext';
+import { useMemo } from "react";
+import { useHabits } from "../../contexts/HabitContext";
 
 export default function HabitCategoriesAnalysis() {
   const { state } = useHabits();
 
   const categoryData = useMemo(() => {
     const categories = state.habits.reduce((acc, habit) => {
-      const category = habit.category || 'Uncategorized';
+      const category = habit.category || "Uncategorized";
       if (!acc[category]) acc[category] = { total: 0, completed: 0 };
-      const completionCount = Object.values(habit.completions).filter(Boolean).length;
+      const completionCount = Object.values(habit.completions).filter(
+        Boolean
+      ).length;
       acc[category].total += Object.keys(habit.completions).length;
       acc[category].completed += completionCount;
       return acc;
@@ -34,4 +36,4 @@ export default function HabitCategoriesAnalysis() {
       </ul>
     </div>
   );
-} 
+}

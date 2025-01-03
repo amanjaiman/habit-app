@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useHabits, createHabit } from '../contexts/HabitContext';
-import HabitForm from './HabitForm';
-import HabitList from './HabitList';
-import Calendar from './Calendar/Calendar';
-import { useUser } from '../contexts/UserContext';
-import { useGroups } from '../contexts/GroupContext';
+import { useState } from "react";
+import { useHabits } from "../contexts/HabitContext";
+import HabitForm from "./HabitForm";
+import HabitList from "./HabitList";
+import Calendar from "./Calendar/Calendar";
+import { useUser } from "../contexts/UserContext";
+import { useGroups } from "../contexts/GroupContext";
 
 export default function Dashboard() {
   const { state: userState } = useUser();
@@ -13,12 +13,12 @@ export default function Dashboard() {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   // Combine individual and group habits
-  const allGroupHabits = groupState.groups.flatMap(group => 
-    group.habits.map(habit => ({
+  const allGroupHabits = groupState.groups.flatMap((group) =>
+    group.habits.map((habit) => ({
       ...habit,
       groupName: group.name,
       groupEmoji: group.emoji,
-      groupId: group.id
+      groupId: group.id,
     }))
   );
 
@@ -28,11 +28,15 @@ export default function Dashboard() {
     <main className="max-w-7xl mx-auto py-6 px-4 sm:px-8 lg:px-12">
       <div className="space-y-8">
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row justify-between items-center backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 
-                      rounded-2xl p-8 border border-white/20 dark:border-gray-800/30 shadow-xl">
+        <div
+          className="flex flex-col sm:flex-row justify-between items-center backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 
+                      rounded-2xl p-8 border border-white/20 dark:border-gray-800/30 shadow-xl"
+        >
           <div>
-            <h1 className="sm:text-start text-4xl leading-[3rem] font-black bg-gradient-to-r from-purple-600 to-pink-600 
-                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+            <h1
+              className="sm:text-start text-4xl leading-[3rem] font-black bg-gradient-to-r from-purple-600 to-pink-600 
+                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+            >
               Hello, {userState.name}!
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">
@@ -50,8 +54,10 @@ export default function Dashboard() {
         </div>
 
         {!hasAnyHabits && (
-          <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                          border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg">
+          <div
+            className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                          border border-white/20 dark:border-gray-800/30 shadow-xl text-center text-gray-600 dark:text-gray-300 text-lg"
+          >
             No habits found. Add a habit to get started.
           </div>
         )}
@@ -64,12 +70,11 @@ export default function Dashboard() {
             </div>
 
             {/* Habits List */}
-            <div className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                          border border-white/20 dark:border-gray-800/30 shadow-xl">
-              <HabitList 
-                habits={state.habits} 
-                groupHabits={allGroupHabits}
-              />
+            <div
+              className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                          border border-white/20 dark:border-gray-800/30 shadow-xl"
+            >
+              <HabitList habits={state.habits} groupHabits={allGroupHabits} />
             </div>
           </>
         )}

@@ -1,19 +1,22 @@
-import { useState } from 'react';
-import { Habit } from '../types/habit';
-import { habitApi, useHabits } from '../contexts/HabitContext';
-import { format } from 'date-fns';
-import { CheckCircleIcon } from '@heroicons/react/24/outline';
-import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
-import HabitForm from './HabitForm';
-import { DEFAULT_CATEGORIES } from '../types/habit';
-import { useUser } from '../contexts/UserContext';
+import { useState } from "react";
+import { Habit } from "../types/habit";
+import { habitApi, useHabits } from "../contexts/HabitContext";
+import { format } from "date-fns";
+import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon as CheckCircleSolidIcon } from "@heroicons/react/24/solid";
+import HabitForm from "./HabitForm";
+import { DEFAULT_CATEGORIES } from "../types/habit";
+import { useUser } from "../contexts/UserContext";
 
 interface HabitItemProps {
   habit: Habit;
   date?: string; // ISO date string, defaults to today
 }
 
-export default function HabitItem({ habit, date = format(new Date(), 'yyyy-MM-dd') }: HabitItemProps) {
+export default function HabitItem({
+  habit,
+  date = format(new Date(), "yyyy-MM-dd"),
+}: HabitItemProps) {
   const { dispatch } = useHabits();
   const { state: userState } = useUser();
   const [showEdit, setShowEdit] = useState(false);
@@ -21,11 +24,11 @@ export default function HabitItem({ habit, date = format(new Date(), 'yyyy-MM-dd
 
   const toggleCompletion = async () => {
     if (!userState.profile?.id) return;
-    
+
     try {
       await habitApi.toggle(userState.profile.id, habit.id, date, !isCompleted);
       dispatch({
-        type: 'TOGGLE_COMPLETION',
+        type: "TOGGLE_COMPLETION",
         payload: {
           habitId: habit.id,
           date,
@@ -33,14 +36,16 @@ export default function HabitItem({ habit, date = format(new Date(), 'yyyy-MM-dd
         },
       });
     } catch (error) {
-      console.error('Failed to toggle completion:', error);
+      console.error("Failed to toggle completion:", error);
     }
   };
 
   return (
     <>
-      <div className="group relative flex items-center justify-between p-4 bg-white/30 dark:bg-gray-900/30 
-                    rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200">
+      <div
+        className="group relative flex items-center justify-between p-4 bg-white/30 dark:bg-gray-900/30 
+                    rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200"
+      >
         <div className="flex items-center space-x-4">
           <button
             onClick={toggleCompletion}
@@ -50,8 +55,10 @@ export default function HabitItem({ habit, date = format(new Date(), 'yyyy-MM-dd
             {isCompleted ? (
               <CheckCircleSolidIcon className="w-8 h-8 text-green-500 dark:text-green-400" />
             ) : (
-              <CheckCircleIcon className="w-8 h-8 text-gray-300 dark:text-gray-600 
-                                       hover:text-gray-600 dark:hover:text-gray-300" />
+              <CheckCircleIcon
+                className="w-8 h-8 text-gray-300 dark:text-gray-600 
+                                       hover:text-gray-600 dark:hover:text-gray-300"
+              />
             )}
           </button>
 
@@ -75,7 +82,7 @@ export default function HabitItem({ habit, date = format(new Date(), 'yyyy-MM-dd
             )}
             {habit.category && (
               <span className="text-sm text-gray-600 dark:text-gray-300 ml-2">
-                {DEFAULT_CATEGORIES.find(c => c.id === habit.category)?.name}
+                {DEFAULT_CATEGORIES.find((c) => c.id === habit.category)?.name}
               </span>
             )}
           </div>

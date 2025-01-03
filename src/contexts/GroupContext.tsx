@@ -1,8 +1,14 @@
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { API_BASE_URL, handleApiResponse } from '../api/config';
-import { useUser } from './UserContext';
-import { Habit } from '../types/habit';
-import { HabitType, HabitConfig, HabitCompletionValue } from '../types/habit';
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from "react";
+import { API_BASE_URL, handleApiResponse } from "../api/config";
+import { useUser } from "./UserContext";
+import { Habit } from "../types/habit";
+import { HabitType, HabitConfig } from "../types/habit";
 
 // Types
 export interface GroupHabitCompletion {
@@ -11,7 +17,7 @@ export interface GroupHabitCompletion {
   completed: boolean | number;
 }
 
-export interface GroupHabit extends Omit<Habit, 'completions'> {
+export interface GroupHabit extends Omit<Habit, "completions"> {
   completions: GroupHabitCompletion[];
   type: HabitType;
   config?: HabitConfig;
@@ -44,16 +50,29 @@ interface GroupState {
 }
 
 type GroupAction =
-  | { type: 'SET_GROUPS'; payload: Group[] }
-  | { type: 'ADD_GROUP'; payload: Group }
-  | { type: 'UPDATE_GROUP'; payload: Group }
-  | { type: 'DELETE_GROUP'; payload: string }
-  | { type: 'ADD_GROUP_HABIT'; payload: { groupId: string; habit: GroupHabit } }
-  | { type: 'UPDATE_GROUP_HABIT'; payload: { groupId: string; habit: GroupHabit } }
-  | { type: 'REMOVE_GROUP_HABIT'; payload: { groupId: string; habitId: string } }
-  | { type: 'TOGGLE_HABIT_COMPLETION'; payload: { groupId: string; habitId: string; completion: GroupHabitCompletion } }
-  | { type: 'SET_ERROR'; payload: string }
-  | { type: 'RESET_DATA' };
+  | { type: "SET_GROUPS"; payload: Group[] }
+  | { type: "ADD_GROUP"; payload: Group }
+  | { type: "UPDATE_GROUP"; payload: Group }
+  | { type: "DELETE_GROUP"; payload: string }
+  | { type: "ADD_GROUP_HABIT"; payload: { groupId: string; habit: GroupHabit } }
+  | {
+      type: "UPDATE_GROUP_HABIT";
+      payload: { groupId: string; habit: GroupHabit };
+    }
+  | {
+      type: "REMOVE_GROUP_HABIT";
+      payload: { groupId: string; habitId: string };
+    }
+  | {
+      type: "TOGGLE_HABIT_COMPLETION";
+      payload: {
+        groupId: string;
+        habitId: string;
+        completion: GroupHabitCompletion;
+      };
+    }
+  | { type: "SET_ERROR"; payload: string }
+  | { type: "RESET_DATA" };
 
 // API functions
 async function fetchUserGroups(userId: string): Promise<Group[]> {
@@ -62,41 +81,61 @@ async function fetchUserGroups(userId: string): Promise<Group[]> {
 }
 
 async function fetchGroup(groupId: string, userId: string): Promise<Group> {
-  const response = await fetch(`${API_BASE_URL}/groups/${groupId}?user_id=${userId}`);
+  const response = await fetch(
+    `${API_BASE_URL}/groups/${groupId}?user_id=${userId}`
+  );
   return handleApiResponse(response);
 }
 
-async function createGroup(name: string, description: string | undefined, emoji: string, userId: string): Promise<Group> {
+async function createGroup(
+  name: string,
+  description: string | undefined,
+  emoji: string,
+  userId: string
+): Promise<Group> {
   const response = await fetch(`${API_BASE_URL}/groups?user_id=${userId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, description, emoji }),
   });
   return handleApiResponse(response);
 }
 
-async function updateGroup(groupId: string, updates: Partial<Group>, userId: string): Promise<Group> {
-  const response = await fetch(`${API_BASE_URL}/groups/${groupId}?user_id=${userId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updates),
-  });
+async function updateGroup(
+  groupId: string,
+  updates: Partial<Group>,
+  userId: string
+): Promise<Group> {
+  const response = await fetch(
+    `${API_BASE_URL}/groups/${groupId}?user_id=${userId}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    }
+  );
   return handleApiResponse(response);
 }
 
 async function deleteGroup(groupId: string, userId: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/groups/${groupId}?user_id=${userId}`, {
-    method: 'DELETE',
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/groups/${groupId}?user_id=${userId}`,
+    {
+      method: "DELETE",
+    }
+  );
   return handleApiResponse(response);
 }
 
 async function joinGroup(joinCode: string, userId: string): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/groups/join?user_id=${userId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ joinCode }),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/groups/join?user_id=${userId}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ joinCode }),
+    }
+  );
   return handleApiResponse(response);
 }
 
@@ -108,9 +147,9 @@ async function createGroupHabit(
   type: HabitType = HabitType.BOOLEAN,
   config?: HabitConfig,
   color?: string,
-  category?: string,
+  category?: string
 ): Promise<GroupHabit> {
-  const habit: Omit<GroupHabit, 'completions'> = {
+  const habit: Omit<GroupHabit, "completions"> = {
     id: crypto.randomUUID(),
     name,
     emoji,
@@ -121,11 +160,14 @@ async function createGroupHabit(
     category,
   };
 
-  const response = await fetch(`${API_BASE_URL}/groups/${groupId}/habits?user_id=${userId}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(habit),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/groups/${groupId}/habits?user_id=${userId}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(habit),
+    }
+  );
   return handleApiResponse(response);
 }
 
@@ -139,10 +181,10 @@ async function toggleGroupHabitCompletion(
   const response = await fetch(
     `${API_BASE_URL}/groups/${groupId}/habits/${habitId}/toggle?user_id=${userId}`,
     {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        date, 
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date,
         completed: value,
       }),
     }
@@ -151,8 +193,8 @@ async function toggleGroupHabitCompletion(
 }
 
 async function updateGroupHabit(
-  groupId: string, 
-  habit: GroupHabit, 
+  groupId: string,
+  habit: GroupHabit,
   userId: string
 ): Promise<GroupHabit> {
   // Create a new object with only the fields expected by HabitBase
@@ -164,35 +206,42 @@ async function updateGroupHabit(
     type: habit.type,
     config: habit.config,
     category: habit.category,
-    createdAt: habit.createdAt
+    createdAt: habit.createdAt,
   };
-  
+
   const response = await fetch(
     `${API_BASE_URL}/groups/${groupId}/habits/${habitData.id}?user_id=${userId}`,
     {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(habitData),
     }
   );
   return handleApiResponse(response);
 }
 
-async function deleteGroupHabit(groupId: string, habitId: string, userId: string): Promise<void> {
+async function deleteGroupHabit(
+  groupId: string,
+  habitId: string,
+  userId: string
+): Promise<void> {
   const response = await fetch(
     `${API_BASE_URL}/groups/${groupId}/habits/${habitId}?user_id=${userId}`,
     {
-      method: 'DELETE',
+      method: "DELETE",
     }
   );
   return handleApiResponse(response);
 }
 
 // Context setup
-const GroupContext = createContext<{
-  state: GroupState;
-  dispatch: React.Dispatch<GroupAction>;
-} | undefined>(undefined);
+const GroupContext = createContext<
+  | {
+      state: GroupState;
+      dispatch: React.Dispatch<GroupAction>;
+    }
+  | undefined
+>(undefined);
 
 const initialState: GroupState = {
   groups: [],
@@ -202,89 +251,95 @@ const initialState: GroupState = {
 
 function groupReducer(state: GroupState, action: GroupAction): GroupState {
   switch (action.type) {
-    case 'SET_GROUPS':
+    case "SET_GROUPS":
       return {
         ...state,
         groups: action.payload,
         loading: false,
       };
-    
-    case 'ADD_GROUP':
+
+    case "ADD_GROUP":
       return {
         ...state,
         groups: [...state.groups, action.payload],
       };
-    
-    case 'UPDATE_GROUP':
+
+    case "UPDATE_GROUP":
       return {
         ...state,
-        groups: state.groups.map(group =>
+        groups: state.groups.map((group) =>
           group.id === action.payload.id ? action.payload : group
         ),
       };
-    
-    case 'DELETE_GROUP':
+
+    case "DELETE_GROUP":
       return {
         ...state,
-        groups: state.groups.filter(group => group.id !== action.payload),
+        groups: state.groups.filter((group) => group.id !== action.payload),
       };
-    
-    case 'ADD_GROUP_HABIT':
+
+    case "ADD_GROUP_HABIT":
       return {
         ...state,
-        groups: state.groups.map(group =>
+        groups: state.groups.map((group) =>
           group.id === action.payload.groupId
             ? { ...group, habits: [...group.habits, action.payload.habit] }
             : group
         ),
       };
-    
-    case 'UPDATE_GROUP_HABIT':
+
+    case "UPDATE_GROUP_HABIT":
       return {
         ...state,
-        groups: state.groups.map(group =>
+        groups: state.groups.map((group) =>
           group.id === action.payload.groupId
             ? {
                 ...group,
-                habits: group.habits.map(habit =>
+                habits: group.habits.map((habit) =>
                   habit.id === action.payload.habit.id
                     ? action.payload.habit
                     : habit
-                )
+                ),
               }
             : group
-        )
+        ),
       };
-    
-    case 'REMOVE_GROUP_HABIT':
+
+    case "REMOVE_GROUP_HABIT":
       return {
         ...state,
-        groups: state.groups.map(group =>
+        groups: state.groups.map((group) =>
           group.id === action.payload.groupId
             ? {
                 ...group,
-                habits: group.habits.filter(habit => habit.id !== action.payload.habitId)
+                habits: group.habits.filter(
+                  (habit) => habit.id !== action.payload.habitId
+                ),
               }
             : group
-        )
+        ),
       };
-    
-    case 'TOGGLE_HABIT_COMPLETION':
+
+    case "TOGGLE_HABIT_COMPLETION":
       return {
         ...state,
-        groups: state.groups.map(group =>
+        groups: state.groups.map((group) =>
           group.id === action.payload.groupId
             ? {
                 ...group,
-                habits: group.habits.map(habit =>
+                habits: group.habits.map((habit) =>
                   habit.id === action.payload.habitId
                     ? {
                         ...habit,
                         completions: [
                           ...habit.completions.filter(
-                            c => c.userId !== action.payload.completion.userId || c.date !== action.payload.completion.date
+                            (c) =>
+                              c.userId !== action.payload.completion.userId ||
+                              c.date !== action.payload.completion.date
                           ),
-                          ...(action.payload.completion.completed ? [action.payload.completion] : []),
+                          ...(action.payload.completion.completed
+                            ? [action.payload.completion]
+                            : []),
                         ],
                       }
                     : habit
@@ -293,17 +348,17 @@ function groupReducer(state: GroupState, action: GroupAction): GroupState {
             : group
         ),
       };
-    
-    case 'SET_ERROR':
+
+    case "SET_ERROR":
       return {
         ...state,
         error: action.payload,
         loading: false,
       };
-    
-    case 'RESET_DATA':
+
+    case "RESET_DATA":
       return initialState;
-    
+
     default:
       return state;
   }
@@ -316,7 +371,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!userState.isAuthenticated) {
-      dispatch({ type: 'RESET_DATA' });
+      dispatch({ type: "RESET_DATA" });
       return;
     }
 
@@ -324,9 +379,9 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       const loadGroups = async () => {
         try {
           const groups = await fetchUserGroups(userState.profile!.id);
-          dispatch({ type: 'SET_GROUPS', payload: groups });
+          dispatch({ type: "SET_GROUPS", payload: groups });
         } catch (error: any) {
-          dispatch({ type: 'SET_ERROR', payload: error.message });
+          dispatch({ type: "SET_ERROR", payload: error.message });
         }
       };
       loadGroups();
@@ -358,7 +413,7 @@ export const groupApi = {
 export function useGroups() {
   const context = useContext(GroupContext);
   if (context === undefined) {
-    throw new Error('useGroups must be used within a GroupProvider');
+    throw new Error("useGroups must be used within a GroupProvider");
   }
   return context;
 }

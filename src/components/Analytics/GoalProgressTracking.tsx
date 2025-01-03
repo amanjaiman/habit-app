@@ -1,18 +1,22 @@
-import { useState } from 'react';
-import { useHabits } from '../../contexts/HabitContext';
+import { useState } from "react";
+import { useHabits } from "../../contexts/HabitContext";
 
 interface GoalProgressTrackingProps {
   habitId: string;
 }
 
-export default function GoalProgressTracking({ habitId }: GoalProgressTrackingProps) {
+export default function GoalProgressTracking({
+  habitId,
+}: GoalProgressTrackingProps) {
   const { state } = useHabits();
   const [goal, setGoal] = useState<number>(80); // Default goal is 80%
-  const habit = state.habits.find(h => h.id === habitId);
+  const habit = state.habits.find((h) => h.id === habitId);
 
   if (!habit) return null;
 
-  const completionCount = Object.values(habit.completions).filter(Boolean).length;
+  const completionCount = Object.values(habit.completions).filter(
+    Boolean
+  ).length;
   const totalDays = Object.keys(habit.completions).length;
   const completionRate = (completionCount / totalDays) * 100;
 
@@ -36,10 +40,14 @@ export default function GoalProgressTracking({ habitId }: GoalProgressTrackingPr
         <p className="text-sm text-gray-600 dark:text-gray-300">
           Current Completion Rate: {completionRate.toFixed(1)}%
         </p>
-        <p className={`text-sm font-medium ${completionRate >= goal ? 'text-green-500' : 'text-red-500'}`}>
-          {completionRate >= goal ? 'Goal Achieved!' : 'Goal Not Achieved'}
+        <p
+          className={`text-sm font-medium ${
+            completionRate >= goal ? "text-green-500" : "text-red-500"
+          }`}
+        >
+          {completionRate >= goal ? "Goal Achieved!" : "Goal Not Achieved"}
         </p>
       </div>
     </div>
   );
-} 
+}

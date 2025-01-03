@@ -1,5 +1,5 @@
-import { Group } from '../../contexts/GroupContext';
-import { calculateGroupStreak } from '../../utils/streakCalculations';
+import { Group } from "../../contexts/GroupContext";
+import { calculateGroupStreak } from "../../utils/streakCalculations";
 
 interface GroupStatsProps {
   group: Group;
@@ -21,7 +21,8 @@ export default function GroupStats({ group }: GroupStatsProps) {
     }, new Date());
 
     // Use the later date between thirtyDaysAgo and firstCompletionDate
-    const startDate = firstCompletionDate > thirtyDaysAgo ? firstCompletionDate : thirtyDaysAgo;
+    const startDate =
+      firstCompletionDate > thirtyDaysAgo ? firstCompletionDate : thirtyDaysAgo;
 
     // Calculate days since start date (minimum 1 day)
     const today = new Date();
@@ -31,23 +32,28 @@ export default function GroupStats({ group }: GroupStatsProps) {
     );
 
     // Calculate completion rate based on the determined time period
-    const possibleCompletions = group.habits.length * group.memberDetails.length * daysSinceStart;
+    const possibleCompletions =
+      group.habits.length * group.memberDetails.length * daysSinceStart;
     const totalCompletions = group.habits.reduce((acc, habit) => {
-      return acc + (habit.completions?.filter(completion => 
-        new Date(completion.date) >= startDate
-      ).length || 0);
+      return (
+        acc +
+        (habit.completions?.filter(
+          (completion) => new Date(completion.date) >= startDate
+        ).length || 0)
+      );
     }, 0);
     const completionRate = (totalCompletions / possibleCompletions) * 100;
 
     // Calculate active members (completed any habit in last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const activeMembers = group.memberDetails.filter(member => {
-      return group.habits.some(habit => 
-        habit.completions?.some(completion => 
-          completion.userId === member.id && 
-          new Date(completion.date) >= sevenDaysAgo
+
+    const activeMembers = group.memberDetails.filter((member) => {
+      return group.habits.some((habit) =>
+        habit.completions?.some(
+          (completion) =>
+            completion.userId === member.id &&
+            new Date(completion.date) >= sevenDaysAgo
         )
       );
     }).length;
@@ -56,7 +62,7 @@ export default function GroupStats({ group }: GroupStatsProps) {
       completionRate: Math.round(completionRate),
       currentStreak: calculateGroupStreak(group),
       totalCompletions,
-      activeMembers
+      activeMembers,
     };
   };
 
@@ -64,25 +70,25 @@ export default function GroupStats({ group }: GroupStatsProps) {
 
   const statCards = [
     {
-      label: '30-Day Completion Rate',
+      label: "30-Day Completion Rate",
       value: `${stats.completionRate}%`,
-      icon: '📊'
+      icon: "📊",
     },
     {
-      label: 'Current Streak',
+      label: "Current Streak",
       value: `${stats.currentStreak} days`,
-      icon: '🔥'
+      icon: "🔥",
     },
     {
-      label: 'Total Completions',
+      label: "Total Completions",
       value: stats.totalCompletions,
-      icon: '✅'
+      icon: "✅",
     },
     {
-      label: 'Active Members',
+      label: "Active Members",
       value: `${stats.activeMembers}/${group.memberDetails.length}`,
-      icon: '👥'
-    }
+      icon: "👥",
+    },
   ];
 
   return (
@@ -96,11 +102,15 @@ export default function GroupStats({ group }: GroupStatsProps) {
         >
           <div className="flex items-center gap-2 mb-1">
             <span className="text-xl">{stat.icon}</span>
-            <h3 className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</h3>
+            <h3 className="text-xs text-gray-500 dark:text-gray-400">
+              {stat.label}
+            </h3>
           </div>
-          <p className="text-xl font-bold mt-1 text-gray-900 dark:text-white">{stat.value}</p>
+          <p className="text-xl font-bold mt-1 text-gray-900 dark:text-white">
+            {stat.value}
+          </p>
         </div>
       ))}
     </div>
   );
-} 
+}

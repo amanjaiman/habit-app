@@ -1,19 +1,9 @@
-import { useState } from 'react';
-import { useGroups, groupApi, GroupHabit } from '../../contexts/GroupContext';
-import { format } from 'date-fns';
-import { DEFAULT_CATEGORIES } from '../../types/habit';
-import HabitForm from '../HabitForm';
-import GroupHabitForm from './GroupHabitForm';
-import { Menu, Transition } from '@headlessui/react';
-import { Fragment } from 'react';
-import { PencilIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { useUser } from '../../contexts/UserContext';
-
-interface GroupMember {
-  id: string;
-  name: string;
-  profileImage?: string;
-}
+import { useState } from "react";
+import { useGroups, groupApi, GroupHabit } from "../../contexts/GroupContext";
+import { DEFAULT_CATEGORIES } from "../../types/habit";
+import GroupHabitForm from "./GroupHabitForm";
+import { PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { useUser } from "../../contexts/UserContext";
 
 interface GroupHabitListProps {
   habits: GroupHabit[];
@@ -21,7 +11,11 @@ interface GroupHabitListProps {
   isAdmin: boolean;
 }
 
-export default function GroupHabitList({ habits, groupId, isAdmin }: GroupHabitListProps) {
+export default function GroupHabitList({
+  habits,
+  groupId,
+  isAdmin,
+}: GroupHabitListProps) {
   const { dispatch } = useGroups();
   const { state: userState } = useUser();
   const [editingHabit, setEditingHabit] = useState<GroupHabit | null>(null);
@@ -30,27 +24,30 @@ export default function GroupHabitList({ habits, groupId, isAdmin }: GroupHabitL
   const handleDelete = async (habitId: string) => {
     if (!userState.profile?.id) return;
 
-    if (window.confirm('Are you sure you want to delete this habit?')) {
+    if (window.confirm("Are you sure you want to delete this habit?")) {
       try {
         await groupApi.deleteHabit(groupId, habitId, userState.profile.id);
         dispatch({
-          type: 'REMOVE_GROUP_HABIT',
-          payload: { groupId, habitId }
+          type: "REMOVE_GROUP_HABIT",
+          payload: { groupId, habitId },
         });
       } catch (error) {
-        console.error('Failed to delete habit:', error);
+        console.error("Failed to delete habit:", error);
       }
     }
   };
 
-  const habitCardClasses = "flex items-center p-4 rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/20 dark:border-gray-800/30 hover:shadow-xl hover:border-purple-200/30 dark:hover:border-purple-800/30";
+  const habitCardClasses =
+    "flex items-center p-4 rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/20 dark:border-gray-800/30 hover:shadow-xl hover:border-purple-200/30 dark:hover:border-purple-800/30";
   const habitNameClasses = "font-medium text-gray-900 dark:text-white";
 
   return (
     <div className="space-y-4">
       <div className="flex items-center space-x-4 mb-6">
-        <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                      dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+        <h2
+          className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                      dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+        >
           Manage Group Habits
         </h2>
         {isAdmin && (
@@ -66,16 +63,16 @@ export default function GroupHabitList({ habits, groupId, isAdmin }: GroupHabitL
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {habits.map((habit) => {
-          const category = DEFAULT_CATEGORIES.find(cat => cat.id === habit.category);
+          const category = DEFAULT_CATEGORIES.find(
+            (cat) => cat.id === habit.category
+          );
 
           return (
             <div key={habit.id} className={habitCardClasses}>
               <div className="flex-1 flex items-center space-x-3">
                 <span className="text-xl">{habit.emoji}</span>
                 <div>
-                  <span className={habitNameClasses}>
-                    {habit.name}
-                  </span>
+                  <span className={habitNameClasses}>{habit.name}</span>
                   {category && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       {category.name}
@@ -104,7 +101,7 @@ export default function GroupHabitList({ habits, groupId, isAdmin }: GroupHabitL
           );
         })}
       </div>
-      
+
       <GroupHabitForm
         isOpen={!!editingHabit || isCreating}
         onClose={() => {
@@ -116,4 +113,4 @@ export default function GroupHabitList({ habits, groupId, isAdmin }: GroupHabitL
       />
     </div>
   );
-} 
+}

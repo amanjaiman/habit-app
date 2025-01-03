@@ -1,11 +1,20 @@
-import React from 'react';
-import { CheckCircleIcon } from '@heroicons/react/24/outline';
-import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
-import { MinusCircleIcon } from '@heroicons/react/24/solid';
-import { Habit, HabitType, NumericHabitConfig, RatingHabitConfig } from '../types/habit';
-import { GroupHabit } from '../contexts/GroupContext';
+import React from "react";
+import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon as CheckCircleSolidIcon } from "@heroicons/react/24/solid";
+import { MinusCircleIcon } from "@heroicons/react/24/solid";
+import {
+  Habit,
+  HabitType,
+  NumericHabitConfig,
+  RatingHabitConfig,
+} from "../types/habit";
+import { GroupHabit } from "../contexts/GroupContext";
 
-export function getCompletionIcon(habit: Habit | GroupHabit, value: boolean | number | undefined, showValue: boolean = false) {
+export function getCompletionIcon(
+  habit: Habit | GroupHabit,
+  value: boolean | number | undefined,
+  showValue: boolean = false
+) {
   if (habit.type === HabitType.BOOLEAN) {
     return value ? (
       <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
@@ -14,10 +23,12 @@ export function getCompletionIcon(habit: Habit | GroupHabit, value: boolean | nu
     );
   }
 
-  if (habit.type === HabitType.NUMERIC && typeof value === 'number') {
+  if (habit.type === HabitType.NUMERIC && typeof value === "number") {
     const config = habit.config as NumericHabitConfig;
     const progress = (value / config.goal) * 100;
-    const isGoalReached = config.higherIsBetter ? value >= config.goal : value <= config.goal;
+    const isGoalReached = config.higherIsBetter
+      ? value >= config.goal
+      : value <= config.goal;
 
     return (
       <div className="flex flex-col items-center gap-0.5">
@@ -37,10 +48,10 @@ export function getCompletionIcon(habit: Habit | GroupHabit, value: boolean | nu
     );
   }
 
-  if (habit.type === HabitType.RATING && typeof value === 'number') {
+  if (habit.type === HabitType.RATING && typeof value === "number") {
     const config = habit.config as RatingHabitConfig;
     const goal = config.goal;
-    
+
     return (
       <div className="flex flex-col items-center gap-0.5">
         {value === goal ? (
@@ -59,5 +70,7 @@ export function getCompletionIcon(habit: Habit | GroupHabit, value: boolean | nu
     );
   }
 
-  return <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />;
-} 
+  return (
+    <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+  );
+}

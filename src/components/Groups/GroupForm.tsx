@@ -1,9 +1,9 @@
-import { Fragment, useState } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { useGroups, groupApi } from '../../contexts/GroupContext';
-import { useUser } from '../../contexts/UserContext';
-import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
-import { Popover } from '@headlessui/react';
+import { Fragment, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { useGroups, groupApi } from "../../contexts/GroupContext";
+import { useUser } from "../../contexts/UserContext";
+import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
+import { Popover } from "@headlessui/react";
 
 interface GroupFormProps {
   isOpen: boolean;
@@ -11,29 +11,34 @@ interface GroupFormProps {
 }
 
 export default function GroupForm({ isOpen, onClose }: GroupFormProps) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [emoji, setEmoji] = useState('👥');
-  const [error, setError] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [emoji, setEmoji] = useState("👥");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { dispatch } = useGroups();
   const { state: userState } = useUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
-      const newGroup = await groupApi.create(name, description, emoji, userState.profile!.id);
-      dispatch({ type: 'ADD_GROUP', payload: newGroup });
+      const newGroup = await groupApi.create(
+        name,
+        description,
+        emoji,
+        userState.profile!.id
+      );
+      dispatch({ type: "ADD_GROUP", payload: newGroup });
       onClose();
       // Reset form
-      setName('');
-      setDescription('');
-      setEmoji('👥');
+      setName("");
+      setDescription("");
+      setEmoji("👥");
     } catch (error: any) {
-      setError(error.message || 'Failed to create group');
+      setError(error.message || "Failed to create group");
     } finally {
       setIsLoading(false);
     }
@@ -69,9 +74,11 @@ export default function GroupForm({ isOpen, onClose }: GroupFormProps) {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="relative w-full max-w-md transform overflow-visible rounded-3xl 
+              <Dialog.Panel
+                className="relative w-full max-w-md transform overflow-visible rounded-3xl 
                                      bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl p-8 text-left shadow-2xl transition-all
-                                     border border-white/20 dark:border-gray-800/30">
+                                     border border-white/20 dark:border-gray-800/30"
+              >
                 <Dialog.Title
                   as="h3"
                   className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
@@ -99,7 +106,13 @@ export default function GroupForm({ isOpen, onClose }: GroupFormProps) {
                         <Popover.Panel className="absolute z-[100] mt-2">
                           <EmojiPicker
                             onEmojiClick={onEmojiClick}
-                            theme={document.documentElement.classList.contains('dark') ? Theme.DARK : Theme.LIGHT}
+                            theme={
+                              document.documentElement.classList.contains(
+                                "dark"
+                              )
+                                ? Theme.DARK
+                                : Theme.LIGHT
+                            }
                           />
                         </Popover.Panel>
                       </Popover>
@@ -137,9 +150,7 @@ export default function GroupForm({ isOpen, onClose }: GroupFormProps) {
                     />
                   </div>
 
-                  {error && (
-                    <p className="text-red-500 text-sm">{error}</p>
-                  )}
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
 
                   <div className="mt-6 flex justify-end space-x-3">
                     <button
@@ -158,7 +169,7 @@ export default function GroupForm({ isOpen, onClose }: GroupFormProps) {
                                rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 
                                focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isLoading ? 'Creating...' : 'Create Group'}
+                      {isLoading ? "Creating..." : "Create Group"}
                     </button>
                   </div>
                 </form>
@@ -169,4 +180,4 @@ export default function GroupForm({ isOpen, onClose }: GroupFormProps) {
       </Dialog>
     </Transition>
   );
-} 
+}

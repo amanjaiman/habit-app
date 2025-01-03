@@ -1,6 +1,6 @@
-import { Group } from '../../contexts/GroupContext';
-import { motion } from 'framer-motion';
-import { calculateMemberStreak } from '../../utils/streakCalculations';
+import { Group } from "../../contexts/GroupContext";
+import { motion } from "framer-motion";
+import { calculateMemberStreak } from "../../utils/streakCalculations";
 
 interface GroupLeaderboardProps {
   group: Group;
@@ -21,14 +21,18 @@ export default function GroupLeaderboard({ group }: GroupLeaderboardProps) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    return group.memberDetails.map(member => {
+    return group.memberDetails.map((member) => {
       // Calculate completion rate for last 30 days
       const possibleCompletions = group.habits.length * 30;
       const actualCompletions = group.habits.reduce((acc, habit) => {
-        return acc + (habit.completions?.filter(completion =>
-          completion.userId === member.id &&
-          new Date(completion.date) >= thirtyDaysAgo
-        ).length || 0);
+        return (
+          acc +
+          (habit.completions?.filter(
+            (completion) =>
+              completion.userId === member.id &&
+              new Date(completion.date) >= thirtyDaysAgo
+          ).length || 0)
+        );
       }, 0);
 
       // Calculate member's current streak
@@ -36,36 +40,45 @@ export default function GroupLeaderboard({ group }: GroupLeaderboardProps) {
 
       // Calculate total completions
       const totalCompletions = group.habits.reduce((acc, habit) => {
-        return acc + (habit.completions?.filter(completion =>
-          completion.userId === member.id
-        ).length || 0);
+        return (
+          acc +
+          (habit.completions?.filter(
+            (completion) => completion.userId === member.id
+          ).length || 0)
+        );
       }, 0);
 
       // Get last active date
       const lastCompletion = group.habits
-        .flatMap(habit => habit.completions || [])
-        .filter(completion => completion.userId === member.id)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+        .flatMap((habit) => habit.completions || [])
+        .filter((completion) => completion.userId === member.id)
+        .sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        )[0];
 
       return {
         id: member.id,
         name: member.name,
         avatar: member.profileImage,
-        completionRate: Math.round((actualCompletions / possibleCompletions) * 100),
+        completionRate: Math.round(
+          (actualCompletions / possibleCompletions) * 100
+        ),
         streak,
         totalCompletions,
-        lastActive: lastCompletion ? new Date(lastCompletion.date) : new Date()
+        lastActive: lastCompletion ? new Date(lastCompletion.date) : new Date(),
       };
     });
   };
 
-  const members = calculateMemberStats().sort((a, b) => b.completionRate - a.completionRate);
+  const members = calculateMemberStats().sort(
+    (a, b) => b.completionRate - a.completionRate
+  );
 
   const getPositionStyle = (index: number) => {
-    if (index === 0) return 'bg-yellow-500';
-    if (index === 1) return 'bg-gray-400';
-    if (index === 2) return 'bg-amber-600';
-    return 'bg-gray-200 dark:bg-gray-700';
+    if (index === 0) return "bg-yellow-500";
+    if (index === 1) return "bg-gray-400";
+    if (index === 2) return "bg-amber-600";
+    return "bg-gray-200 dark:bg-gray-700";
   };
 
   return (
@@ -83,11 +96,13 @@ export default function GroupLeaderboard({ group }: GroupLeaderboardProps) {
                     transition-colors duration-200"
         >
           <div className="flex items-center gap-4">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center 
-                          text-white font-bold ${getPositionStyle(index)}`}>
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center 
+                          text-white font-bold ${getPositionStyle(index)}`}
+            >
               {index + 1}
             </div>
-            
+
             <div className="flex items-center gap-3">
               {member.avatar && (
                 <img
@@ -109,7 +124,9 @@ export default function GroupLeaderboard({ group }: GroupLeaderboardProps) {
 
           <div className="flex items-center gap-6">
             <div className="text-center">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Completion</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Completion
+              </p>
               <p className="font-bold text-gray-900 dark:text-white">
                 {member.completionRate}%
               </p>
@@ -131,4 +148,4 @@ export default function GroupLeaderboard({ group }: GroupLeaderboardProps) {
       ))}
     </div>
   );
-} 
+}

@@ -1,7 +1,7 @@
 export enum HabitType {
   BOOLEAN = "boolean",
   NUMERIC = "numeric",
-  RATING = "rating"
+  RATING = "rating",
 }
 
 export interface NumericHabitConfig {
@@ -57,11 +57,21 @@ export interface HabitCategory {
 
 // Predefined categories
 export const DEFAULT_CATEGORIES: HabitCategory[] = [
-  { id: 'health', name: 'Health', color: '#34D399', darkColor: '#059669' },         // Light/dark green
-  { id: 'productivity', name: 'Productivity', color: '#818CF8', darkColor: '#4F46E5' }, // Light/dark indigo
-  { id: 'learning', name: 'Learning', color: '#FBBF24', darkColor: '#D97706' },     // Light/dark amber
-  { id: 'fitness', name: 'Fitness', color: '#F87171', darkColor: '#DC2626' },       // Light/dark red
-  { id: 'mindfulness', name: 'Mindfulness', color: '#A78BFA', darkColor: '#7C3AED' }, // Light/dark purple
-  { id: 'social', name: 'Social', color: '#F472B6', darkColor: '#DB2777' },         // Light/dark pink
-  { id: 'other', name: 'Other', color: '#9CA3AF', darkColor: '#4B5563' },          // Light/dark gray
+  { id: "health", name: "Health", color: "#34D399", darkColor: "#059669" }, // Light/dark green
+  {
+    id: "productivity",
+    name: "Productivity",
+    color: "#818CF8",
+    darkColor: "#4F46E5",
+  }, // Light/dark indigo
+  { id: "learning", name: "Learning", color: "#FBBF24", darkColor: "#D97706" }, // Light/dark amber
+  { id: "fitness", name: "Fitness", color: "#F87171", darkColor: "#DC2626" }, // Light/dark red
+  {
+    id: "mindfulness",
+    name: "Mindfulness",
+    color: "#A78BFA",
+    darkColor: "#7C3AED",
+  }, // Light/dark purple
+  { id: "social", name: "Social", color: "#F472B6", darkColor: "#DB2777" }, // Light/dark pink
+  { id: "other", name: "Other", color: "#9CA3AF", darkColor: "#4B5563" }, // Light/dark gray
 ];

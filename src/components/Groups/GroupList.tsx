@@ -1,6 +1,6 @@
-import { Group } from '../../contexts/GroupContext';
-import { useUser } from '../../contexts/UserContext';
-import { Link } from 'react-router-dom';
+import { Group } from "../../contexts/GroupContext";
+import { useUser } from "../../contexts/UserContext";
+import { Link } from "react-router-dom";
 
 interface GroupListProps {
   groups: Group[];
@@ -35,24 +35,28 @@ export default function GroupList({ groups }: GroupListProps) {
               </div>
             </div>
             {group.adminId === userState.profile?.id && (
-              <span className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 
-                            bg-purple-100 dark:bg-purple-900/30 rounded-full">
+              <span
+                className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 
+                            bg-purple-100 dark:bg-purple-900/30 rounded-full"
+              >
                 Admin
               </span>
             )}
           </div>
-          
+
           <div className="mt-4 flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {group.members.length} {group.members.length === 1 ? 'member' : 'members'}
+                {group.members.length}{" "}
+                {group.members.length === 1 ? "member" : "members"}
               </span>
               <span className="text-gray-400 dark:text-gray-600">•</span>
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {group.habits.length} {group.habits.length === 1 ? 'habit' : 'habits'}
+                {group.habits.length}{" "}
+                {group.habits.length === 1 ? "habit" : "habits"}
               </span>
             </div>
-            
+
             <button
               onClick={(e) => {
                 e.preventDefault();

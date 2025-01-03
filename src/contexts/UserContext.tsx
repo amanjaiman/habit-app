@@ -1,5 +1,11 @@
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { API_BASE_URL, handleApiResponse } from '../api/config';
+import {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from "react";
+import { API_BASE_URL, handleApiResponse } from "../api/config";
 
 interface UserProfile {
   id: string;
@@ -37,53 +43,56 @@ interface UserState {
 }
 
 type UserAction =
-  | { type: 'LOGIN_SUCCESS'; payload: UserState }
-  | { type: 'LOGOUT' }
-  | { type: 'UPDATE_PROFILE'; payload: UserState }
-  | { type: 'SET_ERROR'; payload: string }
-  | { type: 'CLEAR_ERROR' }
+  | { type: "LOGIN_SUCCESS"; payload: UserState }
+  | { type: "LOGOUT" }
+  | { type: "UPDATE_PROFILE"; payload: UserState }
+  | { type: "SET_ERROR"; payload: string }
+  | { type: "CLEAR_ERROR" };
 
 const initialState: UserState = {
   isAuthenticated: false,
   profile: null,
   loading: true,
   error: null,
-  name: '',
+  name: "",
   subscription: null,
 };
 
-const UserContext = createContext<{
-  state: UserState;
-  dispatch: React.Dispatch<UserAction>;
-} | undefined>(undefined);
+const UserContext = createContext<
+  | {
+      state: UserState;
+      dispatch: React.Dispatch<UserAction>;
+    }
+  | undefined
+>(undefined);
 
 function userReducer(state: UserState, action: UserAction): UserState {
   switch (action.type) {
-    case 'LOGIN_SUCCESS':
+    case "LOGIN_SUCCESS":
       return action.payload;
-    
-    case 'LOGOUT':
-      localStorage.removeItem('userId');
+
+    case "LOGOUT":
+      localStorage.removeItem("userId");
       return {
         ...initialState,
         loading: false,
       };
-    
-    case 'UPDATE_PROFILE':
+
+    case "UPDATE_PROFILE":
       return action.payload;
-    
-    case 'SET_ERROR':
+
+    case "SET_ERROR":
       return {
         ...state,
         error: action.payload,
       };
-    
-    case 'CLEAR_ERROR':
+
+    case "CLEAR_ERROR":
       return {
         ...state,
         error: null,
       };
-    
+
     default:
       return state;
   }
@@ -91,19 +100,19 @@ function userReducer(state: UserState, action: UserAction): UserState {
 
 async function loginUser(email: string, password: string) {
   const response = await fetch(`${API_BASE_URL}/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
   const data = await handleApiResponse(response);
-  localStorage.setItem('userId', data.id);
+  localStorage.setItem("userId", data.id);
   return data;
 }
 
-async function createUser(userData: Omit<UserProfile, 'id' | 'createdAt'>) {
+async function createUser(userData: Omit<UserProfile, "id" | "createdAt">) {
   const response = await fetch(`${API_BASE_URL}/users`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(userData),
   });
   return handleApiResponse(response);
@@ -111,8 +120,8 @@ async function createUser(userData: Omit<UserProfile, 'id' | 'createdAt'>) {
 
 async function updateUser(userId: string, updatedFields: Partial<UserProfile>) {
   const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updatedFields),
   });
   return handleApiResponse(response);
@@ -141,10 +150,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const loadUserData = async () => {
-      const userId = localStorage.getItem('userId');
-      
+      const userId = localStorage.getItem("userId");
+
       if (!userId) {
-        dispatch({ type: 'LOGOUT' });
+        dispatch({ type: "LOGOUT" });
         return;
       }
 
@@ -153,7 +162,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         if (user) {
           const subscription = await getSubscription(user.id);
           dispatch({
-            type: 'LOGIN_SUCCESS',
+            type: "LOGIN_SUCCESS",
             payload: {
               isAuthenticated: true,
               loading: false,
@@ -161,12 +170,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
               name: user.name,
               profile: user,
               subscription,
-            }
+            },
           });
         }
       } catch (error) {
-        console.error('Failed to load user data:', error);
-        dispatch({ type: 'LOGOUT' });
+        console.error("Failed to load user data:", error);
+        dispatch({ type: "LOGOUT" });
       }
     };
 
@@ -183,7 +192,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 export function useUser() {
   const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
+    throw new Error("useUser must be used within a UserProvider");
   }
   return context;
-} 
+}

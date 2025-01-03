@@ -1,18 +1,27 @@
 import { parseISO } from "date-fns";
-import { Habit, HabitCompletionValue, HabitType, NumericHabitConfig, RatingHabitConfig } from "../types/habit";
+import {
+  Habit,
+  HabitCompletionValue,
+  HabitType,
+  NumericHabitConfig,
+  RatingHabitConfig,
+} from "../types/habit";
 import { GroupHabit } from "../contexts/GroupContext";
 
-export function isHabitCompletedForDay(habit: Habit | GroupHabit, value: HabitCompletionValue): boolean {
+export function isHabitCompletedForDay(
+  habit: Habit | GroupHabit,
+  value: HabitCompletionValue
+): boolean {
   if (habit.type === HabitType.BOOLEAN) {
     return Boolean(value);
   }
 
-  if (habit.type === HabitType.NUMERIC && typeof value === 'number') {
+  if (habit.type === HabitType.NUMERIC && typeof value === "number") {
     const config = habit.config as NumericHabitConfig;
     return config.higherIsBetter ? value >= config.goal : value <= config.goal;
   }
 
-  if (habit.type === HabitType.RATING && typeof value === 'number') {
+  if (habit.type === HabitType.RATING && typeof value === "number") {
     const config = habit.config as RatingHabitConfig;
     return value === config.goal;
   }
@@ -36,7 +45,9 @@ export function calculateStreak(habit: Habit): number {
   const mostRecent = completedDates[0];
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const diffFromToday = Math.floor((today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24));
+  const diffFromToday = Math.floor(
+    (today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
   // If most recent completion is older than yesterday, streak is 0
   if (diffFromToday > 1) {
@@ -49,8 +60,10 @@ export function calculateStreak(habit: Habit): number {
   for (let i = 1; i < completedDates.length; i++) {
     const currentDate = completedDates[i - 1];
     const nextDate = completedDates[i];
-    const diffInDays = Math.floor((currentDate.getTime() - nextDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+    const diffInDays = Math.floor(
+      (currentDate.getTime() - nextDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
     if (diffInDays === 1) {
       currentStreak++;
     } else {

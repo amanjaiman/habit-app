@@ -8,15 +8,14 @@ import {
   parseISO,
   startOfWeek,
   endOfWeek,
-} from 'date-fns';
-import { Habit } from '../../types/habit';
-import { useHabits } from '../../contexts/HabitContext';
-import { FireIcon } from '@heroicons/react/24/solid';
-import { useState } from 'react';
-import HabitCompletionControl from './HabitCompletionControl';
-import { HabitType } from '../../types/habit';
-import { getCompletionIcon } from '../../utils/habitUtils';
-import { isHabitCompletedForDay } from '../../utils/helpers';
+} from "date-fns";
+import { Habit } from "../../types/habit";
+import { useHabits } from "../../contexts/HabitContext";
+import { FireIcon } from "@heroicons/react/24/solid";
+import { useState } from "react";
+import HabitCompletionControl from "./HabitCompletionControl";
+import { HabitType } from "../../types/habit";
+import { isHabitCompletedForDay } from "../../utils/helpers";
 
 interface MonthViewProps {
   date: string; // ISO date string
@@ -25,13 +24,17 @@ interface MonthViewProps {
 
 // Add these utility functions
 const getMonthlyCompletionsForHabit = (habit: Habit, daysInMonth: Date[]) => {
-  return daysInMonth.filter(day => {
-    const dateStr = format(day, 'yyyy-MM-dd');
+  return daysInMonth.filter((day) => {
+    const dateStr = format(day, "yyyy-MM-dd");
     const completion = habit.completions[dateStr];
     if (habit.type === HabitType.BOOLEAN) {
       return completion === true;
     }
-    return typeof completion === 'number' && habit.config && completion >= habit.config.goal;
+    return (
+      typeof completion === "number" &&
+      habit.config &&
+      completion >= habit.config.goal
+    );
   }).length;
 };
 
@@ -43,11 +46,14 @@ const getMonthlyStreakForHabit = (habit: Habit, daysInMonth: Date[]) => {
   const sortedDays = [...daysInMonth].sort((a, b) => a.getTime() - b.getTime());
 
   sortedDays.forEach((day) => {
-    const dateStr = format(day, 'yyyy-MM-dd');
+    const dateStr = format(day, "yyyy-MM-dd");
     const completion = habit.completions[dateStr];
-    const isCompleted = habit.type === HabitType.BOOLEAN 
-      ? completion === true
-      : typeof completion === 'number' && habit.config && completion >= habit.config.goal;
+    const isCompleted =
+      habit.type === HabitType.BOOLEAN
+        ? completion === true
+        : typeof completion === "number" &&
+          habit.config &&
+          completion >= habit.config.goal;
 
     if (isCompleted) {
       currentStreak++;
@@ -63,18 +69,20 @@ const getMonthlyStreakForHabit = (habit: Habit, daysInMonth: Date[]) => {
 // Add new utility function for calculating average
 const getMonthlyAverageForHabit = (habit: Habit, daysInMonth: Date[]) => {
   if (habit.type === HabitType.BOOLEAN) return null;
-  
+
   const values = daysInMonth
-    .map(day => {
-      const dateStr = format(day, 'yyyy-MM-dd');
+    .map((day) => {
+      const dateStr = format(day, "yyyy-MM-dd");
       const completion = habit.completions[dateStr];
       // Only include numeric values
-      return typeof completion === 'number' ? completion : 0;
+      return typeof completion === "number" ? completion : 0;
     })
-    .filter(value => value > 0); // Only consider days with actual values
+    .filter((value) => value > 0); // Only consider days with actual values
 
   if (values.length === 0) return 0;
-  return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10;
+  return (
+    Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10
+  );
 };
 
 export default function MonthView({ date, habits }: MonthViewProps) {
@@ -91,15 +99,15 @@ export default function MonthView({ date, habits }: MonthViewProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const toggleHabit = async (habitId: string, date: Date) => {
-    const habit = habits.find(h => h.id === habitId);
+    const habit = habits.find((h) => h.id === habitId);
     if (!habit) return;
 
-    const dateStr = format(date, 'yyyy-MM-dd');
-    
+    const dateStr = format(date, "yyyy-MM-dd");
+
     if (habit.type === HabitType.BOOLEAN) {
       const isCompleted = habit.completions[dateStr] ?? false;
       dispatch({
-        type: 'TOGGLE_COMPLETION',
+        type: "TOGGLE_COMPLETION",
         payload: {
           habitId,
           date: dateStr,
@@ -115,9 +123,9 @@ export default function MonthView({ date, habits }: MonthViewProps) {
 
   const handleCompletionSubmit = (value: number) => {
     if (selectedHabit && selectedDate) {
-      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
       dispatch({
-        type: 'TOGGLE_COMPLETION',
+        type: "TOGGLE_COMPLETION",
         payload: {
           habitId: selectedHabit.id,
           date: dateStr,
@@ -131,55 +139,37 @@ export default function MonthView({ date, habits }: MonthViewProps) {
   };
 
   const getCompletionCount = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    return habits.filter(habit => {
+    const dateStr = format(date, "yyyy-MM-dd");
+    return habits.filter((habit) => {
       const value = habit.completions[dateStr];
       return isHabitCompletedForDay(habit, value);
     }).length;
   };
 
-  // Add new utility functions
-  const getStreakForHabit = (habit: Habit, date: Date) => {
-    let streak = 0;
-    let currentDate = date;
-    
-    while (habit.completions[format(currentDate, 'yyyy-MM-dd')]) {
-      streak++;
-      currentDate = new Date(currentDate.getTime() - 86400000); // Previous day
-    }
-    return streak;
-  };
-
-  const getMonthlyCompletionRate = (habit: Habit) => {
-    const daysInMonth = days.filter(day => isSameMonth(day, monthStart));
-    const completedDays = daysInMonth.filter(
-      day => habit.completions[format(day, 'yyyy-MM-dd')]
-    );
-    return (completedDays.length / daysInMonth.length) * 100;
-  };
-
   // Get days in current month only
-  const daysInMonth = days.filter(day => isSameMonth(day, monthStart));
+  const daysInMonth = days.filter((day) => isSameMonth(day, monthStart));
 
   // Add state for tracking hovered habit
   const [hoveredHabitId, setHoveredHabitId] = useState<string | null>(null);
   // Add memoized streak days
   const [streakDays, setStreakDays] = useState<Set<string>>(new Set());
-  
+
   // Memoize the streak calculation
   const calculateBestStreakDays = (habit: Habit) => {
-    const daysInMonth = days.filter(day => isSameMonth(day, monthStart));
+    const daysInMonth = days.filter((day) => isSameMonth(day, monthStart));
     let bestStreakStart: Date | null = null;
     let bestStreakLength = 0;
     let currentStreakStart: Date | null = null;
     let currentStreak = 0;
 
     // Pre-sort days once
-    const sortedDays = [...daysInMonth].sort((a, b) => a.getTime() - b.getTime());
+    const sortedDays = [...daysInMonth].sort(
+      (a, b) => a.getTime() - b.getTime()
+    );
     const streakDays = new Set<string>();
 
     for (const day of sortedDays) {
-      const dateStr = format(day, 'yyyy-MM-dd');
+      const dateStr = format(day, "yyyy-MM-dd");
       if (habit.completions[dateStr]) {
         if (currentStreak === 0) {
           currentStreakStart = day;
@@ -199,7 +189,7 @@ export default function MonthView({ date, habits }: MonthViewProps) {
       const startTime = bestStreakStart.getTime();
       for (let i = 0; i < bestStreakLength; i++) {
         const streakDay = new Date(startTime + i * 86400000);
-        streakDays.add(format(streakDay, 'yyyy-MM-dd'));
+        streakDays.add(format(streakDay, "yyyy-MM-dd"));
       }
     }
 
@@ -210,7 +200,7 @@ export default function MonthView({ date, habits }: MonthViewProps) {
   const handleHabitHover = (habitId: string | null) => {
     setHoveredHabitId(habitId);
     if (habitId) {
-      const habit = habits.find(h => h.id === habitId);
+      const habit = habits.find((h) => h.id === habitId);
       if (habit) {
         setStreakDays(calculateBestStreakDays(habit));
       }
@@ -221,22 +211,24 @@ export default function MonthView({ date, habits }: MonthViewProps) {
 
   // Simplified check for streak days
   const isPartOfBestStreak = (date: Date) => {
-    return streakDays.has(format(date, 'yyyy-MM-dd'));
+    return streakDays.has(format(date, "yyyy-MM-dd"));
   };
 
   return (
     <div className="flex flex-col space-y-4 p-3 sm:p-6">
       <div className="text-center">
-        <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                      dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
-          {format(monthStart, 'MMMM yyyy')}
+        <h2
+          className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                      dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+        >
+          {format(monthStart, "MMMM yyyy")}
         </h2>
       </div>
 
       <div className="flex flex-col-reverse sm:flex-col gap-y-8">
         {/* Calendar grid */}
         <div className="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden text-xs sm:text-sm">
-          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day) => (
+          {["M", "T", "W", "T", "F", "S", "S"].map((day) => (
             <div
               key={day}
               className="bg-gray-50 dark:bg-gray-800 p-1 sm:p-2 text-center font-medium text-gray-600 dark:text-gray-300"
@@ -246,7 +238,7 @@ export default function MonthView({ date, habits }: MonthViewProps) {
           ))}
 
           {days.map((day) => {
-            const dateStr = format(day, 'yyyy-MM-dd');
+            const dateStr = format(day, "yyyy-MM-dd");
             const isCurrentMonth = isSameMonth(day, monthStart);
             const isToday = isSameDay(day, new Date());
             const completionCount = getCompletionCount(day);
@@ -258,20 +250,30 @@ export default function MonthView({ date, habits }: MonthViewProps) {
                 key={day.toISOString()}
                 className={`min-h-[60px] sm:min-h-[100px] p-1 sm:p-2 relative group cursor-pointer 
                   hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200
-                  ${isCurrentMonth ? 'bg-gray-50 dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-900'}
-                  ${isToday ? 'ring-2 ring-blue-500 ring-inset' : ''}
-                  ${hoveredHabitId ? (streakHighlight ? 'opacity-100' : 'opacity-30') : 'opacity-100'}`}
+                  ${
+                    isCurrentMonth
+                      ? "bg-gray-50 dark:bg-gray-800"
+                      : "bg-gray-100 dark:bg-gray-900"
+                  }
+                  ${isToday ? "ring-2 ring-blue-500 ring-inset" : ""}
+                  ${
+                    hoveredHabitId
+                      ? streakHighlight
+                        ? "opacity-100"
+                        : "opacity-30"
+                      : "opacity-100"
+                  }`}
               >
                 <div className="flex flex-col h-full">
                   <div className="flex justify-between items-start">
                     <span
                       className={`text-sm ${
                         isCurrentMonth
-                          ? 'text-gray-900 dark:text-white'
-                          : 'text-gray-300 dark:text-gray-600'
+                          ? "text-gray-900 dark:text-white"
+                          : "text-gray-300 dark:text-gray-600"
                       }`}
                     >
-                      {format(day, 'd')}
+                      {format(day, "d")}
                     </span>
                     {completionRate === 100 && (
                       <span className="text-green-500 text-xs">🏆</span>
@@ -286,10 +288,10 @@ export default function MonthView({ date, habits }: MonthViewProps) {
                           <div
                             className={`h-full transition-all duration-300 ${
                               completionRate >= 75
-                                ? 'bg-green-500'
+                                ? "bg-green-500"
                                 : completionRate >= 50
-                                ? 'bg-yellow-500'
-                                : 'bg-gray-400'
+                                ? "bg-yellow-500"
+                                : "bg-gray-400"
                             }`}
                             style={{ width: `${completionRate}%` }}
                           />
@@ -305,14 +307,16 @@ export default function MonthView({ date, habits }: MonthViewProps) {
                             return bCompleted - aCompleted;
                           })
                           .map((habit) => {
-                            const dateStr = format(day, 'yyyy-MM-dd');
+                            const dateStr = format(day, "yyyy-MM-dd");
                             const value = habit.completions[dateStr];
-                            
+
                             return (
                               <span
                                 key={habit.id}
                                 className={`text-sm transition-transform hover:scale-110 ${
-                                  isHabitCompletedForDay(habit, value) ? 'opacity-100' : 'opacity-20'
+                                  isHabitCompletedForDay(habit, value)
+                                    ? "opacity-100"
+                                    : "opacity-20"
                                 }`}
                                 onClick={() => toggleHabit(habit.id, day)}
                               >
@@ -337,13 +341,19 @@ export default function MonthView({ date, habits }: MonthViewProps) {
             </h3>
             <div className="overflow-x-auto sm:overflow-x-visible">
               <div className="flex flex-nowrap sm:flex-wrap gap-x-3 gap-y-3 px-2 sm:px-0 pb-2 min-w-min sm:min-w-0">
-                {habits.map(habit => {
-                  const monthlyCompletions = getMonthlyCompletionsForHabit(habit, daysInMonth);
-                  const bestStreak = getMonthlyStreakForHabit(habit, daysInMonth);
+                {habits.map((habit) => {
+                  const monthlyCompletions = getMonthlyCompletionsForHabit(
+                    habit,
+                    daysInMonth
+                  );
+                  const bestStreak = getMonthlyStreakForHabit(
+                    habit,
+                    daysInMonth
+                  );
                   const average = getMonthlyAverageForHabit(habit, daysInMonth);
 
                   return (
-                    <div 
+                    <div
                       key={habit.id}
                       className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm py-1 pl-1.5 pr-2 rounded-xl 
                         bg-white/50 dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow whitespace-nowrap"
@@ -377,7 +387,7 @@ export default function MonthView({ date, habits }: MonthViewProps) {
           </div>
         )}
       </div>
-      
+
       <HabitCompletionControl
         isOpen={isCompletionDialogOpen}
         onClose={() => {
@@ -386,7 +396,11 @@ export default function MonthView({ date, habits }: MonthViewProps) {
           setSelectedDate(null);
         }}
         habit={selectedHabit}
-        value={selectedHabit && selectedDate ? (selectedHabit.completions[format(selectedDate, 'yyyy-MM-dd')] ?? 0) : 0}
+        value={
+          selectedHabit && selectedDate
+            ? selectedHabit.completions[format(selectedDate, "yyyy-MM-dd")] ?? 0
+            : 0
+        }
         onSubmit={handleCompletionSubmit}
       />
     </div>

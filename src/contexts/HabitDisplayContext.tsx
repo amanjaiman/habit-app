@@ -1,20 +1,26 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface HabitDisplayContextType {
   groupHabits: boolean;
   toggleGroupHabits: () => void;
 }
 
-const HabitDisplayContext = createContext<HabitDisplayContextType | undefined>(undefined);
+const HabitDisplayContext = createContext<HabitDisplayContextType | undefined>(
+  undefined
+);
 
-export function HabitDisplayProvider({ children }: { children: React.ReactNode }) {
+export function HabitDisplayProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [groupHabits, setGroupHabits] = useState(() => {
-    const stored = localStorage.getItem('habitGrouping');
+    const stored = localStorage.getItem("habitGrouping");
     return stored ? JSON.parse(stored) : false; // Default to false
   });
 
   useEffect(() => {
-    localStorage.setItem('habitGrouping', JSON.stringify(groupHabits));
+    localStorage.setItem("habitGrouping", JSON.stringify(groupHabits));
   }, [groupHabits]);
 
   const toggleGroupHabits = () => {
@@ -31,7 +37,9 @@ export function HabitDisplayProvider({ children }: { children: React.ReactNode }
 export function useHabitDisplay() {
   const context = useContext(HabitDisplayContext);
   if (context === undefined) {
-    throw new Error('useHabitDisplay must be used within a HabitDisplayProvider');
+    throw new Error(
+      "useHabitDisplay must be used within a HabitDisplayProvider"
+    );
   }
   return context;
-} 
+}

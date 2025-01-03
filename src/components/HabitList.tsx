@@ -1,15 +1,19 @@
-import { useState } from 'react';
-import { DEFAULT_CATEGORIES, Habit } from '../types/habit';
-import { habitApi, useHabits } from '../contexts/HabitContext';
-import HabitForm from './HabitForm';
-import { TrashIcon, PencilIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { useUser } from '../contexts/UserContext';
-import { GroupHabit } from '../contexts/GroupContext';
-import { Link } from 'react-router-dom';
+import { useState } from "react";
+import { Habit } from "../types/habit";
+import { habitApi, useHabits } from "../contexts/HabitContext";
+import HabitForm from "./HabitForm";
+import { TrashIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { useUser } from "../contexts/UserContext";
+import { GroupHabit } from "../contexts/GroupContext";
+import { Link } from "react-router-dom";
 
 interface HabitListProps {
   habits: Habit[];
-  groupHabits: (GroupHabit & { groupName: string; groupEmoji: string; groupId: string })[];
+  groupHabits: (GroupHabit & {
+    groupName: string;
+    groupEmoji: string;
+    groupId: string;
+  })[];
 }
 
 export default function HabitList({ habits, groupHabits }: HabitListProps) {
@@ -21,27 +25,31 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
   const handleDelete = async (id: string) => {
     if (!userState.profile?.id) return;
 
-    if (window.confirm('Are you sure you want to delete this habit?')) {
+    if (window.confirm("Are you sure you want to delete this habit?")) {
       try {
         await habitApi.delete(userState.profile.id, id);
-        dispatch({ type: 'REMOVE_HABIT', payload: id });
+        dispatch({ type: "REMOVE_HABIT", payload: id });
       } catch (error) {
-        console.error('Failed to delete habit:', error);
+        console.error("Failed to delete habit:", error);
       }
     }
   };
 
-  const habitCardClasses = "flex items-center p-4 rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/20 dark:border-gray-800/30 hover:shadow-xl hover:border-purple-200/30 dark:hover:border-purple-800/30";
+  const habitCardClasses =
+    "flex items-center p-4 rounded-xl transition-all duration-200 backdrop-blur-sm border border-white/20 dark:border-gray-800/30 hover:shadow-xl hover:border-purple-200/30 dark:hover:border-purple-800/30";
   const habitNameClasses = "font-medium text-gray-900 dark:text-white";
-  const groupInfoClasses = "text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-2";
+  const groupInfoClasses =
+    "text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-2";
 
   return (
     <>
       {/* Personal Habits Section */}
       <div className="space-y-6">
         <div className="flex items-center space-x-4 mb-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+          <h2
+            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+          >
             Your Habits
           </h2>
           <button
@@ -55,15 +63,10 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {habits.map((habit) => (
-            <div
-              key={habit.id}
-              className={habitCardClasses}
-            >
+            <div key={habit.id} className={habitCardClasses}>
               <div className="flex-1 flex items-center space-x-3">
                 <span className="text-xl">{habit.emoji}</span>
-                <span className={habitNameClasses}>
-                  {habit.name}
-                </span>
+                <span className={habitNameClasses}>{habit.name}</span>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -92,8 +95,10 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
       {/* Group Habits Section */}
       {groupHabits.length > 0 && (
         <div className="mt-12 space-y-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text">
+          <h2
+            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+          >
             Group Habits
           </h2>
 
@@ -106,11 +111,15 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
                     <span className="text-xl">{habit.emoji}</span>
-                    <span className={habitNameClasses}>
-                      {habit.name}
-                    </span>
+                    <span className={habitNameClasses}>{habit.name}</span>
                   </div>
-                  <Link to={`/groups/${habit.groupId}`} className={groupInfoClasses + " hover:text-purple-600 dark:hover:text-purple-400"}>
+                  <Link
+                    to={`/groups/${habit.groupId}`}
+                    className={
+                      groupInfoClasses +
+                      " hover:text-purple-600 dark:hover:text-purple-400"
+                    }
+                  >
                     <span>{habit.groupEmoji}</span>
                     <span>{habit.groupName}</span>
                   </Link>
@@ -128,10 +137,7 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
         habitToEdit={editingHabit ?? undefined}
       />
 
-      <HabitForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-      />
+      <HabitForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} />
     </>
   );
 }

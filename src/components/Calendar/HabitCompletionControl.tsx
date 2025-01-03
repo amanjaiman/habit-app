@@ -1,8 +1,13 @@
-import { Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { Habit, HabitType, NumericHabitConfig, RatingHabitConfig } from '../../types/habit';
-import { GroupHabit } from '../../contexts/GroupContext';
+import { Fragment } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  Habit,
+  HabitType,
+  NumericHabitConfig,
+  RatingHabitConfig,
+} from "../../types/habit";
+import { GroupHabit } from "../../contexts/GroupContext";
 
 interface HabitCompletionControlProps {
   isOpen: boolean;
@@ -12,17 +17,23 @@ interface HabitCompletionControlProps {
   onSubmit: (value: number) => void;
 }
 
-export default function HabitCompletionControl({ 
-  isOpen, 
-  onClose, 
-  habit, 
-  value, 
-  onSubmit 
+export default function HabitCompletionControl({
+  isOpen,
+  onClose,
+  habit,
+  value,
+  onSubmit,
 }: HabitCompletionControlProps) {
   if (!habit) return null;
 
-  const numericConfig = habit.type === HabitType.NUMERIC ? habit.config as NumericHabitConfig : undefined;
-  const ratingConfig = habit.type === HabitType.RATING ? habit.config as RatingHabitConfig : undefined;
+  const numericConfig =
+    habit.type === HabitType.NUMERIC
+      ? (habit.config as NumericHabitConfig)
+      : undefined;
+  const ratingConfig =
+    habit.type === HabitType.RATING
+      ? (habit.config as RatingHabitConfig)
+      : undefined;
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -59,13 +70,16 @@ export default function HabitCompletionControl({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel 
+              <Dialog.Panel
                 className="w-full max-w-md transform overflow-hidden rounded-2xl 
                           bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex justify-between items-start">
-                  <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-medium leading-6 text-gray-900 dark:text-white"
+                  >
                     {habit.name}
                   </Dialog.Title>
                   <button
@@ -87,9 +101,13 @@ export default function HabitCompletionControl({
                           id="numeric-input"
                           type="number"
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+                            if (e.key === "Enter") {
                               e.preventDefault();
-                              onSubmit(parseFloat((e.target as HTMLInputElement).value) || 0);
+                              onSubmit(
+                                parseFloat(
+                                  (e.target as HTMLInputElement).value
+                                ) || 0
+                              );
                               onClose();
                             }
                           }}
@@ -106,8 +124,10 @@ export default function HabitCompletionControl({
                         </div>
                         <button
                           onClick={() => {
-                            const input = document.getElementById('numeric-input') as HTMLInputElement;
-                            onSubmit(parseFloat(input?.value || '0') || 0);
+                            const input = document.getElementById(
+                              "numeric-input"
+                            ) as HTMLInputElement;
+                            onSubmit(parseFloat(input?.value || "0") || 0);
                             onClose();
                           }}
                           className="rounded-md bg-purple-600 px-3.5 py-2 text-sm font-semibold text-white 
@@ -135,9 +155,10 @@ export default function HabitCompletionControl({
                             onClick={() => onSubmit(rating)}
                             className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-medium
                                       transition-all duration-200
-                                      ${value === rating
-                                        ? 'bg-purple-600 text-white'
-                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-purple-100 dark:hover:bg-purple-900/30'
+                                      ${
+                                        value === rating
+                                          ? "bg-purple-600 text-white"
+                                          : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-purple-100 dark:hover:bg-purple-900/30"
                                       }`}
                           >
                             {rating}
@@ -154,4 +175,4 @@ export default function HabitCompletionControl({
       </Dialog>
     </Transition>
   );
-} 
+}

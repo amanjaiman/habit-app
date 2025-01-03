@@ -1,6 +1,12 @@
-import { createContext, useContext, useEffect, useReducer, ReactNode } from 'react';
-import { API_BASE_URL, handleApiResponse } from '../api/config';
-import { useUser } from './UserContext';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  ReactNode,
+} from "react";
+import { API_BASE_URL, handleApiResponse } from "../api/config";
+import { useUser } from "./UserContext";
 
 export interface KeyInsight {
   title: string;
@@ -72,40 +78,46 @@ interface AnalyticsState {
 }
 
 type AnalyticsAction =
-  | { type: 'SET_ANALYTICS'; payload: UserAnalytics }
-  | { type: 'SET_ERROR'; payload: string }
-  | { type: 'RESET_DATA' };
+  | { type: "SET_ANALYTICS"; payload: UserAnalytics }
+  | { type: "SET_ERROR"; payload: string }
+  | { type: "RESET_DATA" };
 
 const initialState: AnalyticsState = {
   analytics: {
-    id: '',
-    userId: '',
+    id: "",
+    userId: "",
     analytics: [],
   },
   loading: true,
   error: null,
 };
 
-const AnalyticsContext = createContext<{
-  state: AnalyticsState;
-  dispatch: React.Dispatch<AnalyticsAction>;
-} | undefined>(undefined);
+const AnalyticsContext = createContext<
+  | {
+      state: AnalyticsState;
+      dispatch: React.Dispatch<AnalyticsAction>;
+    }
+  | undefined
+>(undefined);
 
-function analyticsReducer(state: AnalyticsState, action: AnalyticsAction): AnalyticsState {
+function analyticsReducer(
+  state: AnalyticsState,
+  action: AnalyticsAction
+): AnalyticsState {
   switch (action.type) {
-    case 'SET_ANALYTICS':
+    case "SET_ANALYTICS":
       return {
         ...state,
         analytics: action.payload,
         loading: false,
       };
-    case 'SET_ERROR':
+    case "SET_ERROR":
       return {
         ...state,
         error: action.payload,
         loading: false,
       };
-    case 'RESET_DATA':
+    case "RESET_DATA":
       return initialState;
     default:
       return state;
@@ -124,29 +136,35 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Reset analytics when user logs out
     if (!userState.isAuthenticated) {
-      localStorage.removeItem('analytics');
-      localStorage.removeItem('analytics_expiration');
-      dispatch({ type: 'RESET_DATA' });
+      localStorage.removeItem("analytics");
+      localStorage.removeItem("analytics_expiration");
+      dispatch({ type: "RESET_DATA" });
       return;
     }
 
     // Load analytics when user is authenticated
     if (userState.isAuthenticated && userState.profile) {
       const loadAnalytics = async () => {
-        const savedAnalytics = localStorage.getItem('analytics');
-        const expiration = localStorage.getItem('analytics_expiration');
+        const savedAnalytics = localStorage.getItem("analytics");
+        const expiration = localStorage.getItem("analytics_expiration");
         const now = new Date().getTime();
 
         if (savedAnalytics && expiration && now < parseInt(expiration)) {
-          dispatch({ type: 'SET_ANALYTICS', payload: JSON.parse(savedAnalytics) });
+          dispatch({
+            type: "SET_ANALYTICS",
+            payload: JSON.parse(savedAnalytics),
+          });
         } else {
           try {
             const analytics = await fetchAnalytics(userState.profile!.id);
-            localStorage.setItem('analytics', JSON.stringify(analytics));
-            localStorage.setItem('analytics_expiration', (now + 3600000).toString());
-            dispatch({ type: 'SET_ANALYTICS', payload: analytics });
+            localStorage.setItem("analytics", JSON.stringify(analytics));
+            localStorage.setItem(
+              "analytics_expiration",
+              (now + 3600000).toString()
+            );
+            dispatch({ type: "SET_ANALYTICS", payload: analytics });
           } catch (error: any) {
-            dispatch({ type: 'SET_ERROR', payload: error.message });
+            dispatch({ type: "SET_ERROR", payload: error.message });
           }
         }
       };
@@ -165,7 +183,7 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
 export function useAnalytics() {
   const context = useContext(AnalyticsContext);
   if (context === undefined) {
-    throw new Error('useAnalytics must be used within an AnalyticsProvider');
+    throw new Error("useAnalytics must be used within an AnalyticsProvider");
   }
   return context;
-} 
+}

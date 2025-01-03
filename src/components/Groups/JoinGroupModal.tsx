@@ -1,35 +1,38 @@
-import { Fragment, useState } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
-import { useGroups, groupApi } from '../../contexts/GroupContext';
-import { useUser } from '../../contexts/UserContext';
+import { Fragment, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { useGroups, groupApi } from "../../contexts/GroupContext";
+import { useUser } from "../../contexts/UserContext";
 
 interface JoinGroupModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function JoinGroupModal({ isOpen, onClose }: JoinGroupModalProps) {
-  const [joinCode, setJoinCode] = useState('');
-  const [error, setError] = useState('');
+export default function JoinGroupModal({
+  isOpen,
+  onClose,
+}: JoinGroupModalProps) {
+  const [joinCode, setJoinCode] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { dispatch } = useGroups();
   const { state: userState } = useUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
       await groupApi.join(joinCode, userState.profile!.id);
       // Refresh groups list
       const updatedGroups = await groupApi.fetch(userState.profile!.id);
-      dispatch({ type: 'SET_GROUPS', payload: updatedGroups });
+      dispatch({ type: "SET_GROUPS", payload: updatedGroups });
       onClose();
       // Reset form
-      setJoinCode('');
+      setJoinCode("");
     } catch (error: any) {
-      setError(error.message || 'Failed to join group');
+      setError(error.message || "Failed to join group");
     } finally {
       setIsLoading(false);
     }
@@ -61,9 +64,11 @@ export default function JoinGroupModal({ isOpen, onClose }: JoinGroupModalProps)
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="relative w-full max-w-md transform overflow-visible rounded-3xl 
+              <Dialog.Panel
+                className="relative w-full max-w-md transform overflow-visible rounded-3xl 
                                      bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl p-8 text-left shadow-2xl transition-all
-                                     border border-white/20 dark:border-gray-800/30">
+                                     border border-white/20 dark:border-gray-800/30"
+              >
                 <Dialog.Title
                   as="h3"
                   className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
@@ -83,7 +88,9 @@ export default function JoinGroupModal({ isOpen, onClose }: JoinGroupModalProps)
                       type="text"
                       id="joinCode"
                       value={joinCode}
-                      onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                      onChange={(e) =>
+                        setJoinCode(e.target.value.toUpperCase())
+                      }
                       placeholder="Enter 6-digit code"
                       className="mt-2 block w-full px-3 py-2 rounded-lg border-0 bg-white/50 dark:bg-gray-800/50 
                                backdrop-blur-sm shadow-sm ring-1 ring-inset ring-gray-300/50 dark:ring-gray-700/50 
@@ -95,9 +102,7 @@ export default function JoinGroupModal({ isOpen, onClose }: JoinGroupModalProps)
                     </p>
                   </div>
 
-                  {error && (
-                    <p className="text-red-500 text-sm">{error}</p>
-                  )}
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
 
                   <div className="mt-6 flex justify-end space-x-3">
                     <button
@@ -116,7 +121,7 @@ export default function JoinGroupModal({ isOpen, onClose }: JoinGroupModalProps)
                                rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 
                                focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isLoading ? 'Joining...' : 'Join Group'}
+                      {isLoading ? "Joining..." : "Join Group"}
                     </button>
                   </div>
                 </form>
@@ -127,4 +132,4 @@ export default function JoinGroupModal({ isOpen, onClose }: JoinGroupModalProps)
       </Dialog>
     </Transition>
   );
-} 
+}

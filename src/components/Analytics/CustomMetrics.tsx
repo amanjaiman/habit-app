@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useHabits } from '../../contexts/HabitContext';
+import { useState } from "react";
+import { useHabits } from "../../contexts/HabitContext";
 
 interface CustomMetricsProps {
   habitId: string;
@@ -7,8 +7,8 @@ interface CustomMetricsProps {
 
 export default function CustomMetrics({ habitId }: CustomMetricsProps) {
   const { state } = useHabits();
-  const [customMetric, setCustomMetric] = useState<string>('');
-  const habit = state.habits.find(h => h.id === habitId);
+  const [customMetric, setCustomMetric] = useState<string>("");
+  const habit = state.habits.find((h) => h.id === habitId);
 
   if (!habit) return null;
 
@@ -39,4 +39,4 @@ export default function CustomMetrics({ habitId }: CustomMetricsProps) {
       </div>
     </div>
   );
-} 
+}

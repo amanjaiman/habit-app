@@ -1,4 +1,4 @@
-import { useUser } from '../contexts/UserContext';
+import { useUser } from "../contexts/UserContext";
 
 interface PremiumStatus {
   premium: boolean;
@@ -11,10 +11,10 @@ export function useUserPremium(): PremiumStatus {
   const { subscription } = state;
 
   return {
-    premium: subscription?.status === 'active',
-    nextBillingDate: subscription?.nextBillingDate 
-      ? new Date(subscription.nextBillingDate) 
+    premium: subscription?.status === "active",
+    nextBillingDate: subscription?.nextBillingDate
+      ? new Date(subscription.nextBillingDate)
       : null,
-      cancelAtPeriodEnd: subscription?.cancelAtPeriodEnd || false
+    cancelAtPeriodEnd: subscription?.cancelAtPeriodEnd || false,
   };
-} 
+}
