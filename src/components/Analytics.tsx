@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useHabits } from "../contexts/HabitContext";
 import HabitCorrelation from "./Analytics/HabitCorrelation";
 import AnalyticsSummary from "./Analytics/AnalyticsSummary";
@@ -22,12 +22,6 @@ export default function Analytics() {
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const { state } = useHabits();
   const { state: groupState } = useGroups();
-
-  useEffect(() => {
-    if (premium && selectedHabitId) {
-      setSelectedHabitId(null);
-    }
-  }, [premium, selectedHabitId]);
 
   // Combine personal and group habits
   const allHabits = useMemo(() => {
