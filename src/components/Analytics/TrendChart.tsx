@@ -20,6 +20,7 @@ import {
   RatingHabitConfig,
   HabitCompletionValue,
 } from "../../types/habit";
+import { useUser } from "../../contexts/UserContext";
 
 ChartJS.register(
   CategoryScale,
@@ -35,6 +36,11 @@ ChartJS.register(
 interface TrendChartProps {
   habitId: string;
 }
+
+const convertStringToDate = (date: string) => {
+  const [year, month, day] = date.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
 
 function calculateLinearRegression(points: { x: number; y: number }[]): {
   slope: number;
@@ -62,8 +68,9 @@ function calculateLinearRegression(points: { x: number; y: number }[]): {
 export default function TrendChart({ habitId }: TrendChartProps) {
   const { state } = useHabits();
   const { state: groupState } = useGroups();
-  const today = new Date(new Date().setHours(0, 0, 0, 0));
-  const endDate = today;
+  const { state: userState } = useUser();
+  const today = new Date();
+  const yesterday = subDays(today, 1);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -73,18 +80,20 @@ export default function TrendChart({ habitId }: TrendChartProps) {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  const personalHabit = state.habits.find((h) => h.id === habitId);
+  const groupHabit = groupState.groups
+    .flatMap((group) => group.habits)
+    .find((h) => h.id === habitId);
+
+  const habit = personalHabit || groupHabit;
+
   const chartData = useMemo(() => {
-    const personalHabit = state.habits.find((h) => h.id === habitId);
-    const groupHabit = groupState.groups
-      .flatMap((group) => group.habits)
-      .find((h) => h.id === habitId);
-
-    const habit = personalHabit || groupHabit;
-
     if (habitId === "all") {
       const earliestDate = Math.min(
         ...state.habits.flatMap((h) =>
-          Object.keys(h.completions).map((date) => new Date(date).getTime())
+          Object.keys(h.completions).map((date) =>
+            convertStringToDate(date).getTime()
+          )
         )
       );
 
@@ -93,12 +102,12 @@ export default function TrendChart({ habitId }: TrendChartProps) {
       }
 
       const startDate = new Date(
-        Math.max(earliestDate, subDays(endDate, isMobile ? 13 : 29).getTime())
+        Math.max(earliestDate, subDays(yesterday, isMobile ? 13 : 29).getTime())
       );
 
       const dateRange = eachDayOfInterval({
         start: startDate,
-        end: endDate,
+        end: yesterday,
       });
 
       const dailyRates = dateRange
@@ -162,8 +171,11 @@ export default function TrendChart({ habitId }: TrendChartProps) {
         if ("completions" in habit && Array.isArray(habit.completions)) {
           const completion = (habit.completions as GroupHabitCompletion[]).find(
             (c) => {
-              const completionDate = new Date(c.date);
-              return format(completionDate, "yyyy-MM-dd") === dateStr;
+              const completionDate = convertStringToDate(c.date);
+              return (
+                format(completionDate, "yyyy-MM-dd") === dateStr &&
+                c.userId === userState.profile?.id
+              );
             }
           );
           return completion?.completed;
@@ -184,12 +196,10 @@ export default function TrendChart({ habitId }: TrendChartProps) {
           case HabitType.NUMERIC:
           case HabitType.RATING:
             if (Array.isArray(habit.completions)) {
-              const value =
-                typeof completion === "boolean"
-                  ? completion
-                    ? 100
-                    : 0
-                  : Number(completion);
+              if (typeof completion === "boolean") {
+                return completion ? 100 : 0;
+              }
+              const value = Number(completion);
               return isNaN(value) ? 0 : value;
             } else {
               const value =
@@ -203,41 +213,37 @@ export default function TrendChart({ habitId }: TrendChartProps) {
         }
       };
 
-      const earliestDate = Math.min(
-        ...Object.entries(habit.completions)
-          .filter(([_, value]) => value)
-          .map(([date]) => new Date(date).getTime())
-      );
-
-      if (!isFinite(earliestDate)) {
-        return null;
-      }
-
       const startDate = new Date(
-        Math.max(earliestDate, subDays(endDate, isMobile ? 13 : 29).getTime())
+        Math.max(
+          Math.min(
+            ...(Array.isArray(habit.completions)
+              ? habit.completions
+                  .filter((c) => c.userId === userState.profile?.id)
+                  .map((c) => convertStringToDate(c.date).getTime())
+              : Object.keys(habit.completions).map((date) =>
+                  convertStringToDate(date).getTime()
+                ))
+          ),
+          subDays(yesterday, isMobile ? 13 : 29).getTime()
+        )
       );
 
       const dateRange = eachDayOfInterval({
         start: startDate,
-        end: endDate,
+        end: yesterday,
       });
 
-      const dailyCompletions = dateRange
-        .map((date) => {
-          const dateStr = format(date, "yyyy-MM-dd");
-          const value = getDailyValue(dateStr);
+      const dailyCompletions = dateRange.map((date) => {
+        const dateStr = format(date, "yyyy-MM-dd");
+        const value = getDailyValue(dateStr);
 
-          return {
-            date: format(date, "MMM dd"),
-            value,
-            rawValue: value,
-            hasData:
-              habit.type === HabitType.BOOLEAN
-                ? getCompletionValue(dateStr) !== undefined
-                : value > 0 || getCompletionValue(dateStr) !== undefined,
-          };
-        })
-        .filter((d) => d.hasData);
+        return {
+          date: format(date, "MMM dd"),
+          value,
+          rawValue: value,
+          hasData: true,
+        };
+      });
 
       const rollingAverage = dailyCompletions.map((_, index, arr) => {
         const start = Math.max(0, index - 6);
@@ -307,7 +313,14 @@ export default function TrendChart({ habitId }: TrendChartProps) {
     }
 
     return null;
-  }, [state.habits, groupState.groups, habitId, endDate, isMobile]);
+  }, [
+    habitId,
+    habit,
+    state.habits,
+    yesterday,
+    isMobile,
+    userState.profile?.id,
+  ]);
 
   const options = {
     responsive: true,
@@ -474,7 +487,9 @@ export default function TrendChart({ habitId }: TrendChartProps) {
         </h3>
         {habitId !== "all" && (
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-            Showing 7-day rolling average
+            {habit && habit.type !== HabitType.BOOLEAN
+              ? ``
+              : "Showing 7-day rolling average"}
           </p>
         )}
       </div>

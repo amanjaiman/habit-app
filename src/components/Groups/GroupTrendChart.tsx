@@ -33,6 +33,11 @@ ChartJS.register(
   Filler
 );
 
+const convertStringToDate = (date: string) => {
+  const [year, month, day] = date.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
 interface GroupTrendChartProps {
   group: Group;
 }
@@ -61,16 +66,12 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
     if (!habit) return null;
 
     const startDate = new Date(
-      Math.max(
-        Math.min(
-          ...group.habits.flatMap(
-            (habit) =>
-              habit.completions?.map((completion) =>
-                new Date(completion.date).getTime()
-              ) || []
-          )
-        ),
-        subDays(yesterday, isMobile ? 13 : 29).getTime()
+      Math.min(
+        ...(group.habits
+          .find((h) => h.id === selectedHabit)
+          ?.completions?.map((completion) =>
+            convertStringToDate(completion.date).getTime()
+          ) || [subDays(yesterday, isMobile ? 13 : 29).getTime()])
       )
     );
 
@@ -88,13 +89,7 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
           return completion.completed ? 100 : 0;
         case HabitType.NUMERIC:
         case HabitType.RATING:
-          const value =
-            typeof completion.completed === "boolean"
-              ? completion.completed
-                ? 100
-                : 0
-              : Number(completion.completed);
-          return isNaN(value) ? 0 : value;
+          return completion.completed;
         default:
           return 0;
       }
@@ -106,28 +101,32 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
       .map((member) => {
         const dailyValues = dateRange.map((date) => {
           const dateStr = format(date, "yyyy-MM-dd");
-          const completion = habit.completions?.find(
-            (c) =>
-              c.userId === member.id &&
-              format(new Date(c.date), "yyyy-MM-dd") === dateStr
-          );
 
-          return {
+          const completion = habit.completions?.find((c) => {
+            const completionDate = convertStringToDate(c.date);
+            const completionDateStr = format(completionDate, "yyyy-MM-dd");
+            return c.userId === member.id && completionDateStr === dateStr;
+          });
+
+          const result = {
             date: format(date, "MMM d"),
             value: getDailyValue(completion),
             hasData: completion !== undefined,
           };
+          return result;
         });
 
         // Calculate rolling average
         const rollingAverage = dailyValues.map((_, index, arr) => {
-          const start = Math.max(0, index - 6);
-          const subset = arr.slice(start, index + 1).filter((v) => v.hasData);
-
-          if (subset.length === 0) return 0;
-
-          const sum = subset.reduce((acc, val) => acc + val.value, 0);
-          return sum / subset.length;
+          if (habit.type === HabitType.BOOLEAN) {
+            const start = Math.max(0, index - 6);
+            const subset = arr.slice(start, index + 1).filter((v) => v.hasData);
+            if (subset.length === 0) return 0;
+            const sum = subset.reduce((acc, val) => acc + val.value, 0);
+            return sum / subset.length;
+          } else {
+            return arr[index].value;
+          }
         });
 
         // Generate color and return dataset
@@ -159,7 +158,8 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
                     const completion = habit.completions?.find(
                       (c) =>
                         c.userId === member.id &&
-                        format(new Date(c.date), "yyyy-MM-dd") === dateStr
+                        format(convertStringToDate(c.date), "yyyy-MM-dd") ===
+                          dateStr
                     );
                     return completion ? getDailyValue(completion) : null;
                   })

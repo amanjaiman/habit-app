@@ -35,7 +35,7 @@ import { KeyInsight, useAnalytics } from "../../contexts/AnalyticsContext";
 import TrendChart from "./TrendChart";
 import { useUser } from "../../contexts/UserContext";
 import { useUserPremium } from "../../hooks/useUserPremium";
-import { GroupHabit, GroupHabitCompletion } from "../../contexts/GroupContext";
+import { GroupHabit } from "../../contexts/GroupContext";
 import { useGroups } from "../../contexts/GroupContext";
 
 interface AnalyticsSummaryProps {
@@ -389,7 +389,7 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
         twoWeeks: getCompletionRate("twoWeeks"),
       };
 
-      const streakAnalysis = analyzeStreakPatterns(completionDates);
+      const streakAnalysis = analyzeStreakPatterns(completionDates, habit);
       const timeAnalysis = analyzeTimePatterns(completionDates);
 
       return {
@@ -899,47 +899,6 @@ function calculateMomentum(data: { rate: number; date: Date }[]): number {
   return ((recentAvg - oldAvg) / oldAvg) * 100;
 }
 
-function findOptimalDay(data: { rate: number; date: Date }[]) {
-  const dayScores = data.reduce((acc, { date, rate }) => {
-    const day = format(date, "EEEE");
-    const hour = date.getHours();
-    const timeOfDay =
-      hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
-
-    if (!acc[day]) acc[day] = { total: 0, count: 0, times: {} };
-    if (!acc[day].times[timeOfDay])
-      acc[day].times[timeOfDay] = { total: 0, count: 0 };
-
-    acc[day].total += rate;
-    acc[day].count++;
-    acc[day].times[timeOfDay].total += rate;
-    acc[day].times[timeOfDay].count++;
-
-    return acc;
-  }, {} as Record<string, { total: number; count: number; times: Record<string, { total: number; count: number }> }>);
-
-  let bestDay = "";
-  let bestTime = "";
-  let highestScore = 0;
-
-  Object.entries(dayScores).forEach(([day, data]) => {
-    Object.entries(data.times).forEach(([time, timeData]) => {
-      const score = timeData.total / timeData.count;
-      if (score > highestScore) {
-        highestScore = score;
-        bestDay = day;
-        bestTime = time;
-      }
-    });
-  });
-
-  return {
-    day: bestDay,
-    time: bestTime,
-    score: Math.round(highestScore),
-  };
-}
-
 function calculateHabitSynergy(habits: CombinedHabit[], userId?: string) {
   let complementaryCount = 0;
   let totalSynergy = 0;
@@ -1004,36 +963,6 @@ function calculatePairSynergy(
   return totalDays > 0 ? commonCompletions / totalDays : 0;
 }
 
-function analyzePeakPerformance(data: { rate: number; date: Date }[]) {
-  const timeBlocks = data.reduce((acc, { date, rate }) => {
-    const hour = date.getHours();
-    const timeOfDay =
-      hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
-
-    if (!acc[timeOfDay]) acc[timeOfDay] = { total: 0, count: 0 };
-    acc[timeOfDay].total += rate;
-    acc[timeOfDay].count++;
-
-    return acc;
-  }, {} as Record<string, { total: number; count: number }>);
-
-  let bestTime = "";
-  let highestRate = 0;
-
-  Object.entries(timeBlocks).forEach(([time, data]) => {
-    const avgRate = data.total / data.count;
-    if (avgRate > highestRate) {
-      highestRate = avgRate;
-      bestTime = time;
-    }
-  });
-
-  return {
-    timeOfDay: bestTime,
-    completionRate: Math.round(highestRate),
-  };
-}
-
 function calculateBurnoutRisk(data: { rate: number; date: Date }[]) {
   const recentData = data.slice(-14); // Last 2 weeks
   const stability = calculateVolatility(
@@ -1062,50 +991,97 @@ function calculateBurnoutRisk(data: { rate: number; date: Date }[]) {
   };
 }
 
-function analyzeHabitStacks(habits: CombinedHabit[]) {
-  const stackPatterns = findStackPatterns(habits);
-  const effectiveness = calculateStackEffectiveness(stackPatterns);
-
-  return {
-    description: `${
-      stackPatterns.length
-    } potential habit stacks identified with ${effectiveness.toFixed(
-      0
-    )}% effectiveness`,
-    score: effectiveness,
-    patterns: stackPatterns,
-  };
-}
-
-function findStackPatterns(habits: CombinedHabit[]) {
-  // Implementation to identify habits commonly completed together
-  return [];
-}
-
-function calculateStackEffectiveness(patterns: any[]) {
-  // Implementation to measure how well habit stacks are working
-  return 85;
-}
-
-function analyzeStreakPatterns(dates: Date[]) {
+function analyzeStreakPatterns(dates: Date[], habit?: CombinedHabit) {
+  // Sort dates chronologically
   const sortedDates = [...dates].sort((a, b) => a.getTime() - b.getTime());
+  if (sortedDates.length === 0) {
+    return {
+      currentStreak: 0,
+      bestStreak: 0,
+      recoveryRate: 0,
+      score: 0,
+      streakQuality: "No data yet",
+      recommendation: "Start your first streak!",
+    };
+  }
+
   let currentStreak = 0;
   let bestStreak = 0;
   let recoveryCount = 0;
   let breakCount = 0;
 
-  // Calculate streaks and recovery patterns
-  for (let i = 0; i < sortedDates.length; i++) {
-    const diff =
-      i > 0 ? differenceInDays(sortedDates[i], sortedDates[i - 1]) : 1;
-    if (diff === 1) {
+  // Helper function to check if a completion value meets the goal
+  const meetsGoal = (value: HabitCompletionValue | undefined): boolean => {
+    if (!habit) return Boolean(value); // For all habits view
+    if (value === undefined) return false; // Handle missing dates
+
+    if (typeof value !== "number") return Boolean(value);
+
+    switch (habit.type) {
+      case HabitType.NUMERIC:
+        const numConfig = habit.config as NumericHabitConfig;
+        return numConfig.higherIsBetter
+          ? value >= numConfig.goal
+          : value <= numConfig.goal;
+
+      case HabitType.RATING:
+        const ratingConfig = habit.config as RatingHabitConfig;
+        return value >= ratingConfig.goal;
+
+      default:
+        return Boolean(value);
+    }
+  };
+
+  // Get all dates between first and last completion, excluding today
+  const yesterday = subDays(new Date(), 1);
+  const dateRange = eachDayOfInterval({
+    start: sortedDates[0],
+    end: yesterday,
+  });
+
+  // Analyze each date in the range
+  for (let i = 0; i < dateRange.length; i++) {
+    const dateStr = format(dateRange[i], "yyyy-MM-dd");
+
+    // Get completion value for this date (or undefined for missing dates)
+    const completionValue = habit
+      ? isGroupHabit(habit)
+        ? habit.completions.find((c) => c.date === dateStr)?.completed
+        : habit.completions[dateStr]
+      : undefined;
+
+    if (meetsGoal(completionValue)) {
       currentStreak++;
       bestStreak = Math.max(bestStreak, currentStreak);
     } else {
-      if (diff === 2) recoveryCount++;
-      breakCount++;
-      currentStreak = 1;
+      if (currentStreak > 0) {
+        breakCount++;
+        if (i < dateRange.length - 1) {
+          const nextDayStr = format(dateRange[i + 1], "yyyy-MM-dd");
+          const nextDayCompletion = habit
+            ? isGroupHabit(habit)
+              ? habit.completions.find((c) => c.date === nextDayStr)?.completed
+              : habit.completions[nextDayStr]
+            : undefined;
+          if (meetsGoal(nextDayCompletion)) recoveryCount++;
+        }
+      }
+      currentStreak = 0;
     }
+  }
+
+  // Check today's completion separately to add to current streak if completed
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  const todayCompletion = habit
+    ? isGroupHabit(habit)
+      ? habit.completions.find((c) => c.date === todayStr)?.completed
+      : habit.completions[todayStr]
+    : undefined;
+
+  if (meetsGoal(todayCompletion)) {
+    currentStreak++;
+    bestStreak = Math.max(bestStreak, currentStreak);
   }
 
   const recoveryRate =
@@ -1169,113 +1145,6 @@ function analyzeTimePatterns(dates: Date[]) {
     score: Math.round((successRate + daySuccessRate) / 2),
     recommendation: getTimeRecommendation(optimalHour, successRate),
   };
-}
-
-function calculateAdaptabilityScore(habit: CombinedHabit, userId?: string) {
-  type CompletionEntry = GroupHabitCompletion | [string, HabitCompletionValue];
-
-  // Get entries based on habit type
-  const entries: CompletionEntry[] = isGroupHabit(habit)
-    ? habit.completions.filter((c) => c.userId === userId)
-    : Object.entries(habit.completions);
-
-  const recentCompletions = entries.slice(-30);
-  const olderCompletions = entries.slice(-60, -30);
-
-  // Calculate completion rates with proper type guards
-  const recentRate =
-    recentCompletions.length > 0
-      ? recentCompletions.filter(
-          (entry): entry is GroupHabitCompletion | [string, true] => {
-            if (isGroupHabit(habit)) {
-              return Boolean((entry as GroupHabitCompletion).completed);
-            }
-            return Boolean((entry as [string, HabitCompletionValue])[1]);
-          }
-        ).length / recentCompletions.length
-      : 0;
-
-  const olderRate =
-    olderCompletions.length > 0
-      ? olderCompletions.filter(
-          (entry): entry is GroupHabitCompletion | [string, true] => {
-            if (isGroupHabit(habit)) {
-              return Boolean((entry as GroupHabitCompletion).completed);
-            }
-            return Boolean((entry as [string, HabitCompletionValue])[1]);
-          }
-        ).length / olderCompletions.length
-      : 0;
-
-  const adaptabilityScore = Math.round(
-    (recentRate / Math.max(olderRate, 0.1)) * 100
-  );
-
-  let insight =
-    adaptabilityScore > 100 ? "Improving over time" : "Maintaining consistency";
-
-  if (habit.type === HabitType.NUMERIC) {
-    const config = habit.config as NumericHabitConfig;
-    const recentValues = recentCompletions
-      .map((entry) => {
-        if (isGroupHabit(habit)) {
-          const groupEntry = entry as GroupHabitCompletion;
-          return typeof groupEntry.completed === "number"
-            ? groupEntry.completed
-            : null;
-        }
-        const [_, value] = entry as [string, HabitCompletionValue];
-        return typeof value === "number" ? value : null;
-      })
-      .filter((value): value is number => value !== null);
-
-    if (recentValues.length > 0) {
-      const recentAvg =
-        recentValues.reduce((sum, v) => sum + v, 0) / recentValues.length;
-      if (recentAvg > config.goal) {
-        insight += ` (averaging ${recentAvg.toFixed(1)} ${config.unit})`;
-      }
-    }
-  }
-
-  return {
-    score: Math.min(100, adaptabilityScore),
-    insight,
-    recommendation: getAdaptabilityRecommendation(
-      adaptabilityScore,
-      habit.type
-    ),
-  };
-}
-
-function getAdaptabilityRecommendation(
-  score: number,
-  habitType: HabitType
-): string {
-  if (score > 100) {
-    if (habitType === HabitType.NUMERIC) {
-      return "Keep increasing your targets as you improve";
-    } else if (habitType === HabitType.RATING) {
-      return "Your consistency is improving - keep up the great work";
-    }
-    return "Your habit is getting stronger over time";
-  }
-
-  if (score > 80) {
-    if (habitType === HabitType.NUMERIC) {
-      return "Maintaining good progress towards your goals";
-    } else if (habitType === HabitType.RATING) {
-      return "Maintaining good quality in your practice";
-    }
-    return "Maintaining good consistency";
-  }
-
-  if (habitType === HabitType.NUMERIC) {
-    return "Try breaking down your goals into smaller steps";
-  } else if (habitType === HabitType.RATING) {
-    return "Focus on quality over quantity in your practice";
-  }
-  return "Focus on building more consistent patterns";
 }
 
 function getStreakRecommendation(
