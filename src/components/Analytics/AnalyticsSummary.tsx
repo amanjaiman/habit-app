@@ -23,6 +23,7 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import {
+  CombinedHabit,
   Habit,
   HabitCompletionValue,
   HabitType,
@@ -99,11 +100,6 @@ function getHabitCompletionForDay(
   }
   return habit.completions[dateStr];
 }
-
-// Add type union at the top
-type CombinedHabit =
-  | Habit
-  | (GroupHabit & { isGroupHabit: true; groupName: string; groupId: string });
 
 export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
   const { state: userState } = useUser();

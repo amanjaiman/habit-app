@@ -1,3 +1,5 @@
+import { GroupHabit } from "../contexts/GroupContext";
+
 export enum HabitType {
   BOOLEAN = "boolean",
   NUMERIC = "numeric",
@@ -54,6 +56,11 @@ export interface HabitCategory {
   color: string;
   darkColor: string;
 }
+
+// Add type union at the top
+export type CombinedHabit =
+  | Habit
+  | (GroupHabit & { isGroupHabit: true; groupName: string; groupId: string });
 
 // Predefined categories
 export const DEFAULT_CATEGORIES: HabitCategory[] = [

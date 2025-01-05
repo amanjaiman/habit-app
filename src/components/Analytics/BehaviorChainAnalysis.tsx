@@ -1,6 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useHabits } from "../../contexts/HabitContext";
-import { format, subDays, eachDayOfInterval, parseISO } from "date-fns";
 import {
   ArrowPathIcon,
   CheckCircleIcon,
@@ -12,21 +11,11 @@ import {
   SuccessFailurePattern,
   useAnalytics,
 } from "../../contexts/AnalyticsContext";
-import { isHabitCompletedForDay } from "../../utils/helpers";
-import { Habit } from "../../types/habit";
+import { CombinedHabit } from "../../types/habit";
+import { useGroups } from "../../contexts/GroupContext";
 
 interface BehaviorChainAnalysisProps {
   habitId: string;
-}
-
-interface ChainLink {
-  type: "success" | "failure";
-  date: string;
-  timeOfDay: string;
-  precedingHabits: string[];
-  followingHabits: string[];
-  dayOfWeek: string;
-  streak: number;
 }
 
 export default function BehaviorChainAnalysis({
@@ -34,54 +23,28 @@ export default function BehaviorChainAnalysis({
 }: BehaviorChainAnalysisProps) {
   const { state: analyticsState } = useAnalytics();
   const { state } = useHabits();
-  const [timeframe] = useState<"week" | "month" | "quarter">("week");
-  const habit = state.habits.find((h) => h.id === habitId);
+  const { state: groupState } = useGroups();
 
-  const chainAnalysis = useMemo(() => {
-    if (!habit) return null;
-
-    const today = new Date();
-    const startDate = subDays(
-      today,
-      timeframe === "week" ? 7 : timeframe === "month" ? 30 : 90
+  const allHabits = useMemo<CombinedHabit[]>(() => {
+    const personalHabits = state.habits;
+    const groupHabits = groupState.groups.flatMap((group) =>
+      group.habits.map(
+        (habit) =>
+          ({
+            ...habit,
+            isGroupHabit: true,
+            groupName: group.name,
+            groupId: group.id,
+          } as CombinedHabit)
+      )
     );
-    const days = eachDayOfInterval({ start: startDate, end: today });
+    return [...personalHabits, ...groupHabits];
+  }, [state.habits, groupState.groups]);
 
-    // Build behavior chains
-    const chains: ChainLink[] = days.map((date) => {
-      const dateStr = format(date, "yyyy-MM-dd");
-      const completionValue = habit.completions[dateStr];
-      const isCompleted =
-        completionValue !== undefined &&
-        isHabitCompletedForDay(habit, completionValue);
+  const habit = allHabits.find((h) => h.id === habitId);
 
-      // Find habits completed before and after
-      const precedingHabits = state.habits
-        .filter((h) => {
-          if (h.id === habitId) return false;
-          const value = h.completions[dateStr];
-          return value !== undefined && isHabitCompletedForDay(h, value);
-        })
-        .map((h) => h.name);
-
-      const followingHabits = state.habits
-        .filter((h) => {
-          if (h.id === habitId) return false;
-          const value = h.completions[dateStr];
-          return value !== undefined && isHabitCompletedForDay(h, value);
-        })
-        .map((h) => h.name);
-
-      return {
-        type: isCompleted ? "success" : "failure",
-        date: dateStr,
-        timeOfDay: getTimeOfDay(dateStr),
-        precedingHabits,
-        followingHabits,
-        dayOfWeek: format(date, "EEEE"),
-        streak: calculateStreak(date, habit),
-      };
-    });
+  const behaviorAnalysis = useMemo(() => {
+    if (!habit) return null;
 
     const patterns =
       analyticsState.analytics.analytics.at(-1)?.successFailurePatterns[
@@ -93,25 +56,18 @@ export default function BehaviorChainAnalysis({
       ]?.recommendations || [];
 
     return {
-      chains,
       patterns: {
         success: patterns.filter((p) => p.success),
         failure: patterns.filter((p) => !p.success),
       },
       recommendations: recommendations,
     };
-  }, [
-    analyticsState.analytics.analytics,
-    habit,
-    habitId,
-    state.habits,
-    timeframe,
-  ]);
+  }, [analyticsState.analytics.analytics, habit]);
 
   if (
-    !chainAnalysis?.patterns.success.length &&
-    !chainAnalysis?.patterns.failure.length &&
-    !chainAnalysis?.recommendations.length
+    !behaviorAnalysis?.patterns.success.length &&
+    !behaviorAnalysis?.patterns.failure.length &&
+    !behaviorAnalysis?.recommendations.length
   )
     return (
       <div
@@ -125,7 +81,7 @@ export default function BehaviorChainAnalysis({
   return (
     <div className="space-y-6">
       {/* Success Patterns */}
-      {chainAnalysis?.patterns.success.length > 0 && (
+      {behaviorAnalysis?.patterns.success.length > 0 && (
         <div
           className="backdrop-blur-sm bg-emerald-50/50 dark:bg-emerald-900/20 rounded-2xl p-8 
                       border border-emerald-200/20 dark:border-emerald-800/30 shadow-xl"
@@ -135,7 +91,7 @@ export default function BehaviorChainAnalysis({
             Success Patterns
           </h3>
           <div className="mt-6 space-y-4">
-            {chainAnalysis.patterns.success.map((pattern, index) => (
+            {behaviorAnalysis.patterns.success.map((pattern, index) => (
               <div
                 key={index}
                 className="bg-white/50 dark:bg-gray-700/70 rounded-xl p-6 
@@ -149,7 +105,7 @@ export default function BehaviorChainAnalysis({
       )}
 
       {/* Failure Patterns */}
-      {chainAnalysis?.patterns.failure.length > 0 && (
+      {behaviorAnalysis?.patterns.failure.length > 0 && (
         <div
           className="backdrop-blur-sm bg-rose-50/50 dark:bg-rose-900/20 rounded-2xl p-8 
                       border border-rose-200/20 dark:border-rose-800/30 shadow-xl"
@@ -159,7 +115,7 @@ export default function BehaviorChainAnalysis({
             Failure Patterns
           </h3>
           <div className="mt-6 space-y-4">
-            {chainAnalysis.patterns.failure.map((pattern, index) => (
+            {behaviorAnalysis.patterns.failure.map((pattern, index) => (
               <div
                 key={index}
                 className="bg-white/50 dark:bg-gray-700/70 rounded-xl p-6 
@@ -173,7 +129,7 @@ export default function BehaviorChainAnalysis({
       )}
 
       {/* Recommendations */}
-      {chainAnalysis?.recommendations.length > 0 && (
+      {behaviorAnalysis?.recommendations.length > 0 && (
         <div
           className="backdrop-blur-sm bg-purple-50/50 dark:bg-purple-900/20 rounded-2xl p-8 
                       border border-purple-200/20 dark:border-purple-800/30 shadow-xl"
@@ -183,7 +139,7 @@ export default function BehaviorChainAnalysis({
             Actionable Recommendations
           </h3>
           <div className="mt-6 space-y-4">
-            {chainAnalysis.recommendations.map((rec, index) => (
+            {behaviorAnalysis.recommendations.map((rec, index) => (
               <div
                 key={index}
                 className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-6 
@@ -230,31 +186,4 @@ function PatternCard({ pattern }: { pattern: SuccessFailurePattern }) {
       </div>
     </div>
   );
-}
-
-// Helper functions
-function getTimeOfDay(dateStr: string): string {
-  const hour = parseISO(dateStr).getHours();
-  if (hour < 12) return "morning";
-  if (hour < 17) return "afternoon";
-  return "evening";
-}
-
-function calculateStreak(date: Date, habit: Habit): number {
-  let streak = 0;
-  let currentDate = date;
-
-  while (true) {
-    const dateStr = format(currentDate, "yyyy-MM-dd");
-    const value = habit.completions[dateStr];
-
-    if (value === undefined || !isHabitCompletedForDay(habit, value)) {
-      break;
-    }
-
-    streak++;
-    currentDate = subDays(currentDate, 1);
-  }
-
-  return streak;
 }

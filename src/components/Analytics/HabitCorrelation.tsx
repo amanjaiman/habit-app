@@ -3,6 +3,8 @@ import { useHabits } from "../../contexts/HabitContext";
 import { format, eachDayOfInterval, subMonths } from "date-fns";
 import { LightBulbIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
 import { useAnalytics } from "../../contexts/AnalyticsContext";
+import { useGroups } from "../../contexts/GroupContext";
+import { CombinedHabit } from "../../types/habit";
 
 interface HabitCorrelationProps {
   habitId: string;
@@ -11,13 +13,30 @@ interface HabitCorrelationProps {
 export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
   const { state: analyticsState } = useAnalytics();
   const { state } = useHabits();
+  const { state: groupState } = useGroups();
   const today = new Date();
   const startDate = subMonths(today, 3);
+
+  const allHabits = useMemo<CombinedHabit[]>(() => {
+    const personalHabits = state.habits;
+    const groupHabits = groupState.groups.flatMap((group) =>
+      group.habits.map(
+        (habit) =>
+          ({
+            ...habit,
+            isGroupHabit: true,
+            groupName: group.name,
+            groupId: group.id,
+          } as CombinedHabit)
+      )
+    );
+    return [...personalHabits, ...groupHabits];
+  }, [state.habits, groupState.groups]);
 
   const correlationData = useMemo(() => {
     if (habitId === "all" || !habitId) return [];
 
-    const targetHabit = state.habits.find((h) => h.id === habitId);
+    const targetHabit = allHabits.find((h) => h.id === habitId);
     if (!targetHabit) return [];
 
     const latestAnalytics = analyticsState.analytics.analytics.at(-1);
@@ -32,7 +51,7 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
       latestAnalytics?.correlationInsights[targetHabit.name].correlations || [];
 
     const days = eachDayOfInterval({ start: startDate, end: today });
-    const otherHabits = state.habits.filter((h) => h.id !== habitId);
+    const otherHabits = allHabits.filter((h) => h.id !== habitId);
 
     return otherHabits
       .map((habit) => {
@@ -46,8 +65,14 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
 
         days.forEach((date) => {
           const dateStr = format(date, "yyyy-MM-dd");
-          const targetCompleted = targetHabit.completions[dateStr];
-          const habitCompleted = habit.completions[dateStr];
+          const targetCompleted =
+            "isGroupHabit" in targetHabit
+              ? targetHabit.completions.some((c) => c.date === dateStr)
+              : targetHabit.completions[dateStr];
+          const habitCompleted =
+            "isGroupHabit" in habit
+              ? habit.completions.some((c) => c.date === dateStr)
+              : habit.completions[dateStr];
 
           if (targetCompleted && habitCompleted) {
             sameDay++;
@@ -96,7 +121,7 @@ export default function HabitCorrelation({ habitId }: HabitCorrelationProps) {
       );
   }, [
     habitId,
-    state.habits,
+    allHabits,
     analyticsState.analytics.analytics,
     startDate,
     today,
