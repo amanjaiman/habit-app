@@ -19,7 +19,7 @@ export default function Landing() {
   const weekViewScreenshot =
     theme === "light"
       ? "https://habitsense.blob.core.windows.net/images/app_hero.2a80d9f25a76a9cee376.png"
-      : "https://habitsense.blob.core.windows.net/images/app_hero.2a80d9f25a76a9cee376.png";
+      : "https://habitsense.blob.core.windows.net/images/app_hero.b4dd264653d1ed13a972.png";
 
   const advancedAggAnalyticsScreenshot =
     theme === "light"
