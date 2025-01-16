@@ -17,9 +17,9 @@ export function getCompletionIcon(
 ) {
   if (habit.type === HabitType.BOOLEAN) {
     return value ? (
-      <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
+      <CheckCircleSolidIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-500 dark:text-green-400" />
     ) : (
-      <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+      <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-300 dark:text-gray-600" />
     );
   }
 
@@ -33,11 +33,11 @@ export function getCompletionIcon(
     return (
       <div className="flex flex-col items-center gap-0.5">
         {isGoalReached ? (
-          <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
+          <CheckCircleSolidIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-500 dark:text-green-400" />
         ) : progress >= 70 ? (
-          <MinusCircleIcon className="w-6 h-6 text-yellow-500 dark:text-yellow-400" />
+          <MinusCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 dark:text-yellow-400" />
         ) : (
-          <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+          <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-300 dark:text-gray-600" />
         )}
         {showValue && (
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
@@ -55,11 +55,11 @@ export function getCompletionIcon(
     return (
       <div className="flex flex-col items-center gap-0.5">
         {value === goal ? (
-          <CheckCircleSolidIcon className="w-6 h-6 text-green-500 dark:text-green-400" />
+          <CheckCircleSolidIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-500 dark:text-green-400" />
         ) : value === goal + 1 || value === goal - 1 ? (
-          <MinusCircleIcon className="w-6 h-6 text-yellow-500 dark:text-yellow-400" />
+          <MinusCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-500 dark:text-yellow-400" />
         ) : (
-          <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+          <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-300 dark:text-gray-600" />
         )}
         {showValue && (
           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
@@ -71,6 +71,6 @@ export function getCompletionIcon(
   }
 
   return (
-    <CheckCircleIcon className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+    <CheckCircleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-300 dark:text-gray-600" />
   );
 }

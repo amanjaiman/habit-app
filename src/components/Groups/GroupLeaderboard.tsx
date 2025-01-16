@@ -1,6 +1,7 @@
 import { Group } from "../../contexts/GroupContext";
 import { motion } from "framer-motion";
 import { calculateMemberStreak } from "../../utils/streakCalculations";
+import { isHabitCompletedForDay } from "../../utils/helpers";
 
 interface GroupLeaderboardProps {
   group: Group;
@@ -30,7 +31,8 @@ export default function GroupLeaderboard({ group }: GroupLeaderboardProps) {
           (habit.completions?.filter(
             (completion) =>
               completion.userId === member.id &&
-              new Date(completion.date) >= thirtyDaysAgo
+              new Date(completion.date) >= thirtyDaysAgo &&
+              isHabitCompletedForDay(habit, completion.completed)
           ).length || 0)
         );
       }, 0);
@@ -43,7 +45,9 @@ export default function GroupLeaderboard({ group }: GroupLeaderboardProps) {
         return (
           acc +
           (habit.completions?.filter(
-            (completion) => completion.userId === member.id
+            (completion) =>
+              completion.userId === member.id &&
+              isHabitCompletedForDay(habit, completion.completed)
           ).length || 0)
         );
       }, 0);

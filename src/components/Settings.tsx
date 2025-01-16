@@ -249,7 +249,7 @@ export default function Settings() {
     <main className="max-w-7xl mx-auto py-8 px-6 sm:px-8 lg:px-12">
       <div className="max-w-2xl mx-auto space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-purple-900 dark:text-white">
             Settings
           </h1>
           <p className="mt-2 text-gray-600 dark:text-gray-300">

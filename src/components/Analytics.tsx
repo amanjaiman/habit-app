@@ -55,19 +55,19 @@ export default function Analytics() {
 
   return (
     <main className="max-w-7xl mx-auto py-6 px-4 sm:px-8 lg:px-12">
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         {/* Header */}
         <div
-          className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                      border border-white/20 dark:border-gray-800/30 shadow-xl"
+          className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-4 sm:p-8 
+                      border border-white/20 dark:border-gray-800/30 shadow-xl flex sm:block flex-col items-center"
         >
           <h1
-            className="sm:text-start text-4xl leading-[3rem] font-black bg-gradient-to-r from-purple-600 to-pink-600 
+            className="sm:text-start text-3xl sm:text-4xl leading-[3rem] font-black bg-gradient-to-r from-purple-600 to-pink-600 
                         dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
           >
             Analytics
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">
+          <p className="hidden sm:block mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">
             Gain insights into your habit-building journey
           </p>
         </div>

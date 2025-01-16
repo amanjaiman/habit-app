@@ -279,7 +279,7 @@ export default function DayView({ date, habits }: DayViewProps) {
     <div className="space-y-6 p-8">
       <div className="flex justify-between items-center">
         <h3
-          className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+          className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
         >
           {formattedDate}
@@ -290,7 +290,7 @@ export default function DayView({ date, habits }: DayViewProps) {
               className="flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/30 
                            px-2 py-0.5 rounded-full"
             >
-              <SparklesIcon className="w-4 h-4 text-yellow-400" />
+              <SparklesIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-yellow-400" />
               <span className="text-xs text-yellow-700 dark:text-yellow-400 font-medium">
                 All Complete!
               </span>
@@ -300,10 +300,11 @@ export default function DayView({ date, habits }: DayViewProps) {
             className="text-xs font-medium text-gray-600 dark:text-gray-300 
                           bg-white/50 dark:bg-gray-800/50 px-3 py-1 rounded-full"
           >
-            {completedCount} of {habits.length} completed
+            {completedCount} of {habits.length} <span className="hidden sm:inline">completed</span>
           </span>
         </div>
       </div>
+
 
       <div className="space-y-6">
         {groupHabits ? (
@@ -333,7 +334,7 @@ export default function DayView({ date, habits }: DayViewProps) {
                     }}
                   />
                   <h3
-                    className="text-lg font-semibold"
+                    className="text-base sm:text-lg font-semibold"
                     style={{
                       color:
                         theme === "dark" ? category.darkColor : category.color,
@@ -369,10 +370,10 @@ export default function DayView({ date, habits }: DayViewProps) {
                           <div className="p-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-3">
-                                <span className="text-2xl">{habit.emoji}</span>
+                                <span className="text-xl sm:text-2xl">{habit.emoji}</span>
                                 <div>
                                   <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-2">
-                                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+                                    <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
                                       {habit.name}
                                     </h4>
                                     {streak > 0 && (

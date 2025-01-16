@@ -461,21 +461,20 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
   return (
     <div className="space-y-8">
       {/* Primary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="overflow-x-auto sm:overflow-x-visible flex sm:grid sm:grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {stats.primaryStats.map((stat, index) => (
           <div
             key={index}
-            className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-6 
-                   border border-white/20 dark:border-gray-800/30 shadow-xl"
+            className="backdrop-blur-sm bg-white/60 dark:bg-gray-800/50 rounded-xl border border-white/20 dark:border-gray-800/30 rounded-2xl p-4 sm:p-6 min-w-[280px] sm:min-w-0 sm:shadow-lg"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <stat.icon className="w-8 h-8 text-purple-600 dark:text-purple-400" />
-                <h3 className="ml-3 text-lg font-medium text-gray-900 dark:text-white">
+                <stat.icon className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 dark:text-purple-400" />
+                <h3 className="ml-2 sm:ml-3 text-base sm:text-lg font-medium text-gray-900 dark:text-white">
                   {stat.name}
                 </h3>
                 {stat.isPeriodToggleable && (
-                  <div className="flex gap-1 ml-3">
+                  <div className="flex gap-1 ml-2 sm:ml-3">
                     <button
                       onClick={() =>
                         setSelectedPeriods((prev) => ({
@@ -483,14 +482,14 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                           [index]: "twoWeeks",
                         }))
                       }
-                      className={`p-1.5 rounded-lg transition-all ${
+                      className={`p-1 sm:p-1.5 rounded-lg transition-all ${
                         (selectedPeriods[index] || "lifetime") === "twoWeeks"
                           ? "bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400"
                           : "hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300"
                       }`}
                       title="Last two weeks"
                     >
-                      <ClockIcon className="w-3.5 h-3.5" />
+                      <ClockIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </button>
                     <button
                       onClick={() =>
@@ -499,14 +498,14 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                           [index]: "year",
                         }))
                       }
-                      className={`p-1.5 rounded-lg transition-all ${
+                      className={`p-1 sm:p-1.5 rounded-lg transition-all ${
                         (selectedPeriods[index] || "lifetime") === "year"
                           ? "bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400"
                           : "hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300"
                       }`}
                       title="This year"
                     >
-                      <CalendarIcon className="w-3.5 h-3.5" />
+                      <CalendarIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </button>
                     <button
                       onClick={() =>
@@ -515,21 +514,21 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                           [index]: "lifetime",
                         }))
                       }
-                      className={`p-1.5 rounded-lg transition-all ${
+                      className={`p-1 sm:p-1.5 rounded-lg transition-all ${
                         (selectedPeriods[index] || "lifetime") === "lifetime"
                           ? "bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400"
                           : "hover:bg-white/50 dark:hover:bg-gray-800/50 text-gray-600 dark:text-gray-300"
                       }`}
                       title="Lifetime"
                     >
-                      <SunIcon className="w-3.5 h-3.5" />
+                      <SunIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     </button>
                   </div>
                 )}
               </div>
               {stat.trend && (
                 <span
-                  className={`text-sm font-medium px-2 py-1 rounded-full ${
+                  className={`text-xs sm:text-sm font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full ${
                     stat.trend === "up"
                       ? "bg-green-100/50 dark:bg-green-900/30 text-green-600 dark:text-green-400"
                       : "bg-rose-100/50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400"
@@ -539,10 +538,10 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                 </span>
               )}
             </div>
-            <div className="mt-4">
+            <div className="mt-2 sm:mt-4">
               {stat.isPeriodToggleable ? (
                 <p
-                  className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                  className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
                               dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
                 >
                   {stat.periods?.[
@@ -552,19 +551,19 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                 </p>
               ) : (
                 <p
-                  className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                  className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
                            dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
                 >
                   {stat.value}
                 </p>
               )}
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+              <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                 {stat.isPeriodToggleable
                   ? stat.periods?.[selectedPeriods[index] || "lifetime"].label
                   : stat.description}
               </p>
               {stat.details && (
-                <p className="mt-2 text-sm text-purple-600 dark:text-purple-400 font-medium">
+                <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-purple-600 dark:text-purple-400 font-medium">
                   {stat.details}
                 </p>
               )}
@@ -577,16 +576,14 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
         {/* Secondary Stats - add premium gate */}
         <div className="relative">
           <div
-            className={`grid grid-cols-1 md:grid-cols-3 gap-6 ${
+            className={`flex sm:grid sm:grid-cols-1 md:grid-cols-3 overflow-x-auto sm:overflow-x-visible gap-4 sm:gap-6 ${
               !premium && "blur-sm pointer-events-none"
             }`}
           >
             {stats.secondaryStats.map((stat, index) => (
               <div
                 key={index}
-                className={`backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-xl p-6 
-                        border border-white/20 dark:border-gray-800/30 shadow-lg 
-                        hover:shadow-xl transition-all duration-200
+                className={`backdrop-blur-sm bg-white/60 dark:bg-gray-800/50 rounded-xl p-3 sm:p-5 border border-white/20 dark:border-gray-800/30 rounded-xl sm:shadow-lg min-w-[280px] sm:min-w-0
                         ${
                           stat.alert
                             ? "border-l-4 border-rose-500 dark:border-rose-400"
@@ -594,18 +591,18 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
                         }`}
               >
                 <div className="flex items-center">
-                  <stat.icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                  <span className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-300" />
+                  <span className="ml-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
                     {stat.name}
                   </span>
                 </div>
                 <p
-                  className="mt-2 text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 
+                  className="mt-1.5 sm:mt-2 text-base sm:text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 
                           dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
                 >
                   {stat.value}
                 </p>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
                   {stat.description}
                 </p>
               </div>
@@ -617,7 +614,7 @@ export default function AnalyticsSummary({ habitId }: AnalyticsSummaryProps) {
         {stats.insights.length > 0 && (
           <div className="relative">
             <div
-              className={`backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+              className={`backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-5 sm:p-8 
                             border border-white/20 dark:border-gray-800/30 shadow-xl
                             ${!premium && "blur-sm pointer-events-none"}`}
             >

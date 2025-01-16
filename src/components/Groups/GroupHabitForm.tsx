@@ -432,11 +432,11 @@ export default function GroupHabitForm({
                                    dark:border-gray-600 rounded-md shadow-sm text-sm font-medium 
                                    text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 
                                    hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none 
-                                   focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                   focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                         >
                           {formData.emoji}
                         </Popover.Button>
-                        <Popover.Panel className="absolute z-[100] mt-2">
+                        <Popover.Panel className="absolute z-[100] mt-2 right-0 transform translate-x-[85px]">
                           <EmojiPicker
                             onEmojiClick={(emojiData: EmojiClickData) =>
                               setFormData({
@@ -445,9 +445,7 @@ export default function GroupHabitForm({
                               })
                             }
                             theme={
-                              document.documentElement.classList.contains(
-                                "dark"
-                              )
+                              document.documentElement.classList.contains("dark")
                                 ? Theme.DARK
                                 : Theme.LIGHT
                             }
@@ -465,7 +463,7 @@ export default function GroupHabitForm({
                           className="block w-10 h-10 rounded-lg shadow-sm cursor-pointer"
                           style={{ backgroundColor: formData.color }}
                         />
-                        <Popover.Panel className="absolute z-[100] mt-2">
+                        <Popover.Panel className="absolute z-[100] mt-2 right-0 transform">
                           <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
                             <HexColorPicker
                               color={formData.color}

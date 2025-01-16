@@ -191,10 +191,11 @@ export default function Calendar() {
           >
             <ChevronLeftIcon className="w-5 h-5" />
           </button>
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white px-4">
+          <h2 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white px-2 sm:px-4">
             {getViewTitle()}
           </h2>
           <button
+
             onClick={() => navigate("next")}
             className="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 
                      text-gray-600 dark:text-gray-300 transition-all duration-200"

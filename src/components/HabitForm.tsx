@@ -423,18 +423,15 @@ export default function HabitForm({
                                    dark:border-gray-600 rounded-md shadow-sm text-sm font-medium 
                                    text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 
                                    hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none 
-                                   focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                   focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                         >
-                          {formData.emoji ? formData.emoji : "📝"}
+                          {formData.emoji}
                         </PopoverButton>
-
-                        <PopoverPanel className="absolute z-[100] mt-2">
+                        <PopoverPanel className="absolute z-[100] mt-2 right-0 transform translate-x-[85px]">
                           <EmojiPicker
                             onEmojiClick={onEmojiClick}
                             theme={
-                              document.documentElement.classList.contains(
-                                "dark"
-                              )
+                              document.documentElement.classList.contains("dark")
                                 ? Theme.DARK
                                 : Theme.LIGHT
                             }
@@ -448,17 +445,17 @@ export default function HabitForm({
                         Color
                       </label>
                       <div className="relative mt-2">
-                        <Popover className="relative">
+                        <Popover className="relative mt-2">
                           <PopoverButton
-                            className="block w-10 h-10 rounded-lg cursor-pointer"
+                            className="block w-10 h-10 rounded-lg shadow-sm cursor-pointer"
                             style={{ backgroundColor: formData.color }}
                           />
-                          <PopoverPanel className="absolute z-[100] mt-2">
+                          <PopoverPanel className="absolute z-[100] mt-2 right-0 transform">
                             <div className="p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
                               <HexColorPicker
                                 color={formData.color}
                                 onChange={(color) =>
-                                  setFormData({ ...formData, color: color })
+                                  setFormData({ ...formData, color })
                                 }
                               />
                             </div>

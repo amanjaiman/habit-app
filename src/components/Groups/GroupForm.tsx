@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog, PopoverButton, PopoverPanel, Transition } from "@headlessui/react";
 import { useGroups, groupApi } from "../../contexts/GroupContext";
 import { useUser } from "../../contexts/UserContext";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
@@ -93,7 +93,7 @@ export default function GroupForm({ isOpen, onClose }: GroupFormProps) {
                         Emoji
                       </label>
                       <Popover className="relative mt-2">
-                        <Popover.Button
+                        <PopoverButton
                           className="flex items-center justify-center w-10 h-10 border border-gray-300 
                                    dark:border-gray-600 rounded-md shadow-sm text-sm font-medium 
                                    text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 
@@ -101,9 +101,9 @@ export default function GroupForm({ isOpen, onClose }: GroupFormProps) {
                                    focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                         >
                           {emoji}
-                        </Popover.Button>
+                        </PopoverButton>
 
-                        <Popover.Panel className="absolute z-[100] mt-2">
+                        <PopoverPanel className="absolute z-[100] mt-2 translate-x-[-29px]">
                           <EmojiPicker
                             onEmojiClick={onEmojiClick}
                             theme={
@@ -114,7 +114,7 @@ export default function GroupForm({ isOpen, onClose }: GroupFormProps) {
                                 : Theme.LIGHT
                             }
                           />
-                        </Popover.Panel>
+                        </PopoverPanel>
                       </Popover>
                     </div>
 

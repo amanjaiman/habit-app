@@ -37,9 +37,9 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
 
   const habitCardClasses =
     "rounded-xl transition-all duration-200 overflow-hidden border border-white/20 dark:border-gray-800/30 bg-white/30 dark:bg-gray-900/30";
-  const habitNameClasses = "font-medium text-gray-900 dark:text-white";
+  const habitNameClasses = "text-sm sm:text-base font-medium text-gray-900 dark:text-white";
   const groupInfoClasses =
-    "text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-2";
+    "ml-1.5 text-sm text-gray-600 dark:text-gray-400 flex items-center space-x-2";
 
   return (
     <>
@@ -66,7 +66,7 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
             <div key={habit.id} className={habitCardClasses}>
               <div className="p-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-2">
                     <span className="text-2xl">{habit.emoji}</span>
                     <span className={habitNameClasses}>{habit.name}</span>
                   </div>
@@ -115,7 +115,7 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
                 <div className="p-3">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
+                      <div className="flex items-center gap-1.5 mb-2">
                         <span className="text-2xl">{habit.emoji}</span>
                         <span className={habitNameClasses}>{habit.name}</span>
                       </div>

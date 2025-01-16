@@ -475,7 +475,7 @@ export default function TrendChart({ habitId }: TrendChartProps) {
 
   return (
     <div
-      className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+      className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-5 sm:p-8 
                     border border-white/20 dark:border-gray-800/30 shadow-xl w-full"
     >
       <div className="mb-6">

@@ -24,3 +24,11 @@ yarn-error.log*
 
 # Local Netlify folder
 .netlify
+
+# Android
+/android
+/ios
+/dist
+
+# Capacitor
+capacitor.config.json

@@ -296,7 +296,7 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
               case HabitType.NUMERIC:
                 const numericConfig =
                   chartData.habitConfig as NumericHabitConfig;
-                return `${value} ${numericConfig.unit || ""}`;
+                return isMobile ? value : `${value} ${numericConfig.unit || ""}`;
               case HabitType.RATING:
                 return value;
               default:
@@ -344,10 +344,10 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <Listbox value={selectedHabit} onChange={setSelectedHabit}>
-          <div className="relative w-72">
-            <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white py-2 pl-3 pr-10 text-left border border-gray-200 dark:border-gray-700">
+          <div className="relative w-full sm:w-72">
+            <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white py-2.5 pl-3 pr-10 text-left border border-gray-200 dark:border-gray-700">
               <span className="block truncate">
                 {group.habits.find((h) => h.id === selectedHabit)?.name}
               </span>
@@ -364,7 +364,7 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
                   key={habit.id}
                   value={habit.id}
                   className={({ active }) =>
-                    `relative cursor-default select-none py-2 pl-3 pr-9 ${
+                    `relative cursor-default select-none py-2.5 pl-3 pr-9 ${
                       active
                         ? "bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-100"
                         : "text-gray-900 dark:text-gray-100"
@@ -386,10 +386,10 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
           </div>
         </Listbox>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 -mx-1 px-1 pb-1 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setShowGroupAverage(!showGroupAverage)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 ${
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
               showGroupAverage
                 ? "bg-purple-600 text-white shadow-md shadow-purple-200 dark:shadow-purple-900/20"
                 : "bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300"
@@ -407,7 +407,7 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
                     : [...prev, member.id]
                 );
               }}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 ${
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
                 selectedMembers.includes(member.id)
                   ? "bg-purple-600 text-white shadow-md shadow-purple-200 dark:shadow-purple-900/20"
                   : "bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300"
@@ -421,34 +421,76 @@ export default function GroupTrendChart({ group }: GroupTrendChartProps) {
 
       {selectedHabit ? (
         <div
-          className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+          className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-4 sm:p-8 
                         border border-white/20 dark:border-gray-800/30 shadow-xl"
         >
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <h3
-              className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+              className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
                            dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
             >
               Group Progress Trends
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1">
               Showing 7-day rolling average
             </p>
           </div>
           <div
-            className="h-[400px] w-full bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 
+            className="h-[300px] sm:h-[400px] w-full bg-white/50 dark:bg-gray-800/50 rounded-xl p-2 sm:p-4 
                           transition-all duration-200 hover:shadow-lg"
           >
             {chartData && (
               <Line
                 data={chartData as ChartData<"line">}
-                options={options as any}
+                options={{
+                  ...options,
+                  plugins: {
+                    ...options.plugins,
+                    tooltip: {
+                      ...options.plugins.tooltip,
+                      titleFont: {
+                        ...options.plugins.tooltip.titleFont,
+                        size: isMobile ? 12 : 14,
+                      },
+                      bodyFont: {
+                        ...options.plugins.tooltip.bodyFont,
+                        size: isMobile ? 11 : 13,
+                      },
+                      padding: isMobile
+                        ? { top: 8, bottom: 8, left: 12, right: 12 }
+                        : options.plugins.tooltip.padding,
+                    },
+                  },
+                  scales: {
+                    ...options.scales,
+                    x: {
+                      ...options.scales.x,
+                      ticks: {
+                        ...options.scales.x.ticks,
+                        font: {
+                          ...options.scales.x.ticks.font,
+                          size: isMobile ? 10 : 12,
+                        },
+                      },
+                    },
+                    y: {
+                      ...options.scales.y,
+                      ticks: {
+                        ...options.scales.y.ticks,
+                        font: {
+                          ...options.scales.y.ticks.font,
+                          size: isMobile ? 10 : 12,
+                        },
+                      },
+                    },
+                  },
+                } as any}
               />
             )}
           </div>
         </div>
       ) : (
-        <div className="text-center p-8 text-gray-600">
+        <div className="text-center p-4 sm:p-8 text-gray-600">
           Select a habit to view trends
         </div>
       )}

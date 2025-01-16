@@ -15,20 +15,20 @@ export default function Groups() {
         {/* Header Section */}
         <div
           className="flex flex-col sm:flex-row justify-between items-center backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 
-                      rounded-2xl p-8 border border-white/20 dark:border-gray-800/30 shadow-xl"
+                      rounded-2xl p-6 sm:p-8 border border-white/20 dark:border-gray-800/30 shadow-xl"
         >
           <div>
             <h1
-              className="sm:text-start text-4xl leading-[3rem] font-black bg-gradient-to-r from-purple-600 to-pink-600 
+              className="sm:text-start text-3xl sm:text-4xl leading-[3rem] font-black bg-gradient-to-r from-purple-600 to-pink-600 
                         dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
             >
               Your Groups
             </h1>
-            <p className="mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">
+            <p className="hidden sm:block mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">
               Build habits together with friends and family
             </p>
           </div>
-          <div className="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-3">
+          <div className="mt-4 sm:mt-0 flex flex-row gap-3">
             <button
               onClick={() => setIsJoinModalOpen(true)}
               className="px-4 sm:px-6 py-2 sm:py-3 border-2 border-purple-600 dark:border-purple-400 

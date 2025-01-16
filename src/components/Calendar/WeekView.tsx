@@ -3,14 +3,13 @@ import { DEFAULT_CATEGORIES, Habit, HabitType } from "../../types/habit";
 import { habitApi, useHabits } from "../../contexts/HabitContext";
 import { useUser } from "../../contexts/UserContext";
 import { FireIcon } from "@heroicons/react/24/solid";
-import { calculateStreak } from "../../utils/helpers";
+import { calculateStreak, isHabitCompletedForDay } from "../../utils/helpers";
 import React, { useState } from "react";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useHabitDisplay } from "../../contexts/HabitDisplayContext";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import {
   GroupHabit,
-  GroupHabitCompletion,
   useGroups,
 } from "../../contexts/GroupContext";
 import { groupApi } from "../../contexts/GroupContext";
@@ -148,25 +147,27 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
   };
 
   const calculateGroupHabitStreak = (
-    completions: GroupHabitCompletion[],
+    habit: GroupHabit,
     userId: string
   ) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     let streak = 0;
     let currentDate = new Date(today);
+
     const todayStr = format(today, "yyyy-MM-dd");
 
     while (true) {
       const dateStr = format(currentDate, "yyyy-MM-dd");
-      const completion = completions.find(
+      const completion = habit.completions.find(
         (c) => c.userId === userId && c.date === dateStr
       );
 
-      // Skip today when calculating streak if there's no completion
-      if (dateStr !== todayStr && (!completion || !completion.completed)) break;
 
-      if (completion && completion.completed) {
+      // Skip today when calculating streak if there's no completion
+      if (dateStr !== todayStr && (!completion || !isHabitCompletedForDay(habit, completion.completed))) break;
+
+      if (completion && isHabitCompletedForDay(habit, completion.completed)) {
         streak++;
       }
 
@@ -254,7 +255,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
       >
         <thead>
           <tr>
-            <th className="px-6 py-4 text-left w-96 max-w-96">
+            <th className="px-4 sm:px-6 py-3 sm:py-4 text-left w-72 sm:w-96 max-w-72 sm:max-w-96">
               <span
                 className="text-sm font-medium bg-gradient-to-r from-purple-600 
                               to-pink-600 dark:from-purple-400 dark:to-pink-400 
@@ -264,13 +265,13 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
               </span>
             </th>
             {weekDays.map((day) => (
-              <th key={day.toString()} className="px-6 py-4 text-center">
+              <th key={day.toString()} className="px-2 sm:px-6 py-3 sm:py-4 text-center">
                 <div className="flex flex-col items-center">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
                     {format(day, "EEE")}
                   </span>
                   <span
-                    className="mt-1 text-2xl font-bold bg-gradient-to-br 
+                    className="mt-1 text-xl sm:text-2xl font-bold bg-gradient-to-br 
                                  from-purple-600 to-pink-600 dark:from-purple-400 
                                  dark:to-pink-400 text-transparent bg-clip-text"
                   >
@@ -297,7 +298,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                   return (
                     <React.Fragment key={categoryId}>
                       <tr className="bg-gray-50/50 dark:bg-gray-800/50">
-                        <td colSpan={8} className="px-6 py-2">
+                        <td colSpan={8} className="px-3 sm:px-6 py-2">
                           <button
                             onClick={() => toggleCategory(categoryId)}
                             className="flex items-center space-x-2 w-full"
@@ -345,14 +346,14 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                                          : "hover:bg-white/50 dark:hover:bg-gray-800/50"
                                      }`}
                             >
-                              <td className="px-6 py-4 whitespace-nowrap w-72 max-w-72">
-                                <div className="flex items-center space-x-3">
-                                  <span className="flex-shrink-0 text-xl">
+                              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap w-72 sm:w-96 max-w-72 sm:max-w-96">
+                                <div className="flex items-center space-x-2 sm:space-x-3">
+                                  <span className="flex-shrink-0 text-lg sm:text-xl">
                                     {habit.emoji}
                                   </span>
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center space-x-2">
-                                      <span className="font-medium text-gray-900 dark:text-white truncate">
+                                      <span className="font-medium text-gray-900 dark:text-white truncate text-sm sm:text-base">
                                         {habit.name}
                                       </span>
                                       {streak > 0 && (
@@ -375,7 +376,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                                 return (
                                   <td
                                     key={day.toISOString()}
-                                    className={`px-6 py-4 text-center ${
+                                    className={`px-2 sm:px-6 py-3 sm:py-4 text-center ${
                                       isToday
                                         ? "bg-blue-100/40 dark:bg-blue-900/20"
                                         : ""
@@ -383,7 +384,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                                   >
                                     <button
                                       onClick={() => toggleHabit(habit.id, day)}
-                                      className="inline-flex items-center justify-center"
+                                      className="inline-flex items-center justify-center p-1 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                                     >
                                       {getCompletionIcon(habit, value)}
                                     </button>
@@ -402,14 +403,14 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                   key={habit.id}
                   className="hover:bg-white/50 dark:hover:bg-gray-800/50"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap w-72 max-w-72">
-                    <div className="flex items-center space-x-3">
-                      <span className="flex-shrink-0 text-xl">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap w-full sm:w-96 sm:max-w-96">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
+                      <span className="flex-shrink-0 text-lg sm:text-xl">
                         {habit.emoji}
                       </span>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center space-x-2">
-                          <span className="font-medium text-gray-900 dark:text-white truncate">
+                          <span className="hidden sm:block font-medium text-gray-900 dark:text-white truncate text-sm sm:text-base">
                             {habit.name}
                           </span>
                           {calculateStreak(habit) > 0 && (
@@ -432,13 +433,13 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                     return (
                       <td
                         key={day.toISOString()}
-                        className={`px-6 py-4 text-center ${
+                        className={`px-2 sm:px-6 py-3 sm:py-4 text-center ${
                           isToday ? "bg-blue-100/40 dark:bg-blue-900/20" : ""
                         }`}
                       >
                         <button
                           onClick={() => toggleHabit(habit.id, day)}
-                          className="inline-flex items-center justify-center"
+                          className="inline-flex items-center justify-center p-1 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         >
                           {getCompletionIcon(habit, value)}
                         </button>
@@ -450,7 +451,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
           {getAllGroupHabits().length > 0 && (
             <>
               <tr className="bg-purple-50/50 dark:bg-purple-900/20">
-                <td colSpan={8} className="px-6 py-2">
+                <td colSpan={8} className="px-3 sm:px-6 py-2">
                   <button
                     onClick={() => setGroupHabitsCollapsed((prev) => !prev)}
                     className="flex items-center space-x-2 w-full"
@@ -470,7 +471,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
               {!groupHabitsCollapsed &&
                 getAllGroupHabits().map((habit) => {
                   const streak = calculateGroupHabitStreak(
-                    habit.completions,
+                    habit,
                     userState.profile?.id || ""
                   );
 
@@ -479,14 +480,14 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                       key={`${habit.groupId}-${habit.id}`}
                       className="hover:bg-white/50 dark:hover:bg-gray-800/50"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap w-72 max-w-72">
-                        <div className="flex items-center space-x-3">
-                          <span className="flex-shrink-0 text-xl">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap w-24 sm:w-96 max-w-24 sm:max-w-96">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
+                          <span className="flex-shrink-0 text-lg sm:text-xl">
                             {habit.emoji}
                           </span>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center space-x-2">
-                              <span className="font-medium text-gray-900 dark:text-white truncate">
+                              <span className="hidden sm:block font-medium text-gray-900 dark:text-white truncate text-sm sm:text-base">
                                 {habit.name}
                               </span>
                               {streak > 0 && (
@@ -498,8 +499,8 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                                 </div>
                               )}
                             </div>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className="hidden sm:flex items-center space-x-2 mt-1">
+                              <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                                 <Link
                                   to={`/groups/${habit.groupId}`}
                                   className="hover:text-purple-600 dark:hover:text-purple-400"
@@ -523,7 +524,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                         return (
                           <td
                             key={day.toISOString()}
-                            className={`px-6 py-4 text-center ${
+                            className={`px-2 sm:px-6 py-3 sm:py-4 text-center ${
                               isToday
                                 ? "bg-blue-100/40 dark:bg-blue-900/20"
                                 : ""
@@ -533,7 +534,7 @@ export default function WeekView({ startDate, habits }: WeekViewProps) {
                               onClick={() =>
                                 handleGroupHabitClick(habit.groupId, habit, day)
                               }
-                              className="inline-flex items-center justify-center"
+                              className="inline-flex items-center justify-center p-1 sm:p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                             >
                               {getCompletionIcon(habit, completionValue)}
                             </button>
