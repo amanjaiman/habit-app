@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard';
 import Analytics from './components/Analytics';
 import Settings from './components/Settings';
 import Navbar from './components/Navbar';
+import MobileNav from './components/MobileNav';
 import Landing from './components/Landing';
 import LoginForm from './components/Auth/LoginForm';
 import SignupForm from './components/Auth/SignupForm';
@@ -41,37 +42,40 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gradient-to-tl from-sky-100 via-cyan-100 to-violet-200 dark:from-sky-950 dark:via-cyan-950 dark:to-violet-950 transition-all duration-500">
       <Navbar />
-      <Routes>
-        <Route path="/" element={state.isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/landing" />} />
-        <Route path="/landing" element={<Landing />} />
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } />
-        <Route path="/login" element={<LoginForm />} />
-        <Route path="/signup" element={<SignupForm />} />
-        <Route path="/groups" element={
-          <ProtectedRoute>
-            <Groups />
-          </ProtectedRoute>
-        } />
-        <Route path="/groups/:groupId" element={
-          <ProtectedRoute>
-            <GroupPage />
-          </ProtectedRoute>
-        } />
-        <Route path="/analytics" element={
-          <ProtectedRoute>
-            <Analytics />
-          </ProtectedRoute>
-        } />
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        } />
-      </Routes>
+      <div className="pb-16 sm:pb-0"> {/* Add padding at the bottom for mobile nav */}
+        <Routes>
+          <Route path="/" element={state.isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/landing" />} />
+          <Route path="/landing" element={<Landing />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/signup" element={<SignupForm />} />
+          <Route path="/groups" element={
+            <ProtectedRoute>
+              <Groups />
+            </ProtectedRoute>
+          } />
+          <Route path="/groups/:groupId" element={
+            <ProtectedRoute>
+              <GroupPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics" element={
+            <ProtectedRoute>
+              <Analytics />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </div>
+      <MobileNav />
     </div>
   );
 }
