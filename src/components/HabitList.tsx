@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Habit } from "../types/habit";
 import { habitApi, useHabits } from "../contexts/HabitContext";
 import HabitForm from "./HabitForm";
-import { TrashIcon, PencilIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { TrashIcon, PencilIcon, PlusIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { useUser } from "../contexts/UserContext";
 import { GroupHabit } from "../contexts/GroupContext";
 import { Link } from "react-router-dom";
@@ -19,6 +19,8 @@ interface HabitListProps {
 export default function HabitList({ habits, groupHabits }: HabitListProps) {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isPersonalExpanded, setIsPersonalExpanded] = useState(false);
+  const [isGroupExpanded, setIsGroupExpanded] = useState(false);
   const { dispatch } = useHabits();
   const { state: userState } = useUser();
 
@@ -45,23 +47,36 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
     <>
       {/* Personal Habits Section */}
       <div className="space-y-6">
-        <div className="flex items-center space-x-4 mb-6">
-          <h2
-            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
-          >
-            Your Habits
-          </h2>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <h2
+              className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
+                          dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+            >
+              Your Habits
+            </h2>
+            <button
+              onClick={() => setIsFormOpen(true)}
+              className="p-1.5 mt-0.5 rounded-lg bg-white/40 dark:bg-gray-800/40 hover:bg-white/70 
+                       dark:hover:bg-gray-800/70 transition-all duration-200 group"
+            >
+              <PlusIcon className="w-5 h-5 text-purple-600 dark:text-purple-400 transition-transform" />
+            </button>
+          </div>
           <button
-            onClick={() => setIsFormOpen(true)}
-            className="p-1.5 mt-0.5 rounded-lg bg-white/40 dark:bg-gray-800/40 hover:bg-white/70 
-                     dark:hover:bg-gray-800/70 transition-all duration-200 group"
+            onClick={() => setIsPersonalExpanded(!isPersonalExpanded)}
+            className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-white/40 
+                     dark:hover:bg-gray-800/40 rounded-lg transition-all duration-200"
           >
-            <PlusIcon className="w-5 h-5 text-purple-600 dark:text-purple-400 transition-transform" />
+            {isPersonalExpanded ? (
+              <ChevronUpIcon className="w-5 h-5" />
+            ) : (
+              <ChevronDownIcon className="w-5 h-5" />
+            )}
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${!isPersonalExpanded ? 'hidden md:grid' : ''}`}>
           {habits.map((habit) => (
             <div key={habit.id} className={habitCardClasses}>
               <div className="p-3">
@@ -98,15 +113,29 @@ export default function HabitList({ habits, groupHabits }: HabitListProps) {
 
       {/* Group Habits Section */}
       {groupHabits.length > 0 && (
-        <div className="mt-12 space-y-6">
-          <h2
-            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
-                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
-          >
-            Group Habits
-          </h2>
+        <div className="mt-6 sm:mt-12 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2
+              className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+            >
+              Group Habits
+            </h2>
+            <button
+              onClick={() => setIsGroupExpanded(!isGroupExpanded)}
+              className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-white/40 
+                       dark:hover:bg-gray-800/40 rounded-lg transition-all duration-200"
+            >
+              {isGroupExpanded ? (
+                <ChevronUpIcon className="w-5 h-5" />
+              ) : (
+                <ChevronDownIcon className="w-5 h-5" />
+              )}
+            </button>
+          </div>
+
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${!isGroupExpanded ? 'hidden md:grid' : ''}`}>
             {groupHabits.map((habit) => (
               <div
                 key={`${habit.id}-${habit.groupName}`}

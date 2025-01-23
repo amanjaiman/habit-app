@@ -246,319 +246,328 @@ export default function Settings() {
   }, [userState.profile?.id, userDispatch, userState]);
 
   return (
-    <main className="max-w-7xl mx-auto py-8 px-6 sm:px-8 lg:px-12">
+    <main className="max-w-7xl mx-auto pt-0 sm:pt-6 pb-6">
       <div className="max-w-2xl mx-auto space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-purple-900 dark:text-white">
+        <div
+          className="relative z-0 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-none sm:rounded-2xl px-4 sm:px-8 py-4 sm:py-8 
+                      border-x-0 sm:border border-white/20 dark:border-gray-800/30 shadow-xl flex sm:block flex-col items-center
+                      relative mx-0 sm:mx-8 lg:mx-12"
+        >
+          <h1
+            className="sm:text-start text-3xl sm:text-4xl !leading-[3rem] font-black bg-gradient-to-r from-purple-600 to-pink-600 
+                        dark:from-purple-400 dark:to-pink-400 text-transparent bg-clip-text"
+          >
             Settings
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-300">
+          <p className="hidden sm:block mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg font-medium">
             Manage your preferences and data
           </p>
         </div>
 
-        {/* Profile Settings */}
-        <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 shadow-lg rounded-2xl divide-y divide-gray-200 dark:divide-gray-700">
-          <div className="p-6">
-            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-              Profile Settings
-            </h2>
+        <div className="px-4 sm:px-8 lg:px-12">
+          {/* Profile Settings */}
+          <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 shadow-lg rounded-2xl divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="p-6">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                Profile Settings
+              </h2>
 
-            {/* Profile Image */}
-            <div className="mb-6">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  {profileImage ? (
-                    <img
-                      src={profileImage}
-                      alt="Profile"
-                      className="w-20 h-20 rounded-full object-cover border-2 border-purple-200 dark:border-purple-900"
-                    />
-                  ) : (
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white text-2xl font-medium">
-                      {userState.name ? userState.name[0].toUpperCase() : "?"}
-                    </div>
-                  )}
-                  <label className="absolute bottom-0 right-0 bg-purple-600 p-1.5 rounded-full cursor-pointer hover:bg-purple-700 transition-colors duration-200 shadow-lg">
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleProfileImageChange}
-                    />
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-white"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                    </svg>
-                  </label>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    Profile Picture
-                  </span>
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    Click the edit icon to change your profile picture
-                  </span>
-                  {userState.profile?.email && (
-                    <span className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                      {userState.profile.email}
+              {/* Profile Image */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="Profile"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-purple-200 dark:border-purple-900"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white text-2xl font-medium">
+                        {userState.name ? userState.name[0].toUpperCase() : "?"}
+                      </div>
+                    )}
+                    <label className="absolute bottom-0 right-0 bg-purple-600 p-1.5 rounded-full cursor-pointer hover:bg-purple-700 transition-colors duration-200 shadow-lg">
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleProfileImageChange}
+                      />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 text-white"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                      </svg>
+                    </label>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      Profile Picture
                     </span>
-                  )}
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      Click the edit icon to change your profile picture
+                    </span>
+                    {userState.profile?.email && (
+                      <span className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                        {userState.profile.email}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Password Change Form */}
-            <form onSubmit={handlePasswordChange} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="newPassword"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  id="newPassword"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="p-1 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                >
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="p-1 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-              <button
-                type="submit"
-                className="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-              >
-                Change Password
-              </button>
-            </form>
-
-            {/* Premium Status */}
-            <div className="mt-6">
-              <div className="flex items-center justify-between">
+              {/* Password Change Form */}
+              <form onSubmit={handlePasswordChange} className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                    Premium Status
-                  </h3>
-                  <p
-                    className={`text-sm ${
+                  <label
+                    htmlFor="newPassword"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    id="newPassword"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="p-1 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="p-1 mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                >
+                  Change Password
+                </button>
+              </form>
+
+              {/* Premium Status */}
+              <div className="mt-10">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                      Premium Status
+                    </h3>
+                    <p
+                      className={`text-sm ${
+                        premium
+                          ? "bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-bold"
+                          : "text-gray-600 dark:text-gray-300"
+                      }`}
+                    >
+                      {premium
+                        ? cancelAtPeriodEnd
+                          ? "Premium Member (Canceled)"
+                          : "Premium Member"
+                        : "Free Plan"}
+                    </p>
+                    {premium && nextBillingDate && !cancelAtPeriodEnd && (
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                        Next billing date:{" "}
+                        <span className="font-bold">
+                          {format(new Date(nextBillingDate), "MMMM d, yyyy")}
+                        </span>
+                      </p>
+                    )}
+                    {premium && nextBillingDate && cancelAtPeriodEnd && (
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                        You will have access until{" "}
+                        {format(new Date(nextBillingDate), "MMMM d, yyyy")}
+                      </p>
+                    )}
+                    {!premium && (
+                      <button
+                        onClick={() => setIsPremiumDialogOpen(true)}
+                        className="text-left text-sm bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium"
+                      >
+                        View premium benefits
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleTogglePremiumStatus}
+                    className={`inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${
                       premium
-                        ? "bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium"
-                        : "text-gray-600 dark:text-gray-300"
-                    }`}
+                        ? "bg-gray-600 hover:bg-gray-700"
+                        : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
                   >
                     {premium
                       ? cancelAtPeriodEnd
-                        ? "Premium Member (Canceled)"
-                        : "Premium Member"
-                      : "Free Plan"}
-                  </p>
-                  {premium && nextBillingDate && !cancelAtPeriodEnd && (
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                      Next billing date:{" "}
-                      <span className="font-medium">
-                        {format(new Date(nextBillingDate), "MMMM d, yyyy")}
-                      </span>
-                    </p>
-                  )}
-                  {premium && nextBillingDate && cancelAtPeriodEnd && (
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                      You will have access until{" "}
-                      {format(new Date(nextBillingDate), "MMMM d, yyyy")}
-                    </p>
-                  )}
-                  {!premium && (
-                    <button
-                      onClick={() => setIsPremiumDialogOpen(true)}
-                      className="text-sm bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent font-medium"
-                    >
-                      View premium benefits
-                    </button>
-                  )}
+                        ? "Renew Premium"
+                        : "Downgrade to Free"
+                      : "Upgrade to Premium"}
+                  </button>
                 </div>
-                <button
-                  onClick={handleTogglePremiumStatus}
-                  className={`inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${
-                    premium
-                      ? "bg-gray-600 hover:bg-gray-700"
-                      : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                  } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
-                >
-                  {premium
-                    ? cancelAtPeriodEnd
-                      ? "Renew Premium"
-                      : "Downgrade to Free"
-                    : "Upgrade to Premium"}
-                </button>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Theme Settings */}
-        <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 shadow-lg rounded-2xl divide-y divide-gray-200 dark:divide-gray-700">
-          <div className="p-6">
-            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-              Appearance
-            </h2>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                {theme === "dark" ? (
-                  <MoonIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                ) : (
-                  <SunIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                )}
-                <span className="text-gray-900 dark:text-white">Dark mode</span>
-              </div>
-              <Switch
-                checked={theme === "dark"}
-                onChange={toggleTheme}
-                className={`${
-                  theme === "dark" ? "bg-purple-600" : "bg-gray-200"
-                } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2`}
-              >
-                <span
+          {/* Theme Settings */}
+          <div className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 shadow-lg rounded-2xl divide-y divide-gray-200 dark:divide-gray-700">
+            <div className="p-6">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                Appearance
+              </h2>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  {theme === "dark" ? (
+                    <MoonIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  ) : (
+                    <SunIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  )}
+                  <span className="text-gray-900 dark:text-white">Dark mode</span>
+                </div>
+                <Switch
+                  checked={theme === "dark"}
+                  onChange={toggleTheme}
                   className={`${
-                    theme === "dark" ? "translate-x-6" : "translate-x-1"
-                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                />
-              </Switch>
-            </div>
-
-            <div className="mt-4 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-gray-600 dark:text-gray-300"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
+                    theme === "dark" ? "bg-purple-600" : "bg-gray-200"
+                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 0 1-1.125-1.125v-3.75Zm12 1.5c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-8.25ZM2.25 16.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-3.75Z"
+                  <span
+                    className={`${
+                      theme === "dark" ? "translate-x-6" : "translate-x-1"
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                   />
-                </svg>
-                <span className="text-gray-900 dark:text-white">
-                  Group habits by category
-                </span>
+                </Switch>
               </div>
-              <Switch
-                checked={groupHabits}
-                onChange={toggleGroupHabits}
-                className={`${
-                  groupHabits ? "bg-purple-600" : "bg-gray-200"
-                } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2`}
-              >
-                <span
-                  className={`${
-                    groupHabits ? "translate-x-6" : "translate-x-1"
-                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
-                />
-              </Switch>
-            </div>
-          </div>
 
-          {/* Data Management */}
-          <div className="p-6">
-            <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-              Data Management
-            </h2>
-            <div className="space-y-4">
-              {/* Export Data */}
-              {premium && (
+              <div className="mt-4 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-gray-600 dark:text-gray-300"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M2.25 7.125C2.25 6.504 2.754 6 3.375 6h6c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-6a1.125 1.125 0 0 1-1.125-1.125v-3.75Zm12 1.5c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v8.25c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-8.25ZM2.25 16.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125v3.75c0 .621-.504 1.125-1.125 1.125h-5.25a1.125 1.125 0 0 1-1.125-1.125v-3.75Z"
+                    />
+                  </svg>
+                  <span className="text-gray-900 dark:text-white">
+                    Group habits by category
+                  </span>
+                </div>
+                <Switch
+                  checked={groupHabits}
+                  onChange={toggleGroupHabits}
+                  className={`${
+                    groupHabits ? "bg-purple-600" : "bg-gray-200"
+                  } relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2`}
+                >
+                  <span
+                    className={`${
+                      groupHabits ? "translate-x-6" : "translate-x-1"
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                  />
+                </Switch>
+              </div>
+            </div>
+
+            {/* Data Management */}
+            <div className="p-6">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                Data Management
+              </h2>
+              <div className="space-y-4">
+                {/* Export Data */}
+                {premium && (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                        Export Data
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Download your habits and progress
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleExportData}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 
+                              rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 
+                              bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 
+                              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    >
+                      <ArrowDownTrayIcon className="w-5 h-5 mr-2" />
+                      Export
+                    </button>
+                  </div>
+                )}
+
+                {/* Import Data */}
+                {premium && (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">
+                        Import Data
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        Restore from a backup file
+                      </p>
+                    </div>
+                    <label
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 
+                                    rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 
+                                    bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 
+                                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 cursor-pointer"
+                    >
+                      <ArrowUpTrayIcon className="w-5 h-5 mr-2" />
+                      Import
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".json"
+                        onChange={handleImportData}
+                      />
+                    </label>
+                  </div>
+                )}
+
+                {/* Reset Data */}
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                      Export Data
+                      Reset Data
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Download your habits and progress
+                      Clear all habits and progress
                     </p>
                   </div>
                   <button
-                    onClick={handleExportData}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 
-                            rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 
-                            bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 
-                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    onClick={handleResetData}
+                    className="inline-flex items-center px-4 py-2 border border-red-300 dark:border-red-700 
+                            rounded-md shadow-sm text-sm font-medium text-red-700 dark:text-red-400 
+                            bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 
+                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   >
-                    <ArrowDownTrayIcon className="w-5 h-5 mr-2" />
-                    Export
+                    <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+                    Reset
                   </button>
                 </div>
-              )}
-
-              {/* Import Data */}
-              {premium && (
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                      Import Data
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Restore from a backup file
-                    </p>
-                  </div>
-                  <label
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 
-                                  rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 
-                                  bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 
-                                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 cursor-pointer"
-                  >
-                    <ArrowUpTrayIcon className="w-5 h-5 mr-2" />
-                    Import
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept=".json"
-                      onChange={handleImportData}
-                    />
-                  </label>
-                </div>
-              )}
-
-              {/* Reset Data */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                    Reset Data
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Clear all habits and progress
-                  </p>
-                </div>
-                <button
-                  onClick={handleResetData}
-                  className="inline-flex items-center px-4 py-2 border border-red-300 dark:border-red-700 
-                          rounded-md shadow-sm text-sm font-medium text-red-700 dark:text-red-400 
-                          bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 
-                          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
-                  Reset
-                </button>
               </div>
             </div>
           </div>
@@ -584,7 +593,7 @@ export default function Settings() {
 
               {/* Plan Comparison */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex flex-col justify-between rounded-xl border border-gray-300 dark:border-gray-700 p-6">
+                <div className="flex flex-col justify-between rounded-xl border border-gray-400 dark:border-gray-700 p-6">
                   <div className="flex flex-col">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                       Free Plan

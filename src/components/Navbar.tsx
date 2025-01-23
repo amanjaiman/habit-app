@@ -69,7 +69,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="z-10 relative backdrop-blur-md bg-white/30 dark:bg-gray-900/30 border-b border-white/20 dark:border-gray-800/30">
+    <nav className="hidden sm:block z-10 relative backdrop-blur-md bg-white/30 dark:bg-gray-900/30 border-b border-white/20 dark:border-gray-800/30">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between h-20">
           <div className="flex items-center gap-8">
@@ -79,7 +79,7 @@ export default function Navbar() {
               </span>
             </Link>
 
-            <div className="hidden sm:flex sm:gap-4">
+            <div className="flex gap-4">
               {navigation
                 .filter((item) => !["Settings", "Logout"].includes(item.name))
                 .map((item) => (
@@ -116,7 +116,7 @@ export default function Navbar() {
             </button>
 
             {userState.isAuthenticated ? (
-              <div className="hidden sm:flex relative" ref={dropdownRef}>
+              <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center space-x-2 p-1 rounded-full hover:bg-white/30 dark:hover:bg-gray-800/30"
@@ -191,7 +191,7 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <div className="hidden sm:flex items-center space-x-4">
+              <div className="flex items-center space-x-4">
                 <Link
                   to="/login"
                   className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 text-sm font-medium"

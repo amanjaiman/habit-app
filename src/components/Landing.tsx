@@ -11,10 +11,12 @@ import {
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import { useTheme } from "../contexts/ThemeContext";
+import { useUser } from "../contexts/UserContext";
 
 export default function Landing() {
   const [currentSlides, setCurrentSlides] = useState([0, 0, 0]);
   const { theme } = useTheme();
+  const { state: userState } = useUser();
 
   const weekViewScreenshot =
     theme === "light"
@@ -102,22 +104,38 @@ export default function Landing() {
                 Track, analyze, and improve your daily habits with AI-powered
                 insights and beautiful visualizations.
               </p>
-              <div className="flex gap-4">
-                <Link
-                  to="/signup"
-                  className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl 
-                           shadow-lg hover:shadow-xl transition-all duration-200 font-medium transform hover:scale-105"
-                >
-                  Get Started Free
-                </Link>
-                <Link
-                  to="/login"
-                  className="px-8 py-4 bg-white/80 dark:bg-gray-800/80 text-purple-600 dark:text-purple-400 rounded-xl 
-                           shadow-lg hover:shadow-xl transition-all duration-200 font-medium transform hover:scale-105"
-                >
-                  Login
-                </Link>
-              </div>
+              {!userState.isAuthenticated ? (
+                <div className="flex gap-4">
+                  <Link
+                    to="/signup"
+                    className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl 
+                            shadow-lg hover:shadow-xl transition-all duration-200 font-medium transform hover:scale-105"
+                  >
+                    Get Started Free
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="px-8 py-4 bg-white/80 dark:bg-gray-800/80 text-purple-600 dark:text-purple-400 rounded-xl 
+                            shadow-lg hover:shadow-xl transition-all duration-200 font-medium transform hover:scale-105"
+                  >
+                    Login
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex gap-4">
+                  <Link
+                    to="/dashboard"
+                    className="flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl 
+                            shadow-lg hover:shadow-xl transition-all duration-200 font-medium transform hover:scale-105"
+                  >
+                    Go to your dashboard <ArrowRightIcon className="w-4 h-4 ml-2" />
+                  </Link>
+                </div>
+
+              )}
+
+              
+
             </div>
 
             {/* Right Column - Image */}

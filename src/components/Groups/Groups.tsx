@@ -10,12 +10,13 @@ export default function Groups() {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
 
   return (
-    <main className="max-w-7xl mx-auto py-6 px-4 sm:px-8 lg:px-12">
+    <main className="max-w-7xl mx-auto pt-0 sm:pt-6 pb-6">
       <div className="space-y-8">
         {/* Header Section */}
         <div
           className="flex flex-col sm:flex-row justify-between items-center backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 
-                      rounded-2xl p-6 sm:p-8 border border-white/20 dark:border-gray-800/30 shadow-xl"
+                      rounded-none sm:rounded-2xl px-4 sm:px-8 py-6 sm:py-8 border-x-0 sm:border border-white/20 dark:border-gray-800/30 shadow-xl
+                      relative mx-0 sm:mx-8 lg:mx-12"
         >
           <div>
             <h1
@@ -24,7 +25,7 @@ export default function Groups() {
             >
               Your Groups
             </h1>
-            <p className="hidden sm:block mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg">
+            <p className="hidden sm:block mt-2 text-gray-600 dark:text-gray-300 text-base sm:text-lg font-medium">
               Build habits together with friends and family
             </p>
           </div>
@@ -51,33 +52,35 @@ export default function Groups() {
           </div>
         </div>
 
-        {state.loading ? (
-          <div
-            className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center"
-          >
-            <div className="animate-pulse text-gray-600 dark:text-gray-300">
-              Loading groups...
+        <div className="px-4 sm:px-8 lg:px-12 space-y-8">
+          {state.loading ? (
+            <div
+              className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                          border border-white/20 dark:border-gray-800/30 shadow-xl text-center"
+            >
+              <div className="animate-pulse text-gray-600 dark:text-gray-300">
+                Loading groups...
+              </div>
             </div>
-          </div>
-        ) : state.groups.length === 0 ? (
-          <div
-            className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                        border border-white/20 dark:border-gray-800/30 shadow-xl text-center"
-          >
-            <p className="text-gray-600 dark:text-gray-300 text-lg">
-              You're not part of any groups yet. Create a new group or join an
-              existing one!
-            </p>
-          </div>
-        ) : (
-          <div
-            className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
-                        border border-white/20 dark:border-gray-800/30 shadow-xl"
-          >
-            <GroupList groups={state.groups} />
-          </div>
-        )}
+          ) : state.groups.length === 0 ? (
+            <div
+              className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                          border border-white/20 dark:border-gray-800/30 shadow-xl text-center"
+            >
+              <p className="text-gray-600 dark:text-gray-300 text-lg">
+                You're not part of any groups yet. Create a new group or join an
+                existing one!
+              </p>
+            </div>
+          ) : (
+            <div
+              className="backdrop-blur-sm bg-white/30 dark:bg-gray-900/30 rounded-2xl p-8 
+                          border border-white/20 dark:border-gray-800/30 shadow-xl"
+            >
+              <GroupList groups={state.groups} />
+            </div>
+          )}
+        </div>
 
         {/* Create Group Modal */}
         <GroupForm
